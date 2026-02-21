@@ -1,0 +1,660 @@
+<div class="sidebar">
+    <div class="logo">
+        <a href="{% url 'students_app:home' %}">
+            <i class="fas fa-graduation-cap"></i>
+            <span id="panel-title">
+                {% if user.is_superuser %}
+                Company Admin Panel
+                {% elif user.school_profile.role.name == 'school_admin' %}
+                School Admin Panel
+                {% elif user.school_profile.role.name == 'teacher' %}
+                Teacher Panel
+                {% elif user.school_profile.role.name == 'student' %}
+                Student Panel
+                {% elif user.school_profile.role.name == 'parent' %}
+                Parent Panel
+                {% elif user.school_profile.role.name == 'librarian' %}
+                Library Panel
+                {% else %}
+                School ERP
+                {% endif %}
+            </span>
+        </a>
+    </div>
+
+    <!-- Language Switcher -->
+    <div class="language-switcher p-3 border-bottom">
+        {% csrf_token %}
+        <div class="d-flex gap-2">
+            <button type="button" data-language="en"
+                class="btn btn-sm btn-outline-primary {% if request.session.language == 'en' or not request.session.language %}active{% endif %}">
+                <i class="fas fa-flag-usa"></i> EN
+            </button>
+            <button type="button" data-language="hi"
+                class="btn btn-sm btn-outline-success {% if request.session.language == 'hi' %}active{% endif %}">
+                <i class="fas fa-flag"></i> हिं
+            </button>
+        </div>
+    </div>
+
+    <div class="sidebar-menu" id="sidebar-menu">
+
+        <a href="{% url 'students_app:home' %}"
+            class="{% if request.resolver_match.url_name == 'home' %}active-link{% endif %}">
+            <i class="fas fa-tachometer-alt"></i> <span class="menu-text">Dashboard</span>
+        </a>
+
+        {% if user.is_superuser %}
+        <!-- COMPANY ADMIN SIDEBAR -->
+        <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
+            स्कूल प्रबंधन
+        </h6>
+        <a href="{% url 'students_app:create_school' %}"
+            class="{% if request.resolver_match.url_name == 'create_school' %}active-link{% endif %}">
+            <i class="fas fa-plus"></i> नया स्कूल
+        </a>
+        <a href="{% url 'students_app:school_list' %}"
+            class="{% if request.resolver_match.url_name == 'school_list' %}active-link{% endif %}">
+            <i class="fas fa-school"></i> सभी स्कूल
+        </a>
+        <a href="{% url 'students_app:create_user' %}"
+            class="{% if request.resolver_match.url_name == 'create_user' %}active-link{% endif %}">
+            <i class="fas fa-user-plus"></i> नया यूजर
+        </a>
+        <a href="{% url 'students_app:user_list' %}"
+            class="{% if request.resolver_match.url_name == 'user_list' %}active-link{% endif %}">
+            <i class="fas fa-users"></i> सभी यूजर
+        </a>
+
+        <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
+            सुपर एडमिन टूल्स
+        </h6>
+        <a href="{% url 'students_app:id_card_generator_dashboard' %}"
+            class="{% if 'id_card_generator' in request.resolver_match.url_name %}active-link{% endif %}">
+            <i class="fas fa-id-card"></i> ID कार्ड जनरेटर
+        </a>
+        <a href="{% url 'students_app:calculator' %}"
+            class="{% if request.resolver_match.url_name == 'calculator' %}active-link{% endif %}">
+            <i class="fas fa-calculator"></i> कैलकुलेटर
+        </a>
+
+        {% elif user.school_profile.role.name == 'school_admin' %}
+        <!-- SCHOOL ADMIN SIDEBAR -->
+        <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
+            छात्र और शिक्षक
+        </h6>
+        <a href="{% url 'students_app:student_list' %}"
+            class="{% if request.resolver_match.url_name == 'student_list' %}active-link{% endif %}">
+            <i class="fas fa-users"></i> सभी छात्र
+        </a>
+        <a href="{% url 'students_app:student_import' %}"
+            class="{% if request.resolver_match.url_name == 'student_import' %}active-link{% endif %}">
+            <i class="fas fa-file-import"></i> छात्र इम्पोर्ट (Excel)
+        </a>
+        <a href="{% url 'students_app:teacher_list' %}"
+            class="{% if request.resolver_match.url_name == 'teacher_list' %}active-link{% endif %}">
+            <i class="fas fa-chalkboard-teacher"></i> सभी शिक्षक
+        </a>
+        <a href="{% url 'students_app:class_selector' %}"
+            class="{% if request.resolver_match.url_name == 'class_selector' %}active-link{% endif %}">
+            <i class="fas fa-school"></i> कक्षा चयन (Class Select)
+        </a>
+
+        <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
+            अटेंडेंस (ATTENDANCE)
+        </h6>
+        <a href="{% url 'students_app:attendance_dashboard' %}"
+            class="{% if 'attendance' in request.resolver_match.url_name %}active-link{% endif %}">
+            <i class="fas fa-user-check"></i> अटेंडेंस डैशबोर्ड
+        </a>
+        <a href="{% url 'students_app:attendance_report' %}"
+            class="{% if request.resolver_match.url_name == 'attendance_report' %}active-link{% endif %}">
+            <i class="fas fa-chart-bar"></i> अटेंडेंस रिपोर्ट
+        </a>
+
+        <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
+            टाइमटेबल (TIMETABLE)
+        </h6>
+        <a href="{% url 'students_app:timetable_management' %}"
+            class="{% if request.resolver_match.url_name == 'timetable_management' %}active-link{% endif %}">
+            <i class="fas fa-calendar-alt"></i> टाइमटेबल मैनेजमेंट
+        </a>
+
+        <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
+            आईडी कार्ड (ID CARDS)
+        </h6>
+        <a href="{% url 'students_app:idcard_template_list' %}"
+            class="{% if request.resolver_match.url_name == 'idcard_template_list' %}active-link{% endif %}">
+            <i class="fas fa-id-card"></i> आईडी कार्ड टेम्पलेट
+        </a>
+        <a href="{% url 'students_app:generate_id_cards_with_progress' %}"
+            class="{% if request.resolver_match.url_name == 'generate_id_cards_with_progress' %}active-link{% endif %}">
+            <i class="fas fa-magic"></i> आईडी कार्ड बनाएं
+        </a>
+
+        <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
+            क्रेडेंशियल्स (CREDENTIALS)
+        </h6>
+        <a href="{% url 'students_app:display_credentials' %}"
+            class="{% if request.resolver_match.url_name == 'display_credentials' %}active-link{% endif %}">
+            <i class="fas fa-key"></i> लॉगिन क्रेडेंशियल्स
+        </a>
+
+        <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
+            क्लासेस मैनेजमेंट (CLASS MANAGEMENT)
+        </h6>
+        <a href="{% url 'students_app:class_list_management' %}"
+            class="{% if request.resolver_match.url_name == 'class_list_management' %}active-link{% endif %}">
+            <i class="fas fa-school"></i> क्लासेस लिस्ट
+        </a>
+        <a href="{% url 'students_app:class_list_management' %}"
+            class="{% if request.resolver_match.url_name == 'class_list_management' %}active-link{% endif %}">
+            <i class="fas fa-plus"></i> क्लास जोड़ें
+        </a>
+        <a href="{% url 'students_app:class_list_management' %}"
+            class="{% if request.resolver_match.url_name == 'class_list_management' %}active-link{% endif %}">
+            <i class="fas fa-layer-group"></i> सेक्शन जोड़ें
+        </a>
+
+        <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
+            शैक्षणिक (ACADEMICS)
+        </h6>
+        <a href="{% url 'students_app:view_timetable' %}"
+            class="{% if request.resolver_match.url_name == 'view_timetable' %}active-link{% endif %}">
+            <i class="fas fa-calendar-alt"></i> टाइमटेबल
+        </a>
+        <a href="{% url 'students_app:time_slot_list' %}"
+            class="{% if 'time_slot' in request.resolver_match.url_name or 'academic_year' in request.resolver_match.url_name %}active-link{% endif %}">
+            <i class="fas fa-clock"></i> टाइमटेबल सेटिंग्स
+        </a>
+        <a href="#" class="menu-item">
+            <i class="fas fa-check-circle"></i> अटेंडेंस (Attendance)
+        </a>
+        <a href="{% url 'students_app:teacher_exam_entry' %}"
+            class="{% if request.resolver_match.url_name == 'teacher_exam_entry' %}active-link{% endif %}">
+            <i class="fas fa-edit"></i> मार्क्स एंट्री
+        </a>
+        <a href="{% url 'students_app:exam_list' %}"
+            class="{% if 'exam_list' in request.resolver_match.url_name or 'exam_create' in request.resolver_match.url_name %}active-link{% endif %}">
+            <i class="fas fa-file-signature"></i> परीक्षाएं (Exam Mgmt)
+        </a>
+
+        <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
+            फीस और वित्त (FINANCE)
+        </h6>
+        <a href="{% url 'students_app:fee_history' %}"
+            class="{% if request.resolver_match.url_name == 'fee_history' %}active-link{% endif %}">
+            <i class="fas fa-history"></i> फीस इतिहास
+        </a>
+        <a href="{% url 'students_app:pay_fees' %}"
+            class="{% if request.resolver_match.url_name == 'pay_fees' %}active-link{% endif %}">
+            <i class="fas fa-wallet"></i> फीस भुगतान
+        </a>
+        <a href="{% url 'students_app:receipts_list' %}"
+            class="{% if request.resolver_match.url_name == 'receipts_list' %}active-link{% endif %}">
+            <i class="fas fa-receipt"></i> सभी रसीदें
+        </a>
+
+        <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
+            ID और सर्टिफिकेट
+        </h6>
+        <a href="{% url 'students_app:id_card_list' %}"
+            class="{% if request.resolver_match.url_name == 'id_card_list' %}active-link{% endif %}">
+            <i class="fas fa-address-card"></i> ID कार्ड्स
+        </a>
+        <a href="{% url 'students_app:generate_bulk_id_cards' %}"
+            class="{% if request.resolver_match.url_name == 'generate_bulk_id_cards' %}active-link{% endif %}">
+            <i class="fas fa-layer-group"></i> बल्क ID जनरेशन
+        </a>
+        <a href="{% url 'students_app:idcard_template_list' %}"
+            class="{% if request.resolver_match.url_name == 'idcard_template_list' %}active-link{% endif %}">
+            <i class="fas fa-drafting-compass"></i> सर्टिफिकेट्स
+        </a>
+
+        {% elif user.school_profile.role.name == 'teacher' %}
+        <!-- TEACHER SIDEBAR -->
+        <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
+            मेरी कक्षाएं
+        </h6>
+        <a href="{% url 'students_app:teacher_dashboard_restricted' %}"
+            class="{% if request.resolver_match.url_name == 'teacher_dashboard_restricted' %}active-link{% endif %}">
+            <i class="fas fa-chalkboard"></i> मेरा डैशबोर्ड
+        </a>
+        <a href="{% url 'students_app:class_selector' %}"
+            class="{% if request.resolver_match.url_name == 'class_selector' %}active-link{% endif %}">
+            <i class="fas fa-school"></i> कक्षा चयन (Class Select)
+        </a>
+        <a href="{% url 'students_app:teacher_student_list' %}"
+            class="{% if request.resolver_match.url_name == 'teacher_student_list' %}active-link{% endif %}">
+            <i class="fas fa-users"></i> मेरे छात्र
+        </a>
+        <a href="{% url 'students_app:teacher_timetable' %}"
+            class="{% if request.resolver_match.url_name == 'teacher_timetable' %}active-link{% endif %}">
+            <i class="fas fa-calendar-alt"></i> मेरा टाइमटेबल
+        </a>
+        
+        <!-- Only show import for class teachers - this will be checked in the view -->
+        <a href="{% url 'students_app:student_import' %}"
+            class="{% if request.resolver_match.url_name == 'student_import' %}active-link{% endif %}"
+            onclick="checkImportPermission(event)">
+            <i class="fas fa-file-import"></i> छात्र इम्पोर्ट (Import)
+        </a>
+        <a href="{% url 'students_app:teacher_exam_entry' %}"
+            class="{% if request.resolver_match.url_name == 'teacher_exam_entry' %}active-link{% endif %}">
+            <i class="fas fa-edit"></i> मार्क्स एंट्री
+        </a>
+        <a href="{% url 'students_app:exam_list' %}"
+            class="{% if 'exam_list' in request.resolver_match.url_name or 'exam_create' in request.resolver_match.url_name %}active-link{% endif %}">
+            <i class="fas fa-file-signature"></i> परीक्षाएं (Exam Mgmt)
+        </a>
+
+        <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
+            छात्र प्रबंधन
+        </h6>
+        <a href="{% url 'students_app:student_list' %}"
+            class="{% if request.resolver_match.url_name == 'student_list' %}active-link{% endif %}">
+            <i class="fas fa-users"></i> मेरे छात्र
+        </a>
+        <a href="#" class="menu-item">
+            <i class="fas fa-check-circle"></i> अटेंडेंस
+        </a>
+
+        {% elif user.school_profile.role.name == 'student' %}
+        <!-- STUDENT SIDEBAR -->
+        <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
+            मेरी जानकारी
+        </h6>
+        <a href="{% url 'students_app:student_dashboard' %}"
+            class="{% if request.resolver_match.url_name == 'student_dashboard' %}active-link{% endif %}">
+            <i class="fas fa-user"></i> मेरा प्रोफाइल
+        </a>
+        <a href="{% url 'students_app:view_timetable' %}"
+            class="{% if request.resolver_match.url_name == 'view_timetable' %}active-link{% endif %}">
+            <i class="fas fa-calendar-alt"></i> मेरा टाइमटेबल
+        </a>
+        <a href="#" class="menu-item">
+            <i class="fas fa-check-circle"></i> मेरी अटेंडेंस
+        </a>
+
+        <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
+            शैक्षणिक
+        </h6>
+        <a href="{% url 'students_app:student_dashboard' %}"
+            class="{% if request.resolver_match.url_name == 'student_dashboard' %}active-link{% endif %}">
+            <i class="fas fa-chart-line"></i> मेरे मार्क्स
+        </a>
+        <a href="{% url 'students_app:student_dashboard' %}"
+            class="{% if request.resolver_match.url_name == 'student_dashboard' %}active-link{% endif %}">
+            <i class="fas fa-file-alt"></i> परीक्षाएं
+        </a>
+
+        {% elif user.school_profile.role.name == 'parent' %}
+        <!-- PARENT SIDEBAR -->
+        <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
+            मेरे बच्चे
+        </h6>
+        <a href="{% url 'students_app:parent_dashboard' %}"
+            class="{% if request.resolver_match.url_name == 'parent_dashboard' %}active-link{% endif %}">
+            <i class="fas fa-home"></i> मेरा डैशबोर्ड
+        </a>
+        <a href="{% url 'students_app:parent_dashboard' %}"
+            class="{% if request.resolver_match.url_name == 'parent_dashboard' %}active-link{% endif %}">
+            <i class="fas fa-child"></i> मेरे बच्चे
+        </a>
+
+        <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
+            शैक्षणिक जानकारी
+        </h6>
+        <a href="{% url 'students_app:parent_dashboard' %}"
+            class="{% if request.resolver_match.url_name == 'parent_dashboard' %}active-link{% endif %}">
+            <i class="fas fa-check-circle"></i> अटेंडेंस
+        </a>
+        <a href="{% url 'students_app:parent_dashboard' %}"
+            class="{% if request.resolver_match.url_name == 'parent_dashboard' %}active-link{% endif %}">
+            <i class="fas fa-chart-line"></i> मार्क्स
+        </a>
+        <a href="{% url 'students_app:view_timetable' %}"
+            class="{% if request.resolver_match.url_name == 'view_timetable' %}active-link{% endif %}">
+            <i class="fas fa-calendar-alt"></i> टाइमटेबल
+        </a>
+
+        {% elif user.school_profile.role.name == 'librarian' %}
+        <!-- LIBRARIAN SIDEBAR -->
+        <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
+            लाइब्रेरी प्रबंधन
+        </h6>
+        <a href="{% url 'students_app:librarian_dashboard' %}"
+            class="{% if request.resolver_match.url_name == 'librarian_dashboard' %}active-link{% endif %}">
+            <i class="fas fa-book"></i> लाइब्रेरी डैशबोर्ड
+        </a>
+        <a href="{% url 'students_app:book_list' %}"
+            class="{% if request.resolver_match.url_name == 'book_list' %}active-link{% endif %}">
+            <i class="fas fa-books"></i> सभी किताबें
+        </a>
+        <a href="{% url 'students_app:issue_book' %}"
+            class="{% if request.resolver_match.url_name == 'issue_book' %}active-link{% endif %}">
+            <i class="fas fa-hand-holding"></i> किताब जारी करें
+        </a>
+        <a href="{% url 'students_app:library_dashboard' %}"
+            class="{% if request.resolver_match.url_name == 'library_dashboard' %}active-link{% endif %}">
+            <i class="fas fa-undo"></i> किताब वापसी
+        </a>
+
+        {% endif %}
+
+        <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
+            कम्युनिकेशन
+        </h6>
+        <a href="{% url 'students_app:notice_list' %}"
+            class="{% if request.resolver_match.url_name == 'notice_list' %}active-link{% endif %}">
+            <i class="fas fa-bullhorn"></i> नोटिस
+        </a>
+        <a href="{% url 'students_app:event_calendar' %}"
+            class="{% if request.resolver_match.url_name == 'event_calendar' %}active-link{% endif %}">
+            <i class="fas fa-calendar-day"></i> इवेंट्स
+        </a>
+
+        <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
+            सिस्टम
+        </h6>
+        {% if user.is_superuser or user.school_profile.role.name == 'school_admin' %}
+        <a href="{% url 'admin:index' %}">
+            <i class="fas fa-cogs"></i> एडमिन पैनल
+        </a>
+        {% endif %}
+        <a href="{% url 'students_app:user_logout' %}" class="logout-btn" onclick="confirmLogout(event)">
+            <i class="fas fa-sign-out-alt"></i> <span class="menu-text">Logout</span>
+        </a>
+    </div>
+</div>
+
+<script>
+    // Check teacher import permission
+    function checkImportPermission(event) {
+        event.preventDefault();
+        
+        fetch('/api/teacher/check-import-permission/')
+            .then(response => response.json())
+            .then(data => {
+                if (data.has_permission) {
+                    window.location.href = '/students/bulk-upload/';
+                } else {
+                    alert(data.message || 'Only class teachers can import students.');
+                }
+            })
+            .catch(error => {
+                console.error('Error checking permission:', error);
+                alert('Error checking permission. Please try again.');
+            });
+    }
+</script>
+
+<script>
+    // Language switching functionality
+    document.addEventListener('DOMContentLoaded', function () {
+        // Load current language text
+        loadLanguageText();
+
+        // Add click handlers for language buttons
+        const languageButtons = document.querySelectorAll('.language-switcher button');
+        languageButtons.forEach(button => {
+            button.addEventListener('click', function (e) {
+                e.preventDefault();
+                const language = this.getAttribute('data-language');
+                switchLanguage(language, this);
+            });
+        });
+    });
+
+    function switchLanguage(language, button) {
+        // Update active button
+        document.querySelectorAll('.language-switcher button').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        button.classList.add('active');
+
+        // Save language preference
+        fetch('{% url "students_app:switch_language" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: 'language=' + language
+        });
+
+        // Load new language text
+        loadLanguageText(language);
+    }
+
+    function loadLanguageText(language = null) {
+        if (!language) {
+            language = '{{ request.session.language|default:"en" }}';
+        }
+
+        // Language text mapping
+        const textMap = {
+            'en': {
+                'dashboard': 'Dashboard',
+                'logout': 'Logout',
+                'admin_panel': 'Admin Panel',
+                'communication': 'Communication',
+                'notices': 'Notices',
+                'events': 'Events',
+                'system': 'System',
+                'company_admin_panel': 'Company Admin Panel',
+                'school_management': 'School Management',
+                'new_school': 'New School',
+                'all_schools': 'All Schools',
+                'new_user': 'New User',
+                'all_users': 'All Users',
+                'super_admin_tools': 'Super Admin Tools',
+                'id_card_generator': 'ID Card Generator',
+                'calculator': 'Calculator',
+                'school_admin_panel': 'School Admin Panel',
+                'students_teachers': 'Students & Teachers',
+                'all_students': 'All Students',
+                'student_import': 'Student Import (Excel)',
+                'all_teachers': 'All Teachers',
+                'academics': 'Academics',
+                'timetable': 'Timetable',
+                'attendance': 'Attendance',
+                'marks_entry': 'Marks Entry',
+                'fees_finance': 'Fees & Finance',
+                'fee_history': 'Fee History',
+                'pay_fees': 'Pay Fees',
+                'all_receipts': 'All Receipts',
+                'id_certificates': 'ID & Certificates',
+                'id_cards': 'ID Cards',
+                'bulk_id_generation': 'Bulk ID Generation',
+                'certificates': 'Certificates',
+                'teacher_panel': 'Teacher Panel',
+                'my_classes': 'My Classes',
+                'my_dashboard': 'My Dashboard',
+                'my_timetable': 'My Timetable',
+                'student_management': 'Student Management',
+                'my_students': 'My Students',
+                'student_panel': 'Student Panel',
+                'my_info': 'My Information',
+                'my_profile': 'My Profile',
+                'my_attendance': 'My Attendance',
+                'my_marks': 'My Marks',
+                'exams': 'Exams',
+                'parent_panel': 'Parent Panel',
+                'my_children': 'My Children',
+                'academic_info': 'Academic Information',
+                'marks': 'Marks',
+                'library_panel': 'Library Panel',
+                'library_management': 'Library Management',
+                'library_dashboard': 'Library Dashboard',
+                'all_books': 'All Books',
+                'issue_book': 'Issue Book',
+                'return_book': 'Return Book'
+            },
+            'hi': {
+                'dashboard': 'डैशबोर्ड',
+                'logout': 'लॉगआउट',
+                'admin_panel': 'एडमिन पैनल',
+                'communication': 'कम्युनिकेशन',
+                'notices': 'नोटिस',
+                'events': 'इवेंट्स',
+                'system': 'सिस्टम',
+                'company_admin_panel': 'Company Admin Panel',
+                'school_management': 'स्कूल प्रबंधन',
+                'new_school': 'नया स्कूल',
+                'all_schools': 'सभी स्कूल',
+                'new_user': 'नया यूजर',
+                'all_users': 'सभी यूजर',
+                'super_admin_tools': 'सुपर एडमिन टूल्स',
+                'id_card_generator': 'ID कार्ड जनरेटर',
+                'calculator': 'कैलकुलेटर',
+                'school_admin_panel': 'School Admin Panel',
+                'students_teachers': 'छात्र और शिक्षक',
+                'all_students': 'सभी छात्र',
+                'student_import': 'छात्र इम्पोर्ट (Excel)',
+                'all_teachers': 'सभी शिक्षक',
+                'academics': 'शैक्षणिक (ACADEMICS)',
+                'timetable': 'टाइमटेबल',
+                'attendance': 'अटेंडेंस (Attendance)',
+                'marks_entry': 'मार्क्स एंट्री',
+                'fees_finance': 'फीस और वित्त (FINANCE)',
+                'fee_history': 'फीस इतिहास',
+                'pay_fees': 'फीस भुगतान',
+                'all_receipts': 'सभी रसीदें',
+                'id_certificates': 'ID और सर्टिफिकेट',
+                'id_cards': 'ID कार्ड्स',
+                'bulk_id_generation': 'बल्क ID जनरेशन',
+                'certificates': 'सर्टिफिकेट्स',
+                'teacher_panel': 'Teacher Panel',
+                'my_classes': 'मेरी कक्षाएं',
+                'my_dashboard': 'मेरा डैशबोर्ड',
+                'my_timetable': 'मेरा टाइमटेबल',
+                'student_management': 'छात्र प्रबंधन',
+                'my_students': 'मेरे छात्र',
+                'student_panel': 'Student Panel',
+                'my_info': 'मेरी जानकारी',
+                'my_profile': 'मेरा प्रोफाइल',
+                'my_attendance': 'मेरी अटेंडेंस',
+                'my_marks': 'मेरे मार्क्स',
+                'exams': 'परीक्षाएं',
+                'parent_panel': 'Parent Panel',
+                'my_children': 'मेरे बच्चे',
+                'academic_info': 'शैक्षणिक जानकारी',
+                'marks': 'मार्क्स',
+                'library_panel': 'Library Panel',
+                'library_management': 'लाइब्रेरी प्रबंधन',
+                'library_dashboard': 'लाइब्रेरी डैशबोर्ड',
+                'all_books': 'सभी किताबें',
+                'issue_book': 'किताब जारी करें',
+                'return_book': 'किताब वापसी'
+            }
+        };
+
+        const texts = textMap[language] || textMap['en'];
+
+        // Update all menu texts
+        document.querySelectorAll('.menu-text').forEach(element => {
+            const key = element.getAttribute('data-key');
+            if (key && texts[key]) {
+                element.textContent = texts[key];
+            }
+        });
+
+        // Update headings
+        document.querySelectorAll('.sidebar-heading').forEach(element => {
+            const key = element.getAttribute('data-key');
+            if (key && texts[key]) {
+                element.textContent = texts[key];
+            }
+        });
+    }
+
+    // Logout functionality
+    function confirmLogout(event) {
+        event.preventDefault();
+
+        // Get current language for confirmation message
+        const currentLang = '{{ request.session.language|default:"en" }}';
+        const messages = {
+            'en': {
+                'confirm': 'Are you sure you want to logout?',
+                'yes': 'Yes, Logout',
+                'no': 'Cancel'
+            },
+            'hi': {
+                'confirm': 'क्या आप वाकई लॉगआउट करना चाहते हैं?',
+                'yes': 'हाँ, लॉगआउट करें',
+                'no': 'रद्द करें'
+            }
+        };
+
+        const msg = messages[currentLang] || messages['en'];
+
+        // Create custom confirmation dialog
+        if (confirm(msg.confirm)) {
+            // Show loading state
+            const logoutBtn = event.target.closest('.logout-btn');
+            const originalText = logoutBtn.innerHTML;
+            logoutBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span class="menu-text">Logging out...</span>';
+            logoutBtn.style.pointerEvents = 'none';
+
+            // Perform AJAX logout
+            fetch('{% url "students_app:ajax_logout" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success message
+                        showNotification(data.message, 'success');
+
+                        // Redirect after short delay
+                        setTimeout(() => {
+                            window.location.href = data.redirect_url;
+                        }, 1000);
+                    } else {
+                        // Show error message
+                        showNotification(data.message, 'error');
+
+                        // Restore button
+                        logoutBtn.innerHTML = originalText;
+                        logoutBtn.style.pointerEvents = 'auto';
+                    }
+                })
+                .catch(error => {
+                    console.error('Logout error:', error);
+                    showNotification('Logout failed. Please try again.', 'error');
+
+                    // Restore button
+                    logoutBtn.innerHTML = originalText;
+                    logoutBtn.style.pointerEvents = 'auto';
+                });
+        }
+    }
+
+    // Notification function
+    function showNotification(message, type = 'info') {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} alert-dismissible fade show position-fixed`;
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+
+        // Add to page
+        document.body.appendChild(notification);
+
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 5000);
+    }
+</script>

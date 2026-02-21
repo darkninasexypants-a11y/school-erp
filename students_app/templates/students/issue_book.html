@@ -1,0 +1,182 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Issue Book{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    .select2-container--default .select2-selection--single {
+        height: 48px;
+        padding: 10px 14px;
+        border: 2px solid var(--gray-200);
+        border-radius: 10px;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 26px;
+        color: var(--gray-700);
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 46px;
+    }
+    .select2-container--default.select2-container--focus .select2-selection--single {
+        border-color: var(--primary);
+    }
+    .select2-dropdown {
+        border: 2px solid var(--gray-200);
+        border-radius: 10px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    .select2-results__option--highlighted[aria-selected] {
+        background: var(--primary) !important;
+    }
+</style>
+{% endblock %}
+
+{% block sidebar %}
+<!-- Library Sidebar -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+        <h4><i class="bi bi-book-half"></i> Library</h4>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Overview</div>
+        <a href="{% url 'students_app:library_dashboard' %}" class="nav-link">
+            <i class="bi bi-grid-1x2-fill"></i> Dashboard
+        </a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Books</div>
+        <a href="{% url 'students_app:book_list' %}" class="nav-link">
+            <i class="bi bi-collection"></i> All Books
+        </a>
+        <a href="{% url 'students_app:add_book' %}" class="nav-link">
+            <i class="bi bi-plus-circle"></i> Add Book
+        </a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Circulation</div>
+        <a href="{% url 'students_app:issue_book' %}" class="nav-link active">
+            <i class="bi bi-box-arrow-right"></i> Issue Book
+        </a>
+    </div>
+
+    <div class="nav-section" style="margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+        <a href="{% url 'students_app:library_dashboard' %}" class="nav-link">
+            <i class="bi bi-arrow-left"></i> Back to Library
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="top-bar">
+    <div class="page-title">
+        <h1>Issue Book</h1>
+        <p>Lend a book to a student</p>
+    </div>
+    <div class="top-bar-actions">
+        <a href="{% url 'students_app:library_dashboard' %}" class="btn btn-light">
+            <i class="bi bi-arrow-left me-2"></i>Back
+        </a>
+    </div>
+</div>
+
+<!-- Issue Form -->
+<div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-box-arrow-right me-2"></i>Issue Book Form</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <label class="form-label">Select Student</label>
+                        <select name="student" id="student-select" class="form-select" required>
+                            <option value="">Type to search student...</option>
+                            {% for student in students %}
+                            <option value="{{ student.id }}" 
+                                data-name="{{ student.get_full_name }}"
+                                data-admission="{{ student.admission_number }}"
+                                data-class="{{ student.current_class.name|default:'' }}">
+                                {{ student.get_full_name }} | {{ student.admission_number }} | {{ student.current_class.name|default:'N/A' }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted">Search by name, admission number, or class</small>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Select Book</label>
+                        <select name="book" id="book-select" class="form-select" required>
+                            <option value="">Type to search book...</option>
+                            {% for book in books %}
+                            <option value="{{ book.id }}" {% if book.available_copies == 0 %}disabled{% endif %}>
+                                {{ book.title }}{% if book.author %} - {{ book.author }}{% endif %} ({{ book.available_copies }} available)
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted">Search by book title or author</small>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Due Date</label>
+                        <input type="date" name="due_date" id="due_date" class="form-control" required>
+                        <small class="text-muted">Default: 14 days from today</small>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-circle me-2"></i>Issue Book
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Initialize Select2 for Student
+    $('#student-select').select2({
+        placeholder: 'Search student by name, admission no...',
+        allowClear: true,
+        width: '100%',
+        matcher: function(params, data) {
+            if ($.trim(params.term) === '') return data;
+            var term = params.term.toLowerCase();
+            var $el = $(data.element);
+            var name = ($el.data('name') || '').toLowerCase();
+            var admission = ($el.data('admission') || '').toLowerCase();
+            var cls = ($el.data('class') || '').toLowerCase();
+            if (name.includes(term) || admission.includes(term) || cls.includes(term)) {
+                return data;
+            }
+            return null;
+        }
+    });
+
+    // Initialize Select2 for Book
+    $('#book-select').select2({
+        placeholder: 'Search book by title or author...',
+        allowClear: true,
+        width: '100%'
+    });
+
+    // Set default due date (14 days from today)
+    var today = new Date();
+    var dueDate = new Date(today);
+    dueDate.setDate(today.getDate() + 14);
+    $('#due_date').val(dueDate.toISOString().split('T')[0]);
+});
+</script>
+{% endblock %}

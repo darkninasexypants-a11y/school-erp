@@ -1,0 +1,53 @@
+{% extends "students/base_modern.html" %}
+
+{% block title %}Update School Logo{% endblock %}
+
+{% block sidebar %}
+{% include 'includes/admin_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Update School Logo</h2>
+            {% if school %}
+                <p class="text-muted mb-0">{{ school.name }}</p>
+            {% endif %}
+        </div>
+        <a href="{% url 'students_app:admin_dashboard' %}" class="btn btn-outline-secondary">
+            Back
+        </a>
+    </div>
+
+    <div class="card" style="max-width: 720px;">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label class="form-label">Current Logo</label>
+                    <div>
+                        {% if school and school.logo %}
+                            <img src="{{ school.logo.url }}" alt="{{ school.name }}" style="height: 80px; width: auto; object-fit: contain; border-radius: 10px; background: #fff; padding: 6px; border: 1px solid #eee;">
+                        {% else %}
+                            <div class="text-muted">No logo uploaded</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="id_logo">Upload New Logo</label>
+                    {{ form.logo }}
+                    {% if form.logo.errors %}
+                        <div class="text-danger small mt-1">{{ form.logo.errors }}</div>
+                    {% endif %}
+                    <div class="form-text">Supported: JPG, PNG. Recommended square image.</div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Update Logo</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

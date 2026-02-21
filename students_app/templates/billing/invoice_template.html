@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Invoice - {{ billing.school.name }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            padding: 40px;
+            background: #f5f5f5;
+        }
+        
+        .invoice-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .company-info h1 {
+            color: #667eea;
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        
+        .company-info p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .invoice-details {
+            text-align: right;
+        }
+        
+        .invoice-details h2 {
+            color: #333;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .invoice-number {
+            color: #667eea;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .billing-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .info-section h3 {
+            color: #333;
+            font-size: 14px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .info-section p {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .billing-table {
+            width: 100%;
+            margin-bottom: 30px;
+            border-collapse: collapse;
+        }
+        
+        .billing-table thead {
+            background: #667eea;
+            color: white;
+        }
+        
+        .billing-table th,
+        .billing-table td {
+            padding: 15px;
+            text-align: left;
+        }
+        
+        .billing-table th {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .billing-table tbody tr {
+            border-bottom: 1px solid #eee;
+        }
+        
+        .billing-table tbody tr:hover {
+            background: #f9f9f9;
+        }
+        
+        .amount-column {
+            text-align: right;
+        }
+        
+        .totals {
+            margin-left: auto;
+            width: 300px;
+        }
+        
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            font-size: 14px;
+        }
+        
+        .total-row.grand-total {
+            border-top: 2px solid #667eea;
+            margin-top: 10px;
+            padding-top: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .payment-info {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+        
+        .payment-info h3 {
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        
+        .payment-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .payment-detail {
+            font-size: 14px;
+        }
+        
+        .payment-detail strong {
+            color: #333;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .payment-detail span {
+            color: #666;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-paid {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-overdue {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+        }
+        
+        .notes {
+            background: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 4px;
+        }
+        
+        .notes h4 {
+            color: #92400e;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .notes p {
+            color: #78350f;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .invoice-container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-container">
+        <!-- Header -->
+        <div class="invoice-header">
+            <div class="company-info">
+                <h1>School ERP System</h1>
+                <p>Complete School Management Solution</p>
+                <p>Email: billing@schoolerp.com</p>
+                <p>Phone: +91-1234567890</p>
+            </div>
+            <div class="invoice-details">
+                <h2>INVOICE</h2>
+                <p class="invoice-number">#INV-{{ billing.id|stringformat:"05d" }}</p>
+                <p style="color: #666; font-size: 14px; margin-top: 10px;">
+                    Date: {{ billing.created_at|date:"d M, Y" }}
+                </p>
+            </div>
+        </div>
+        
+        <!-- Billing Info -->
+        <div class="billing-info">
+            <div class="info-section">
+                <h3>Bill To:</h3>
+                <p><strong>{{ billing.school.name }}</strong></p>
+                <p>{{ billing.school.address }}</p>
+                <p>Phone: {{ billing.school.phone }}</p>
+                <p>Email: {{ billing.school.email }}</p>
+            </div>
+            <div class="info-section">
+                <h3>Invoice Details:</h3>
+                <p><strong>Billing Period:</strong> {{ billing.billing_period }}</p>
+                <p><strong>Due Date:</strong> {{ billing.due_date|date:"d M, Y" }}</p>
+                <p><strong>Status:</strong> 
+                    <span class="status-badge status-{{ billing.payment_status }}">
+                        {{ billing.payment_status|upper }}
+                    </span>
+                </p>
+                {% if billing.payment_date %}
+                <p><strong>Payment Date:</strong> {{ billing.payment_date|date:"d M, Y" }}</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Billing Table -->
+        <table class="billing-table">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Period</th>
+                    <th class="amount-column">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <strong>School ERP Subscription</strong><br>
+                        <small style="color: #666;">Monthly subscription for {{ billing.school.name }}</small>
+                    </td>
+                    <td>{{ billing.billing_period }}</td>
+                    <td class="amount-column"><strong>₹{{ billing.amount|floatformat:2 }}</strong></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <!-- Totals -->
+        <div class="totals">
+            <div class="total-row">
+                <span>Subtotal:</span>
+                <span>₹{{ billing.amount|floatformat:2 }}</span>
+            </div>
+            <div class="total-row">
+                <span>Tax (0%):</span>
+                <span>₹0.00</span>
+            </div>
+            <div class="total-row grand-total">
+                <span>Grand Total:</span>
+                <span>₹{{ billing.amount|floatformat:2 }}</span>
+            </div>
+        </div>
+        
+        <!-- Payment Info (if paid) -->
+        {% if billing.payment_status == 'paid' and billing.payment_date %}
+        <div class="payment-info">
+            <h3>💳 Payment Information</h3>
+            <div class="payment-details">
+                <div class="payment-detail">
+                    <strong>Payment Date:</strong>
+                    <span>{{ billing.payment_date|date:"d M, Y" }}</span>
+                </div>
+                <div class="payment-detail">
+                    <strong>Payment Method:</strong>
+                    <span>{{ billing.payment_method|default:"Not specified" }}</span>
+                </div>
+                {% if billing.transaction_id %}
+                <div class="payment-detail">
+                    <strong>Transaction ID:</strong>
+                    <span>{{ billing.transaction_id }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Notes -->
+        {% if billing.notes %}
+        <div class="notes">
+            <h4>📝 Notes:</h4>
+            <p>{{ billing.notes }}</p>
+        </div>
+        {% endif %}
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p>Thank you for your business!</p>
+            <p>This is a computer-generated invoice and does not require a signature.</p>
+            <p style="margin-top: 10px;">
+                For any queries, please contact us at billing@schoolerp.com
+            </p>
+        </div>
+    </div>
+</body>
+</html>
+
+
+
+

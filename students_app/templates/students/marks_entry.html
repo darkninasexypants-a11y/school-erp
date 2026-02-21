@@ -1,0 +1,219 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Marks Entry{% endblock %}
+
+{% block sidebar %}
+{% if request.user.is_authenticated %}
+    {% with teacher=request.user.teacher %}
+        {% if teacher %}
+            {% include 'includes/teacher_sidebar.html' %}
+        {% else %}
+            {% include 'includes/admin_sidebar.html' %}
+        {% endif %}
+    {% endwith %}
+{% else %}
+    {% include 'includes/admin_sidebar.html' %}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="top-bar">
+    <div class="page-title">
+        <h1><i class="bi bi-journal-text me-2"></i>Marks Entry</h1>
+        <p>Enter and manage student exam marks</p>
+    </div>
+    <div class="top-bar-actions">
+        {% if request.user.is_authenticated %}
+            {% with teacher=request.user.teacher %}
+                {% if teacher %}
+                    <a href="{% url 'students_app:teacher_dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+                    </a>
+                {% else %}
+                    <a href="{% url 'students_app:home' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+                    </a>
+                {% endif %}
+            {% endwith %}
+        {% else %}
+            <a href="{% url 'students_app:home' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        {% endif %}
+    </div>
+</div>
+    
+    {% if messages %}
+    <div class="mb-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+<!-- Exam Selection Card -->
+    <div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-search me-2"></i>Select Exam Schedule</h5>
+    </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-12">
+                <label class="form-label fw-bold">Exam Schedule</label>
+                    <select name="exam_schedule" class="form-select form-select-lg" id="examScheduleSelect" onchange="this.form.submit()">
+                        <option value="">Choose Exam Schedule...</option>
+                        {% for schedule in exam_schedules %}
+                        <option value="{{ schedule.id }}" {% if selected_schedule and selected_schedule.id == schedule.id %}selected{% endif %}>
+                            {{ schedule.exam.name }} - {{ schedule.class_assigned.name }} - {{ schedule.subject.name }} ({{ schedule.exam_date|date:"d M Y" }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                <div class="form-text">Select an exam schedule to enter marks for students</div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if selected_schedule %}
+<!-- Marks Entry Card -->
+    <div class="card">
+    <div class="card-header" style="background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: #fff;">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-1">
+                    <i class="bi bi-clipboard-check me-2"></i>
+                    {{ selected_schedule.exam.name }} - {{ selected_schedule.class_assigned.name }}
+            </h5>
+                <small>{{ selected_schedule.subject.name }} | {{ selected_schedule.exam_date|date:"d M Y" }} | Max Marks: {{ selected_schedule.max_marks }}</small>
+            </div>
+            <div class="badge bg-white text-primary" style="font-size: 1rem;">
+                {{ students|length }} Students
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-0">
+            {% if students %}
+            <form method="post" id="marksForm">
+                {% csrf_token %}
+                <input type="hidden" name="exam_schedule" value="{{ selected_schedule.id }}">
+                
+                <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead>
+                            <tr>
+                            <th width="8%">Roll No</th>
+                            <th width="28%">Student Name</th>
+                            <th width="12%">Section</th>
+                            <th width="18%">Marks (0-{{ selected_schedule.max_marks }})</th>
+                                <th width="10%">Absent</th>
+                            <th width="24%">Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                            <tr>
+                            <td class="text-center">
+                                <span class="badge bg-primary bg-opacity-10 text-primary">{{ student.roll_number|default:"-" }}</span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="me-2" style="width: 35px; height: 35px; background: linear-gradient(135deg, var(--primary), var(--primary-light)); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600; font-size: 0.85rem;">
+                                        {{ student.first_name.0|upper }}
+                                    </div>
+                                    <span class="fw-medium">{{ student.get_full_name }}</span>
+                                </div>
+                            </td>
+                                <td>{{ student.section.name|default:"-" }}</td>
+                                <td>
+                                    <input type="number" 
+                                           name="marks_{{ student.id }}" 
+                                           class="form-control" 
+                                           min="0" 
+                                           max="{{ selected_schedule.max_marks }}" 
+                                           placeholder="0-{{ selected_schedule.max_marks }}"
+                                           step="0.01">
+                                </td>
+                                <td class="text-center">
+                                <div class="form-check d-flex justify-content-center">
+                                    <input type="checkbox" 
+                                           name="absent_{{ student.id }}" 
+                                           class="form-check-input" 
+                                           style="width: 1.3em; height: 1.3em;"
+                                           id="absent_{{ student.id }}">
+                                </div>
+                                </td>
+                                <td>
+                                    <input type="text" 
+                                           name="remarks_{{ student.id }}" 
+                                       class="form-control" 
+                                       placeholder="Optional">
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+            <div class="p-4 bg-light border-top">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-check-circle me-2"></i>Save Marks for {{ students|length }} Student(s)
+                    </button>
+                    <a href="{% url 'students_app:marks_entry' %}" class="btn btn-outline-secondary btn-lg ms-2">
+                    <i class="bi bi-x-lg me-2"></i>Cancel
+                    </a>
+                </div>
+            </form>
+            {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+            <h6 class="mt-3 text-muted">No students found in class {{ selected_schedule.class_assigned.name }}</h6>
+            <a href="{% url 'students_app:add_student' %}" class="btn btn-primary mt-2">
+                <i class="bi bi-plus"></i> Add Students
+            </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+<!-- No Selection State -->
+    <div class="card">
+        <div class="card-body text-center py-5">
+        <i class="bi bi-clipboard-data text-muted" style="font-size: 4rem;"></i>
+        <h5 class="mt-4 text-muted">Select an Exam Schedule</h5>
+        <p class="text-muted">Choose an exam schedule from the dropdown above to start entering marks.</p>
+            {% if not exam_schedules %}
+        <div class="alert alert-info d-inline-block mt-3">
+            <i class="bi bi-info-circle me-2"></i>
+            No exam schedules found. Create exams and schedules first.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+{% block extra_js %}
+<script>
+// Auto-disable marks input when absent is checked
+document.addEventListener('DOMContentLoaded', function() {
+    const absentCheckboxes = document.querySelectorAll('input[type="checkbox"][name^="absent_"]');
+    absentCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const studentId = this.name.replace('absent_', '');
+            const marksInput = document.querySelector(`input[name="marks_${studentId}"]`);
+            if (this.checked) {
+                marksInput.disabled = true;
+                marksInput.value = '';
+                marksInput.classList.add('bg-light');
+            } else {
+                marksInput.disabled = false;
+                marksInput.classList.remove('bg-light');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

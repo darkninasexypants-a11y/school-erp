@@ -1,0 +1,330 @@
+{% extends "students/base_modern.html" %}
+{% load static %}
+
+{% block title %}Take Attendance - {{ class_obj.name }} {{ section_obj.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-0">
+                <i class="fas fa-user-check me-2"></i>
+                Take Attendance
+            </h4>
+            <p class="text-muted mb-0">
+                {{ class_obj.name }} - {{ section_obj.name }} | {{ today|date:"F d, Y" }}
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'students_app:attendance_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Attendance Summary -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h4 class="mb-0">{{ students.count }}</h4>
+                    <p class="mb-0">Total Students</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h4 class="mb-0" id="presentCount">0</h4>
+                    <p class="mb-0">Present</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <h4 class="mb-0" id="absentCount">0</h4>
+                    <p class="mb-0">Absent</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <h4 class="mb-0" id="lateCount">0</h4>
+                    <p class="mb-0">Late</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Form -->
+    <form id="attendanceForm" method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="class_id" value="{{ class_obj.id }}">
+        <input type="hidden" name="section_id" value="{{ section_obj.id }}">
+        
+        <div class="card shadow">
+            <div class="card-header bg-light">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users me-2"></i>
+                        Student List
+                    </h5>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-sm btn-outline-success" onclick="markAll('present')">
+                            <i class="fas fa-check"></i> All Present
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="markAll('absent')">
+                            <i class="fas fa-times"></i> All Absent
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                {% if students %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="60">#</th>
+                                <th width="80">Photo</th>
+                                <th>Student Name</th>
+                                <th>Roll No</th>
+                                <th>Admission No</th>
+                                <th width="200">Attendance Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    {% if student.photo %}
+                                    <img src="{{ student.photo.url }}" alt="{{ student.get_full_name }}" 
+                                         class="rounded-circle" width="40" height="40" 
+                                         style="object-fit: cover;">
+                                    {% else %}
+                                    <img src="{% static 'images/default-avatar.png' %}" alt="No Photo" 
+                                         class="rounded-circle" width="40" height="40">
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <strong>{{ student.get_full_name }}</strong>
+                                    {% if student.designation and student.designation != 'Student' %}
+                                    <span class="badge bg-info ms-2">{{ student.designation }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ student.roll_number|default:"-" }}</td>
+                                <td>{{ student.admission_number }}</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <input type="radio" class="btn-check" name="attendance_{{ student.id }}" 
+                                               id="present_{{ student.id }}" value="present"
+                                               {% if existing_attendance|lookup:student.id == 'present' %}checked{% endif %}>
+                                        <label class="btn btn-outline-success" for="present_{{ student.id }}">
+                                            <i class="fas fa-check"></i> Present
+                                        </label>
+                                        
+                                        <input type="radio" class="btn-check" name="attendance_{{ student.id }}" 
+                                               id="absent_{{ student.id }}" value="absent"
+                                               {% if existing_attendance|lookup:student.id == 'absent' %}checked{% endif %}>
+                                        <label class="btn btn-outline-danger" for="absent_{{ student.id }}">
+                                            <i class="fas fa-times"></i> Absent
+                                        </label>
+                                        
+                                        <input type="radio" class="btn-check" name="attendance_{{ student.id }}" 
+                                               id="late_{{ student.id }}" value="late"
+                                               {% if existing_attendance|lookup:student.id == 'late' %}checked{% endif %}>
+                                        <label class="btn btn-outline-warning" for="late_{{ student.id }}">
+                                            <i class="fas fa-clock"></i> Late
+                                        </label>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Students Found</h5>
+                    <p class="text-muted">No students are assigned to this class and section.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="card mt-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <button type="button" class="btn btn-outline-secondary" onclick="resetForm()">
+                            <i class="fas fa-undo me-2"></i>Reset
+                        </button>
+                    </div>
+                    <div>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-save me-2"></i>Save Attendance
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Saving...</span>
+                </div>
+                <h5>Saving Attendance...</h5>
+                <p class="text-muted">Please wait while we save the attendance.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Update counts
+function updateCounts() {
+    let present = 0;
+    let absent = 0;
+    let late = 0;
+    
+    document.querySelectorAll('input[type="radio"]:checked').forEach(radio => {
+        if (radio.value === 'present') present++;
+        else if (radio.value === 'absent') absent++;
+        else if (radio.value === 'late') late++;
+    });
+    
+    document.getElementById('presentCount').textContent = present;
+    document.getElementById('absentCount').textContent = absent;
+    document.getElementById('lateCount').textContent = late;
+}
+
+// Mark all students
+function markAll(status) {
+    document.querySelectorAll(`input[type="radio"][value="${status}"]`).forEach(radio => {
+        radio.checked = true;
+    });
+    updateCounts();
+}
+
+// Reset form
+function resetForm() {
+    document.querySelectorAll('input[type="radio"]').forEach(radio => {
+        radio.checked = false;
+    });
+    updateCounts();
+}
+
+// Form submission
+document.getElementById('attendanceForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Collect attendance data
+    const attendanceData = {};
+    document.querySelectorAll('input[type="radio"]:checked').forEach(radio => {
+        const studentId = radio.name.replace('attendance_', '');
+        attendanceData[studentId] = radio.value;
+    });
+    
+    // Show loading modal
+    const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    modal.show();
+    
+    // Submit via AJAX
+    fetch('/attendance/take/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: new URLSearchParams({
+            'class_id': '{{ class_obj.id }}',
+            'section_id': '{{ section_obj.id }}',
+            'attendance_data': JSON.stringify(attendanceData)
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        modal.hide();
+        
+        if (data.success) {
+            showNotification(data.message, 'success');
+            setTimeout(() => {
+                window.location.href = '{% url "students_app:attendance_dashboard" %}';
+            }, 2000);
+        } else {
+            showNotification(data.error || 'Error saving attendance', 'error');
+        }
+    })
+    .catch(error => {
+        modal.hide();
+        console.error('Error:', error);
+        showNotification('Error saving attendance', 'error');
+    });
+});
+
+// Initialize counts on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateCounts();
+    
+    // Update counts when radio buttons change
+    document.querySelectorAll('input[type="radio"]').forEach(radio => {
+        radio.addEventListener('change', updateCounts);
+    });
+});
+
+// Notification function
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}
+</script>
+
+<style>
+.btn-check:checked + .btn {
+    background-color: var(--bs-btn-bg);
+    border-color: var(--bs-btn-border-color);
+}
+
+.btn-check:checked + .btn-success {
+    background-color: #198754;
+    border-color: #198754;
+    color: white;
+}
+
+.btn-check:checked + .btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: white;
+}
+
+.btn-check:checked + .btn-warning {
+    background-color: #ffc107;
+    border-color: #ffc107;
+    color: black;
+}
+</style>
+{% endblock %}

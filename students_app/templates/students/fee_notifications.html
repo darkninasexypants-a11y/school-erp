@@ -1,0 +1,307 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Fee Notifications{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-bell me-2 text-warning"></i>Fee Notifications & Reminders</h2>
+        <a href="{% url 'students_app:fee_analytics' %}" class="btn btn-outline-primary">
+            <i class="fas fa-chart-line me-1"></i>View Analytics
+        </a>
+    </div>
+
+    <!-- Send Notifications Form -->
+    <div class="card mb-4">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0"><i class="fas fa-paper-plane me-2"></i>Send Fee Reminders</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="send_reminder">
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Notification Type</label>
+                        <select name="notification_type" class="form-select" required>
+                            <option value="pending">Pending Fee Reminder</option>
+                            <option value="overdue">Overdue Fee Alert</option>
+                            <option value="reminder">General Reminder</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Send Via</label>
+                        <select name="send_via" class="form-select" required>
+                            <option value="email">Email Only</option>
+                            <option value="sms">SMS Only</option>
+                            <option value="whatsapp">WhatsApp Only</option>
+                            <option value="both">SMS + WhatsApp</option>
+                            <option value="all">All (Email + SMS + WhatsApp)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Custom Message (Optional)</label>
+                    <textarea name="custom_message" class="form-control" rows="3" 
+                              placeholder="Leave empty to use default message template"></textarea>
+                    <small class="text-muted">If provided, this message will be used instead of the default template</small>
+                </div>
+
+                <!-- Search and Filter Section -->
+                <div class="card bg-light mb-3">
+                    <div class="card-body">
+                        <form method="GET" class="row g-3" id="filterForm">
+                            <div class="col-md-4">
+                                <label class="form-label"><i class="fas fa-search me-1"></i>Search Student</label>
+                                <input type="text" name="search" class="form-control" placeholder="Name, Admission No, Roll No, Phone..." value="{{ search_query }}" id="searchInput">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label"><i class="fas fa-graduation-cap me-1"></i>Class</label>
+                                <select name="class" class="form-select" id="classFilter" onchange="loadSections(this.value)">
+                                    <option value="">All Classes</option>
+                                    {% for class in all_classes %}
+                                    <option value="{{ class.id }}" {% if class_filter == class.id|stringformat:"s" %}selected{% endif %}>{{ class.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label"><i class="fas fa-users me-1"></i>Section</label>
+                                <select name="section" class="form-select" id="sectionFilter">
+                                    <option value="">All Sections</option>
+                                    {% for section in all_sections %}
+                                    <option value="{{ section.id }}" {% if section_filter == section.id|stringformat:"s" %}selected{% endif %}>{{ section.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">&nbsp;</label>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-filter"></i> Filter
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                        {% if search_query or class_filter or section_filter %}
+                        <div class="mt-2">
+                            <a href="{% url 'students_app:fee_notifications' %}" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-times"></i> Clear Filters
+                            </a>
+                            <span class="ms-2 text-muted">
+                                <i class="fas fa-info-circle"></i> Showing {{ total_pending }} student(s)
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">
+                        Select Students 
+                        <span class="badge bg-warning text-dark ms-2">{{ total_pending }} pending</span>
+                    </label>
+                    <div class="border rounded p-3" style="max-height: 400px; overflow-y: auto;" id="studentList">
+                        <div class="form-check mb-2 sticky-top bg-white p-2 border-bottom">
+                            <input class="form-check-input" type="checkbox" id="selectAll" onchange="toggleAll(this)">
+                            <label class="form-check-label fw-bold" for="selectAll">
+                                <i class="fas fa-check-square me-1"></i>Select All ({{ total_pending }} students)
+                            </label>
+                        </div>
+                        {% for student in pending_students %}
+                        <div class="form-check student-item" data-name="{{ student.get_full_name|lower }}" data-admission="{{ student.admission_number|lower }}" data-roll="{{ student.roll_number|lower|default:'' }}" data-phone="{{ student.father_phone|lower|default:'' }}">
+                            <input class="form-check-input" type="checkbox" name="students" value="{{ student.id }}" id="student{{ student.id }}">
+                            <label class="form-check-label" for="student{{ student.id }}">
+                                <strong>{{ student.get_full_name }}</strong>
+                                <span class="text-muted">(Adm: {{ student.admission_number }})</span>
+                                {% if student.current_class %}
+                                <span class="badge bg-info ms-1">{{ student.current_class.name }}</span>
+                                {% endif %}
+                                {% if student.section %}
+                                <span class="badge bg-secondary ms-1">{{ student.section.name }}</span>
+                                {% endif %}
+                                {% if student.roll_number %}
+                                <span class="text-muted ms-1">| Roll: {{ student.roll_number }}</span>
+                                {% endif %}
+                                {% if student.father_phone %}
+                                <small class="text-muted d-block mt-1">
+                                    <i class="fas fa-phone"></i> {{ student.father_phone }}
+                                </small>
+                                {% endif %}
+                            </label>
+                        </div>
+                        {% empty %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-user-slash fa-2x mb-2 d-block"></i>
+                            <p>No students found with pending fees</p>
+                            {% if search_query or class_filter or section_filter %}
+                            <a href="{% url 'students_app:fee_notifications' %}" class="btn btn-sm btn-outline-primary">Clear Filters</a>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Note:</strong> For SMS and WhatsApp, ensure Twilio credentials are configured in settings.
+                    <br><small>Students must have valid phone numbers in their profile.</small>
+                </div>
+
+                <button type="submit" class="btn btn-warning">
+                    <i class="fas fa-paper-plane me-1"></i>Send Notifications
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Recent Notifications -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recent Notifications</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Type</th>
+                            <th>Subject</th>
+                            <th>Sent Via</th>
+                            <th>Sent At</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for notification in recent_notifications %}
+                        <tr>
+                            <td>
+                                {% if notification.student %}
+                                {{ notification.student.get_full_name }}
+                                {% else %}
+                                N/A
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-{% if notification.notification_type == 'overdue' %}danger{% elif notification.notification_type == 'receipt' %}success{% else %}warning{% endif %}">
+                                    {% if notification.get_notification_type_display %}
+                                    {{ notification.get_notification_type_display }}
+                                    {% else %}
+                                    {{ notification.notification_type|title }}
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>{{ notification.subject|truncatewords:10 }}</td>
+                            <td>
+                                {% if notification.sent_via %}
+                                {% if notification.sent_via == 'email' %}
+                                <i class="fas fa-envelope text-primary"></i> Email
+                                {% elif notification.sent_via == 'sms' %}
+                                <i class="fas fa-sms text-info"></i> SMS
+                                {% elif notification.sent_via == 'whatsapp' %}
+                                <i class="fab fa-whatsapp text-success"></i> WhatsApp
+                                {% elif 'both' in notification.sent_via or 'all' in notification.sent_via %}
+                                <i class="fas fa-mobile-alt text-primary"></i> Multiple
+                                {% else %}
+                                {{ notification.sent_via|title }}
+                                {% endif %}
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ notification.sent_at|date:"d M Y, h:i A" }}</td>
+                            <td>
+                                {% if notification.is_sent %}
+                                <span class="badge bg-success"><i class="fas fa-check"></i> Sent</span>
+                                {% else %}
+                                <span class="badge bg-secondary"><i class="fas fa-clock"></i> Pending</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                            No notifications sent yet
+                        </td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleAll(checkbox) {
+    const checkboxes = document.querySelectorAll('input[name="students"]');
+    checkboxes.forEach(cb => cb.checked = checkbox.checked);
+}
+
+// Real-time search filter
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const studentItems = document.querySelectorAll('.student-item');
+            let visibleCount = 0;
+            
+            studentItems.forEach(item => {
+                const name = item.getAttribute('data-name') || '';
+                const admission = item.getAttribute('data-admission') || '';
+                const roll = item.getAttribute('data-roll') || '';
+                const phone = item.getAttribute('data-phone') || '';
+                
+                const matches = name.includes(searchTerm) || 
+                               admission.includes(searchTerm) || 
+                               roll.includes(searchTerm) || 
+                               phone.includes(searchTerm);
+                
+                if (matches || searchTerm === '') {
+                    item.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            // Update select all checkbox
+            const selectAll = document.getElementById('selectAll');
+            if (selectAll) {
+                selectAll.checked = false;
+            }
+        });
+    }
+    
+    // Load sections when class changes
+    window.loadSections = function(classId) {
+        const sectionFilter = document.getElementById('sectionFilter');
+        if (!classId) {
+            sectionFilter.innerHTML = '<option value="">All Sections</option>';
+            return;
+        }
+        
+        // Fetch sections via AJAX
+        fetch(`{% url 'students_app:get_sections_by_class' 0 %}`.replace('0', classId))
+            .then(response => response.json())
+            .then(data => {
+                if (data.sections) {
+                    let options = '<option value="">All Sections</option>';
+                    data.sections.forEach(section => {
+                        options += `<option value="${section.id}">${section.name}</option>`;
+                    });
+                    sectionFilter.innerHTML = options;
+                } else {
+                    sectionFilter.innerHTML = '<option value="">No sections found</option>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading sections:', error);
+                sectionFilter.innerHTML = '<option value="">Error loading sections</option>';
+            });
+    };
+});
+</script>
+{% endblock %}
+

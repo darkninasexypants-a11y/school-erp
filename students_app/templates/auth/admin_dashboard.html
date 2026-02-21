@@ -1,0 +1,365 @@
+{% extends "students/base_modern.html" %}
+{% load humanize %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block sidebar %}
+{% include 'includes/admin_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="top-bar">
+    <div class="page-title">
+        <h1>Admin Dashboard</h1>
+        <p>Complete CRM + ERP Platform</p>
+    </div>
+    {% if school %}
+    <div class="top-bar-actions d-flex align-items-center gap-3">
+        <a href="{% url 'students_app:update_school_logo' %}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-image"></i> Upload Logo
+        </a>
+        {% if school.logo %}
+        <img src="{{ school.logo.url }}" alt="{{ school.name }}"
+            style="height: 40px; width: auto; object-fit: contain; border-radius: 8px;">
+        {% else %}
+        <!-- Fallback: Show school initial if no logo -->
+        <div
+            style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), var(--primary-light)); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 1.2rem;">
+            {{ school.name.0|upper }}
+        </div>
+        {% endif %}
+        <span class="badge bg-primary bg-opacity-10 text-primary" style="padding: 10px 15px; font-size: 0.9rem;">
+            {{ school.name }}
+        </span>
+    </div>
+    {% else %}
+    <!-- Debug: School not found -->
+    <div class="top-bar-actions">
+        <span class="badge bg-warning text-dark">No School Assigned</span>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Stats Row -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon purple"><i class="bi bi-people-fill"></i></div>
+            <div class="stat-value">{{ total_leads|default:0 }}</div>
+            <div class="stat-label">Total Leads</div>
+            <small class="text-muted">{{ new_leads|default:0 }} new</small>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon green"><i class="bi bi-mortarboard-fill"></i></div>
+            <div class="stat-value">{{ total_students|default:0 }}</div>
+            <div class="stat-label">Students</div>
+            <small class="text-muted">{{ total_classes|default:0 }} classes</small>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class="bi bi-person-video3"></i></div>
+            <div class="stat-value">{{ total_teachers|default:0 }}</div>
+            <div class="stat-label">Teachers</div>
+            <small class="text-muted">{{ present_today|default:0 }} present</small>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon orange"><i class="bi bi-check-circle-fill"></i></div>
+            <div class="stat-value">{{ enrolled_leads|default:0 }}</div>
+            <div class="stat-label">Enrolled</div>
+            <small class="text-muted">{{ active_campaigns_count|default:0 }} campaigns</small>
+        </div>
+    </div>
+</div>
+
+<!-- Fee Statistics -->
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-currency-rupee me-2"></i>Fee Structure & Collection
+                    {% if current_academic_year %}
+                    <small class="text-muted">({{ current_academic_year.year }})</small>
+                    {% endif %}
+                </h5>
+                <a href="{% url 'students_app:fee_structure_management' %}" class="btn btn-sm btn-warning">
+                    <i class="bi bi-gear"></i> Manage
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="feature-card text-center" style="border-left: 4px solid var(--warning);">
+                            <div class="icon-box warning mx-auto"><i class="bi bi-list-check"></i></div>
+                            <h3 class="mb-1">{{ total_fee_structures|default:0 }}</h3>
+                            <p class="text-muted mb-0">Fee Structures</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="feature-card text-center" style="border-left: 4px solid var(--success);">
+                            <div class="icon-box success mx-auto"><i class="bi bi-currency-rupee"></i></div>
+                            <h3 class="mb-1">₹{{ total_fee_collected|default:0|floatformat:0|intcomma }}</h3>
+                            <p class="text-muted mb-0">Total Collected</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="feature-card text-center" style="border-left: 4px solid var(--danger);">
+                            <div class="icon-box danger mx-auto"><i class="bi bi-exclamation-triangle"></i></div>
+                            <h3 class="mb-1">₹{{ pending_fees|default:0|floatformat:0|intcomma }}</h3>
+                            <p class="text-muted mb-0">Pending Fees</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="feature-card text-center" style="border-left: 4px solid var(--secondary);">
+                            <div class="icon-box info mx-auto"><i class="bi bi-calendar-check"></i></div>
+                            <h3 class="mb-1">₹{{ today_fees|default:0|floatformat:0|intcomma }}</h3>
+                            <p class="text-muted mb-0">Today's Collection</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alert for Classes Without Fee Structure -->
+{% if classes_without_fee_structure %}
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <div class="alert alert-warning d-flex align-items-start" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 1.5rem;"></i>
+            <div class="flex-grow-1">
+                <h6 class="alert-heading mb-2">Fee Structures Need to be Created</h6>
+                <p class="mb-2">The following classes have students enrolled but no fee structure defined for the
+                    current academic year:</p>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    {% for class in classes_without_fee_structure %}
+                    <span class="badge bg-warning text-dark">{{ class.name }}</span>
+                    {% endfor %}
+                </div>
+                <a href="{% url 'students_app:fee_structure_management' %}" class="btn btn-warning btn-sm">
+                    <i class="bi bi-plus-circle me-1"></i> Create Fee Structures
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Quick Access -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-graph-up-arrow me-2"></i>Enrollment CRM</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">Manage leads, campaigns, and enrollment pipeline</p>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <a href="{% url 'students_app:unified_dashboard' %}" class="quick-action">
+                            <div class="icon" style="background: #dbeafe; color: #2563eb;"><i
+                                    class="bi bi-bar-chart"></i></div>
+                            <span>Dashboard</span>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{% url 'students_app:lead_list' %}" class="quick-action">
+                            <div class="icon" style="background: #dcfce7; color: #16a34a;"><i class="bi bi-people"></i>
+                            </div>
+                            <span>Leads</span>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{% url 'students_app:campaign_list' %}" class="quick-action">
+                            <div class="icon" style="background: #fef3c7; color: #d97706;"><i
+                                    class="bi bi-megaphone"></i></div>
+                            <span>Campaigns</span>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{% url 'students_app:enrollment_analytics' %}" class="quick-action">
+                            <div class="icon" style="background: #ede9fe; color: #7c3aed;"><i
+                                    class="bi bi-pie-chart"></i></div>
+                            <span>Analytics</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-building me-2"></i>School Management</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">Manage students, academics, and school operations</p>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <a href="{% url 'students_app:student_list' %}" class="quick-action">
+                            <div class="icon" style="background: #dbeafe; color: #2563eb;"><i class="bi bi-people"></i>
+                            </div>
+                            <span>Students</span>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{% url 'students_app:view_attendance' %}" class="quick-action">
+                            <div class="icon" style="background: #dcfce7; color: #16a34a;"><i
+                                    class="bi bi-check-circle"></i></div>
+                            <span>Attendance</span>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{% url 'students_app:marks_entry' %}" class="quick-action">
+                            <div class="icon" style="background: #e0f2fe; color: #0284c7;"><i
+                                    class="bi bi-journal-text"></i></div>
+                            <span>Marks</span>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{% url 'students_app:fee_collection' %}" class="quick-action">
+                            <div class="icon" style="background: #fef3c7; color: #d97706;"><i
+                                    class="bi bi-currency-rupee"></i></div>
+                            <span>Fees</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Leads -->
+{% if recent_leads %}
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-people me-2"></i>Recent Leads</h5>
+                <a href="{% url 'students_app:lead_list' %}" class="btn btn-sm btn-primary">
+                    View All <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Contact</th>
+                                <th>Source</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for lead in recent_leads %}
+                            <tr>
+                                <td><strong>{{ lead.get_full_name }}</strong></td>
+                                <td>
+                                    <small>{{ lead.phone }}</small><br>
+                                    <small class="text-muted">{{ lead.email }}</small>
+                                </td>
+                                <td><span class="badge bg-secondary">{{ lead.source|default:"-" }}</span></td>
+                                <td>
+                                    {% if lead.status == 'new' %}
+                                    <span class="status-badge pending"><i class="bi bi-circle-fill"></i> New</span>
+                                    {% elif lead.status == 'enrolled' %}
+                                    <span class="status-badge active"><i class="bi bi-check-circle-fill"></i>
+                                        Enrolled</span>
+                                    {% else %}
+                                    <span class="badge bg-info">{{ lead.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ lead.enquiry_date|date:"d M Y" }}</td>
+                                <td>
+                                    <a href="{% url 'students_app:lead_detail' lead.id %}" class="btn btn-sm btn-light">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Recent Users -->
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-person-badge me-2"></i>Recent Users</h5>
+                <a href="{% url 'students_app:user_list' %}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-list"></i> View All
+                </a>
+            </div>
+            <div class="card-body p-0">
+                {% if recent_users %}
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Role</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in recent_users %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-3"
+                                            style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), var(--primary-light)); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600;">
+                                            {{ user.user.first_name.0|upper|default:'U' }}
+                                        </div>
+                                        <div>
+                                            <strong>{{ user.user.get_full_name }}</strong>
+                                            <small class="d-block text-muted">{{ user.login_id }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="badge bg-info">{{ user.role.display_name }}</span></td>
+                                <td>{{ user.user.email|default:"—" }}</td>
+                                <td>
+                                    {% if user.is_active %}
+                                    <span class="status-badge active"><i class="bi bi-check-circle-fill"></i>
+                                        Active</span>
+                                    {% else %}
+                                    <span class="status-badge inactive"><i class="bi bi-x-circle-fill"></i>
+                                        Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ user.created_at|date:"M d, Y" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-person-badge text-muted" style="font-size: 3rem;"></i>
+                    <h6 class="mt-3 text-muted">No users found</h6>
+                    <a href="{% url 'students_app:create_user' %}" class="btn btn-primary mt-2">
+                        <i class="bi bi-plus"></i> Create First User
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

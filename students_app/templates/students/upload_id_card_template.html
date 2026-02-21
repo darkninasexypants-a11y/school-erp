@@ -1,0 +1,1345 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Upload ID Card Template{% endblock %}
+
+{% block sidebar %}
+{% if request.user.is_authenticated %}
+{% with teacher=request.user.teacher %}
+{% if teacher %}
+{% include 'includes/teacher_sidebar.html' %}
+{% else %}
+{% with role_name=request.user.school_profile.role.name|default_if_none:''|lower %}
+{% if request.user.is_superuser or role_name == 'super_admin' %}
+{% include 'includes/super_admin_sidebar.html' %}
+{% elif role_name == 'school admin' or role_name == 'school_admin' or role_name == 'admin' %}
+{% include 'includes/admin_sidebar.html' %}
+{% else %}
+{% include 'includes/admin_sidebar.html' %}
+{% endif %}
+{% endwith %}
+{% endif %}
+{% endwith %}
+{% else %}
+{% include 'includes/admin_sidebar.html' %}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="top-bar">
+    <div class="page-title">
+        <h1><i class="bi bi-cloud-upload me-2"></i>Upload ID Card Template</h1>
+        <p>Create a new ID card template with visual editor</p>
+    </div>
+    <div class="top-bar-actions">
+        <a href="{% url 'students_app:id_card_template_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Templates
+        </a>
+    </div>
+</div>
+
+{% if messages %}
+<div class="mb-4">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data" id="templateForm">
+    {% csrf_token %}
+
+    <div class="row">
+        <!-- Left Sidebar - Settings -->
+        <div class="col-lg-4">
+            <!-- Basic Settings -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-gear me-2"></i>Basic Settings</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Template Name <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Description</label>
+                        <textarea name="description" class="form-control" rows="2"></textarea>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Width (mm) <span class="text-danger">*</span></label>
+                            <input type="number" name="width" class="form-control" value="85" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Height (mm) <span class="text-danger">*</span></label>
+                            <input type="number" name="height" class="form-control" value="54" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Orientation</label>
+                        <select name="orientation" class="form-select">
+                            <option value="portrait" selected>Portrait</option>
+                            <option value="landscape">Landscape</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Template Image <span class="text-danger">*</span></label>
+                        <input type="file" name="template_image" class="form-control" accept="image/*"
+                            id="templateImageInput" required>
+                        <small class="text-muted">Upload a high-quality background image (PNG/JPG)</small>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" name="is_active" class="form-check-input" id="isActive" checked>
+                        <label class="form-check-label fw-bold" for="isActive">Active</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Element Selection -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-cursor me-2"></i>Select Element to Position
+                        <button type="button" class="btn btn-sm btn-light float-end" data-bs-toggle="tooltip"
+                            data-bs-placement="left"
+                            title="Click a button, then click on template to position. Drag to move. Use resize handle for Photo/QR elements.">
+                            <i class="bi bi-question-circle"></i>
+                        </button>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-outline-primary element-btn" data-element="photo">
+                            <i class="bi bi-image me-2"></i>Photo Position
+                        </button>
+                        <button type="button" class="btn btn-outline-primary element-btn" data-element="name">
+                            <i class="bi bi-person me-2"></i>Name Position
+                        </button>
+                        <button type="button" class="btn btn-outline-primary element-btn" data-element="admission">
+                            <i class="bi bi-hash me-2"></i>Admission Number
+                        </button>
+                        <button type="button" class="btn btn-outline-primary element-btn" data-element="class">
+                            <i class="bi bi-mortarboard me-2"></i>Class Position
+                        </button>
+                        <button type="button" class="btn btn-outline-primary element-btn" data-element="contact">
+                            <i class="bi bi-telephone me-2"></i>Mobile/Contact
+                        </button>
+                        <button type="button" class="btn btn-outline-primary element-btn" data-element="section">
+                            <i class="bi bi-grid me-2"></i>Section Position
+                        </button>
+                        <button type="button" class="btn btn-outline-primary element-btn" data-element="father">
+                            <i class="bi bi-person-badge me-2"></i>Father Name
+                        </button>
+                        <button type="button" class="btn btn-outline-primary element-btn" data-element="mother">
+                            <i class="bi bi-person-heart me-2"></i>Mother Name
+                        </button>
+                        <button type="button" class="btn btn-outline-primary element-btn" data-element="guardian">
+                            <i class="bi bi-shield-check me-2"></i>Guardian Name
+                        </button>
+                        <button type="button" class="btn btn-outline-primary element-btn" data-element="address">
+                            <i class="bi bi-geo-alt me-2"></i>Address
+                        </button>
+                        <button type="button" class="btn btn-outline-primary element-btn" data-element="dob">
+                            <i class="bi bi-calendar-event me-2"></i>Date of Birth
+                        </button>
+                        <button type="button" class="btn btn-outline-primary element-btn" data-element="blood_group">
+                            <i class="bi bi-droplet me-2"></i>Blood Group
+                        </button>
+                        <button type="button" class="btn btn-outline-primary element-btn" data-element="qr">
+                            <i class="bi bi-qr-code me-2"></i>QR Code Position
+                        </button>
+                    </div>
+                    <div class="alert alert-info mt-3 mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <small>Click an element above, then click on the template preview to position it. Drag to move,
+                            resize handles for photo.</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Position Values -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-rulers me-2"></i>Position Values</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Photo -->
+                    <div id="photoPosition" class="position-group mb-3">
+                        <h6 class="text-muted">Photo</h6>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <input type="number" name="photo_x" class="form-control form-control-sm" value="0"
+                                    placeholder="X">
+                            </div>
+                            <div class="col-6">
+                                <input type="number" name="photo_y" class="form-control form-control-sm" value="0"
+                                    placeholder="Y">
+                            </div>
+                            <div class="col-6">
+                                <input type="number" name="photo_width" class="form-control form-control-sm" value="30"
+                                    placeholder="Width">
+                            </div>
+                            <div class="col-6">
+                                <input type="number" name="photo_height" class="form-control form-control-sm" value="40"
+                                    placeholder="Height">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Name -->
+                    <div id="namePosition" class="position-group mb-3">
+                        <h6 class="text-muted">Name</h6>
+                        <div class="row g-2">
+                            <div class="col-3">
+                                <input type="number" name="name_x" class="form-control form-control-sm" value="0"
+                                    placeholder="X">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="name_y" class="form-control form-control-sm" value="0"
+                                    placeholder="Y">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="name_width" class="form-control form-control-sm" value="150"
+                                    placeholder="Width">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="name_height" class="form-control form-control-sm" value="30"
+                                    placeholder="Height">
+                            </div>
+                            <div class="col-12 mt-1">
+                                <input type="number" name="name_font_size" class="form-control form-control-sm"
+                                    value="12" placeholder="Font Size">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Admission -->
+                    <div id="admissionPosition" class="position-group mb-3">
+                        <h6 class="text-muted">Admission No</h6>
+                        <div class="row g-2">
+                            <div class="col-3">
+                                <input type="number" name="admission_no_x" class="form-control form-control-sm"
+                                    value="0" placeholder="X">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="admission_no_y" class="form-control form-control-sm"
+                                    value="0" placeholder="Y">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="admission_width" class="form-control form-control-sm"
+                                    value="150" placeholder="W">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="admission_height" class="form-control form-control-sm"
+                                    value="30" placeholder="H">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Class -->
+                    <div id="classPosition" class="position-group mb-3">
+                        <h6 class="text-muted">Class</h6>
+                        <div class="row g-2">
+                            <div class="col-3">
+                                <input type="number" name="class_x" class="form-control form-control-sm" value="0"
+                                    placeholder="X">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="class_y" class="form-control form-control-sm" value="0"
+                                    placeholder="Y">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="class_width" class="form-control form-control-sm" value="150"
+                                    placeholder="W">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="class_height" class="form-control form-control-sm" value="30"
+                                    placeholder="H">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact -->
+                    <div id="contactPosition" class="position-group mb-3 d-none">
+                        <h6 class="text-muted">Contact</h6>
+                        <div class="row g-2">
+                            <div class="col-3">
+                                <input type="number" name="contact_x" class="form-control form-control-sm" value="10"
+                                    placeholder="X">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="contact_y" class="form-control form-control-sm" value="260"
+                                    placeholder="Y">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="contact_width" class="form-control form-control-sm"
+                                    value="150" placeholder="W">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="contact_height" class="form-control form-control-sm"
+                                    value="30" placeholder="H">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section -->
+                    <div id="sectionPosition" class="position-group mb-3 d-none">
+                        <h6 class="text-muted">Section</h6>
+                        <div class="row g-2">
+                            <div class="col-3">
+                                <input type="number" name="section_x" class="form-control form-control-sm" value="10"
+                                    placeholder="X">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="section_y" class="form-control form-control-sm" value="240"
+                                    placeholder="Y">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="section_width" class="form-control form-control-sm"
+                                    value="150" placeholder="W">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="section_height" class="form-control form-control-sm"
+                                    value="30" placeholder="H">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Father Name -->
+                    <div id="fatherPosition" class="position-group mb-3 d-none">
+                        <h6 class="text-muted">Father Name</h6>
+                        <div class="row g-2">
+                            <div class="col-3">
+                                <input type="number" name="father_x" class="form-control form-control-sm" value="10"
+                                    placeholder="X">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="father_y" class="form-control form-control-sm" value="280"
+                                    placeholder="Y">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="father_width" class="form-control_sm form-control"
+                                    value="150" placeholder="W">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="father_height" class="form-control_sm form-control"
+                                    value="30" placeholder="H">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mother Name -->
+                    <div id="motherPosition" class="position-group mb-3 d-none">
+                        <h6 class="text-muted">Mother Name</h6>
+                        <div class="row g-2">
+                            <div class="col-3">
+                                <input type="number" name="mother_x" class="form-control form-control-sm" value="10"
+                                    placeholder="X">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="mother_y" class="form-control form-control-sm" value="300"
+                                    placeholder="Y">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="mother_width" class="form-control form-control-sm"
+                                    value="150" placeholder="W">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="mother_height" class="form-control form-control-sm"
+                                    value="30" placeholder="H">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Guardian Name -->
+                    <div id="guardianPosition" class="position-group mb-3 d-none">
+                        <h6 class="text-muted">Guardian Name</h6>
+                        <div class="row g-2">
+                            <div class="col-3">
+                                <input type="number" name="guardian_x" class="form-control form-control-sm" value="10"
+                                    placeholder="X">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="guardian_y" class="form-control form-control-sm" value="320"
+                                    placeholder="Y">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="guardian_width" class="form-control form-control-sm"
+                                    value="150" placeholder="W">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="guardian_height" class="form-control form-control-sm"
+                                    value="30" placeholder="H">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Address -->
+                    <div id="addressPosition" class="position-group mb-3 d-none">
+                        <h6 class="text-muted">Address</h6>
+                        <div class="row g-2">
+                            <div class="col-3">
+                                <input type="number" name="address_x" class="form-control form-control-sm" value="10"
+                                    placeholder="X">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="address_y" class="form-control form-control-sm" value="340"
+                                    placeholder="Y">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="address_width" class="form-control form-control-sm"
+                                    value="150" placeholder="W">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="address_height" class="form-control form-control-sm"
+                                    value="50" placeholder="H">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DOB -->
+                    <div id="dobPosition" class="position-group mb-3 d-none">
+                        <h6 class="text-muted">Date of Birth</h6>
+                        <div class="row g-2">
+                            <div class="col-3">
+                                <input type="number" name="dob_x" class="form-control form-control-sm" value="10"
+                                    placeholder="X">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="dob_y" class="form-control form-control-sm" value="360"
+                                    placeholder="Y">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="dob_width" class="form-control form-control-sm" value="150"
+                                    placeholder="W">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="dob_height" class="form-control form-control-sm" value="30"
+                                    placeholder="H">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Blood Group -->
+                    <div id="blood_groupPosition" class="position-group mb-3 d-none">
+                        <h6 class="text-muted">Blood Group</h6>
+                        <div class="row g-2">
+                            <div class="col-3">
+                                <input type="number" name="blood_group_x" class="form-control form-control-sm"
+                                    value="10" placeholder="X">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="blood_group_y" class="form-control form-control-sm"
+                                    value="380" placeholder="Y">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="blood_group_width" class="form-control form-control-sm"
+                                    value="100" placeholder="W">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" name="blood_group_height" class="form-control form-control-sm"
+                                    value="30" placeholder="H">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- QR Code -->
+                    <div id="qrPosition" class="position-group mb-3">
+                        <h6 class="text-muted">QR Code</h6>
+                        <div class="row g-2">
+                            <div class="col-4">
+                                <input type="number" name="qr_code_x" class="form-control form-control-sm" value="0"
+                                    placeholder="X">
+                            </div>
+                            <div class="col-4">
+                                <input type="number" name="qr_code_y" class="form-control form-control-sm" value="0"
+                                    placeholder="Y">
+                            </div>
+                            <div class="col-4">
+                                <input type="number" name="qr_code_size" class="form-control form-control-sm" value="20"
+                                    placeholder="Size">
+                            </div>
+                        </div>
+                        <div class="form-check mt-2">
+                            <input type="checkbox" name="show_qr_code" class="form-check-input" id="showQrCode" checked>
+                            <label class="form-check-label" for="showQrCode">Show QR Code</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Font Styling -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-type me-2"></i>Font Styling
+                        <button type="button" class="btn btn-sm btn-light float-end" data-bs-toggle="tooltip"
+                            data-bs-placement="left"
+                            title="Customize font size, color, and type for text elements. Select an element first, then adjust its font properties.">
+                            <i class="bi bi-question-circle"></i>
+                        </button>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Selected Element</label>
+                        <select id="fontElementSelect" class="form-select form-select-sm">
+                            <option value="">-- Select Element --</option>
+                            <option value="name">Name</option>
+                            <option value="admission">Admission Number</option>
+                            <option value="class">Class</option>
+                            <option value="section">Section</option>
+                            <option value="father">Father Name</option>
+                            <option value="mother">Mother Name</option>
+                            <option value="guardian">Guardian Name</option>
+                            <option value="mobile">Mobile Number</option>
+                            <option value="address">Address</option>
+                            <option value="dob">Date of Birth</option>
+                            <option value="blood_group">Blood Group</option>
+                        </select>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Font Size</label>
+                            <div class="input-group input-group-sm">
+                                <input type="number" id="fontSizeInput" class="form-control" min="8" max="72" value="12"
+                                    placeholder="Size">
+                                <span class="input-group-text">px</span>
+                            </div>
+                            <small class="text-muted">8-72 pixels</small>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Font Color</label>
+                            <div class="input-group input-group-sm">
+                                <input type="color" id="fontColorInput" class="form-control form-control-color"
+                                    value="#000000" title="Choose font color">
+                                <input type="text" id="fontColorText" class="form-control" value="#000000"
+                                    placeholder="#000000" pattern="^#[0-9A-Fa-f]{6}$">
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Font Family</label>
+                            <select id="fontFamilySelect" class="form-select form-select-sm">
+                                <option value="Arial">Arial</option>
+                                <option value="Helvetica">Helvetica</option>
+                                <option value="Times New Roman">Times New Roman</option>
+                                <option value="Courier New">Courier New</option>
+                                <option value="Verdana">Verdana</option>
+                                <option value="Georgia">Georgia</option>
+                                <option value="Palatino">Palatino</option>
+                                <option value="Garamond">Garamond</option>
+                                <option value="Comic Sans MS">Comic Sans MS</option>
+                                <option value="Trebuchet MS">Trebuchet MS</option>
+                                <option value="Impact">Impact</option>
+                                <option value="Lucida Console">Lucida Console</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Font Weight</label>
+                            <select id="fontWeightSelect" class="form-select form-select-sm">
+                                <option value="normal">Normal</option>
+                                <option value="bold">Bold</option>
+                                <option value="lighter">Light</option>
+                                <option value="300">300 (Light)</option>
+                                <option value="400">400 (Normal)</option>
+                                <option value="500">500 (Medium)</option>
+                                <option value="600">600 (Semi-Bold)</option>
+                                <option value="700">700 (Bold)</option>
+                                <option value="800">800 (Extra Bold)</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Font Style</label>
+                            <select id="fontStyleSelect" class="form-select form-select-sm">
+                                <option value="normal">Normal</option>
+                                <option value="italic">Italic</option>
+                                <option value="oblique">Oblique</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info mt-3 mb-0">
+                        <i class="bi bi-lightbulb me-2"></i>
+                        <small><strong>Tip:</strong> Select an element from dropdown, adjust font properties, and they
+                            will be applied to that element. Changes are saved when you upload the template.</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Display Options -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-check2-square me-2"></i>Select Fields to Display</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary mb-3"><i class="bi bi-person me-1"></i>Student Information</h6>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" name="show_name" class="form-check-input" id="showName" checked>
+                                <label class="form-check-label fw-bold" for="showName">Student Name</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" name="show_photo" class="form-check-input" id="showPhoto"
+                                    checked>
+                                <label class="form-check-label fw-bold" for="showPhoto">Student Photo</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" name="show_admission_no" class="form-check-input"
+                                    id="showAdmissionNo" checked>
+                                <label class="form-check-label fw-bold" for="showAdmissionNo">Admission ID
+                                    Number</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" name="show_class" class="form-check-input" id="showClass"
+                                    checked>
+                                <label class="form-check-label fw-bold" for="showClass">Class</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-info mb-3"><i class="bi bi-people me-1"></i>Other Student Details</h6>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" name="show_section" class="form-check-input" id="showSection"
+                                    checked>
+                                <label class="form-check-label fw-bold" for="showSection">Section</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" name="show_dob" class="form-check-input" id="showDob">
+                                <label class="form-check-label" for="showDob">Date of Birth</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" name="show_blood_group" class="form-check-input"
+                                    id="showBloodGroup">
+                                <label class="form-check-label" for="showBloodGroup">Blood Group</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h6 class="text-info mb-3"><i class="bi bi-people me-1"></i>Parent/Guardian</h6>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" name="show_father_name" class="form-check-input"
+                                    id="showFatherName">
+                                <label class="form-check-label" for="showFatherName">Father Name</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" name="show_mother_name" class="form-check-input"
+                                    id="showMotherName">
+                                <label class="form-check-label" for="showMotherName">Mother Name</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" name="show_guardian_name" class="form-check-input"
+                                    id="showGuardianName">
+                                <label class="form-check-label" for="showGuardianName">Guardian Name</label>
+                            </div>
+
+                            <h6 class="text-success mb-3 mt-3"><i class="bi bi-telephone me-1"></i>Contact Information
+                            </h6>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" name="show_mobile" class="form-check-input" id="showMobile">
+                                <label class="form-check-label" for="showMobile">Mobile Number</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" name="show_address" class="form-check-input" id="showAddress">
+                                <label class="form-check-label" for="showAddress">Address</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg w-100">
+                <i class="bi bi-cloud-upload me-2"></i>Upload Template
+            </button>
+        </div>
+
+        <!-- Right Side - Visual Preview -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-eye me-2"></i>Template Preview</h5>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="resetPreview">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Reset View
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="templatePreview" class="template-preview-container">
+                        <div class="alert alert-info text-center" id="noImageAlert">
+                            <i class="bi bi-image me-2"></i>
+                            Please upload a template image to start positioning elements.
+                        </div>
+                        <img src="" alt="Template Preview" id="templateImage" class="template-image"
+                            style="display: none;">
+                        <div id="elementOverlay" class="element-overlay"></div>
+                    </div>
+                    <p class="text-muted small mt-2 mb-0 text-center" id="dimensionsText">
+                        Upload an image to see dimensions
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+{% block extra_css %}
+<style>
+    .template-preview-container {
+        position: relative;
+        width: 100%;
+        background: #f8f9fa;
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        min-height: 400px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .template-image {
+        max-width: 100%;
+        max-height: 600px;
+        height: auto;
+        display: block;
+        position: relative;
+        z-index: 1;
+    }
+
+    .element-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 10;
+        pointer-events: none;
+    }
+
+    .element-box {
+        position: absolute;
+        border: 2px solid #007bff;
+        background: rgba(0, 123, 255, 0.1);
+        cursor: move;
+        pointer-events: all;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        color: #007bff;
+        font-weight: bold;
+        user-select: none;
+    }
+
+    .element-box.active {
+        border-color: #28a745;
+        background: rgba(40, 167, 69, 0.2);
+        box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.3);
+    }
+
+    .element-btn.active {
+        background-color: #007bff;
+        color: white;
+        border-color: #007bff;
+    }
+
+    .position-group {
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 4px;
+        border-left: 3px solid #007bff;
+    }
+
+    .resize-handle {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background: #007bff;
+        border: 3px solid #fff;
+        border-radius: 50%;
+        bottom: -10px;
+        right: -10px;
+        cursor: nwse-resize;
+        z-index: 30;
+        transition: transform 0.1s, background 0.1s;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+        pointer-events: all;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .resize-handle::after {
+        content: '↘';
+        color: white;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .resize-handle:hover {
+        background: #0056b3;
+        transform: scale(1.4);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    }
+
+    .element-box.active .resize-handle {
+        background: #28a745;
+        box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.5);
+    }
+
+    .element-delete-btn {
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #dc3545;
+        color: white;
+        border: 2px solid white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        opacity: 0;
+        transition: opacity 0.2s, transform 0.2s;
+        z-index: 30;
+        padding: 0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .element-box:hover .element-delete-btn {
+        opacity: 1;
+    }
+
+    .element-delete-btn:hover {
+        background: #bb2d3b;
+        transform: scale(1.15);
+    }
+
+    .element-box:hover {
+        border-color: #0056b3;
+        background: rgba(0, 123, 255, 0.15);
+        transform: scale(1.02);
+    }
+
+    .element-box.active {
+        cursor: grabbing !important;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const templateImage = document.getElementById('templateImage');
+        const elementOverlay = document.getElementById('elementOverlay');
+        const elementButtons = document.querySelectorAll('.element-btn');
+        const templateImageInput = document.getElementById('templateImageInput');
+        const noImageAlert = document.getElementById('noImageAlert');
+        const dimensionsText = document.getElementById('dimensionsText');
+
+        let selectedElement = null;
+        let currentElementBox = null;
+        let isDragging = false;
+        let isResizing = false;
+        let dragOffset = { x: 0, y: 0 };
+        let templateWidth = 85;
+        let templateHeight = 54;
+
+        // Font properties storage
+        const fontProperties = {};
+        ['name', 'admission', 'class', 'section', 'father', 'mother', 'guardian', 'contact', 'address', 'dob', 'blood_group'].forEach(elementType => {
+            fontProperties[elementType] = {
+                size: 12,
+                color: '#000000',
+                family: 'Arial',
+                weight: 'normal',
+                style: 'normal'
+            };
+        });
+
+        const elementPositions = {
+            photo: { x: 0, y: 0, width: 30, height: 40 },
+            name: { x: 0, y: 0, width: 150, height: 30, fontSize: 12 },
+            admission: { x: 0, y: 0, width: 150, height: 30 },
+            class: { x: 0, y: 0, width: 150, height: 30 },
+            section: { x: 0, y: 0, width: 150, height: 30 },
+            contact: { x: 0, y: 0, width: 150, height: 30 },
+            father: { x: 0, y: 0, width: 150, height: 30 },
+            mother: { x: 0, y: 0, width: 150, height: 30 },
+            guardian: { x: 0, y: 0, width: 150, height: 30 },
+            address: { x: 0, y: 0, width: 150, height: 50 },
+            dob: { x: 0, y: 0, width: 150, height: 30 },
+            blood_group: { x: 0, y: 0, width: 100, height: 30 },
+            qr: { x: 0, y: 0, size: 20 }
+        };
+
+        const elementLabels = {
+            photo: '📷 Photo',
+            name: '👤 Name',
+            admission: '# Admission',
+            class: '🎓 Class',
+            section: '📁 Section',
+            contact: '📞 Mobile',
+            father: '👨 Father',
+            mother: '👩 Mother',
+            guardian: '🛡️ Guardian',
+            address: '📍 Address',
+            dob: '📅 DOB',
+            blood_group: '🩸 Blood',
+            qr: '🔲 QR Code'
+        };
+
+        function getScaleFactor() {
+            if (!templateImage || templateImage.style.display === 'none') return 1;
+            const imgWidth = templateImage.offsetWidth;
+            const imgHeight = templateImage.offsetHeight;
+            const scaleX = imgWidth / templateWidth;
+            const scaleY = imgHeight / templateHeight;
+            return Math.min(scaleX, scaleY);
+        }
+
+        function templateToPreview(x, y) {
+            const scale = getScaleFactor();
+            if (!templateImage || templateImage.style.display === 'none') return { x: 0, y: 0 };
+            const container = templateImage.parentElement;
+            const imgRect = templateImage.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            const offsetX = (containerRect.width - imgRect.width) / 2;
+            const offsetY = (containerRect.height - imgRect.height) / 2;
+            return { x: offsetX + (x * scale), y: offsetY + (y * scale) };
+        }
+
+        function previewToTemplate(x, y) {
+            const scale = getScaleFactor();
+            if (!templateImage || templateImage.style.display === 'none') return { x: 0, y: 0 };
+            const container = templateImage.parentElement;
+            const imgRect = templateImage.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            const offsetX = (containerRect.width - imgRect.width) / 2;
+            const offsetY = (containerRect.height - imgRect.height) / 2;
+            return { x: Math.round((x - offsetX) / scale), y: Math.round((y - offsetY) / scale) };
+        }
+
+        function removeElementBox(elementType) {
+            const existingBox = elementOverlay.querySelector(`[data-element="${elementType}"]`);
+            if (existingBox) existingBox.remove();
+        }
+
+        function createElementBox(elementType, forceCreate = false) {
+            removeElementBox(elementType);
+            const pos = elementPositions[elementType];
+            if (!forceCreate && (pos.x <= 0 && pos.y <= 0)) return null;
+
+            const previewPos = templateToPreview(pos.x || 10, pos.y || 10);
+            const box = document.createElement('div');
+            box.className = 'element-box';
+            box.dataset.element = elementType;
+
+            const label = document.createElement('span');
+            label.textContent = elementLabels[elementType];
+            box.appendChild(label);
+
+            // All elements are now resizable
+            const isPhotoOrQr = elementType === 'photo' || elementType === 'qr';
+            const width = pos.width || (elementType === 'qr' ? pos.size || 50 : (elementType === 'photo' ? 100 : 150));
+            const height = pos.height || (elementType === 'qr' ? pos.size || 50 : (elementType === 'photo' ? 120 : 30));
+
+            box.style.width = (width * getScaleFactor()) + 'px';
+            box.style.height = (height * getScaleFactor()) + 'px';
+            box.classList.add('resizable');
+
+            const resizeHandle = document.createElement('div');
+            resizeHandle.className = 'resize-handle';
+            resizeHandle.title = 'Drag to resize';
+            box.appendChild(resizeHandle);
+
+            resizeHandle.addEventListener('mousedown', function (e) {
+                e.stopPropagation();
+                e.preventDefault();
+                isResizing = true;
+                currentElementBox = box;
+                box.classList.add('active');
+
+                const startX = e.clientX;
+                const startY = e.clientY;
+                const startWidth = box.offsetWidth;
+                const startHeight = box.offsetHeight;
+                const scale = getScaleFactor();
+
+                function onMouseMove(e) {
+                    if (!isResizing) return;
+                    const deltaX = e.clientX - startX;
+                    const deltaY = e.clientY - startY;
+
+                    if (elementType === 'qr') {
+                        const delta = Math.max(deltaX, deltaY);
+                        const newSize = Math.max(30, startWidth + delta);
+                        box.style.width = newSize + 'px';
+                        box.style.height = newSize + 'px';
+                    } else {
+                        const minW = isPhotoOrQr ? 50 : 30;
+                        const minH = isPhotoOrQr ? 50 : 20;
+                        const newWidth = Math.max(minW, startWidth + deltaX);
+                        const newHeight = Math.max(minH, startHeight + deltaY);
+                        box.style.width = newWidth + 'px';
+                        box.style.height = newHeight + 'px';
+                    }
+                }
+
+                function onMouseUp() {
+                    isResizing = false;
+                    updatePositionFromBox(box);
+                    box.classList.remove('active');
+                    currentElementBox = null;
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                }
+
+                document.addEventListener('mousemove', onMouseMove, { passive: true });
+                document.addEventListener('mouseup', onMouseUp);
+            });
+
+            box.style.left = previewPos.x + 'px';
+            box.style.top = previewPos.y + 'px';
+
+            // Apply font styling if available
+            if (fontProperties[elementType]) {
+                const props = fontProperties[elementType];
+                label.style.fontSize = (props.size || 12) + 'px';
+                label.style.color = props.color || '#000000';
+                label.style.fontFamily = props.family || 'Arial';
+                label.style.fontWeight = props.weight || 'normal';
+                label.style.fontStyle = props.style || 'normal';
+            }
+
+            box.addEventListener('mousedown', function (e) {
+                if (e.target.classList.contains('resize-handle') || e.target.closest('.resize-handle')) return;
+                e.stopPropagation();
+                e.preventDefault();
+                isDragging = true;
+                const rect = box.getBoundingClientRect();
+                dragOffset.x = e.clientX - rect.left;
+                dragOffset.y = e.clientY - rect.top;
+                box.classList.add('active');
+                currentElementBox = box;
+                elementButtons.forEach(b => b.classList.remove('active'));
+                const btn = document.querySelector(`.element-btn[data-element="${elementType}"]`);
+                if (btn) btn.classList.add('active');
+            });
+
+            elementOverlay.appendChild(box);
+            return box;
+        }
+
+        function updatePositionFromBox(box) {
+            const elementType = box.dataset.element;
+            const rect = box.getBoundingClientRect();
+            const containerRect = elementOverlay.getBoundingClientRect();
+            const templatePos = previewToTemplate(
+                rect.left - containerRect.left,
+                rect.top - containerRect.top
+            );
+
+            elementPositions[elementType].x = templatePos.x;
+            elementPositions[elementType].y = templatePos.y;
+
+            if (elementType === 'photo') {
+                const scale = getScaleFactor();
+                elementPositions[elementType].width = Math.round(box.offsetWidth / scale);
+                elementPositions[elementType].height = Math.round(box.offsetHeight / scale);
+            } else if (elementType === 'qr') {
+                const scale = getScaleFactor();
+                const size = Math.round(box.offsetWidth / scale);
+                elementPositions[elementType].size = size;
+            }
+
+            updateFormFields(elementType);
+        }
+
+        function updateFormFields(elementType) {
+            const pos = elementPositions[elementType];
+            const nameMap = {
+                'admission': 'admission_no'
+            };
+            const baseName = nameMap[elementType] || elementType;
+
+            const xInput = document.querySelector(`input[name="${baseName}_x"]`);
+            if (xInput) xInput.value = pos.x;
+
+            const yInput = document.querySelector(`input[name="${baseName}_y"]`);
+            if (yInput) yInput.value = pos.y;
+
+            if (elementType === 'qr') {
+                const sizeInput = document.querySelector('input[name="qr_code_size"]');
+                if (sizeInput) sizeInput.value = pos.size || 50;
+
+                const qrx = document.querySelector('input[name="qr_code_x"]');
+                if (qrx) qrx.value = pos.x;
+                const qry = document.querySelector('input[name="qr_code_y"]');
+                if (qry) qry.value = pos.y;
+            } else {
+                const wInput = document.querySelector(`input[name="${baseName}_width"]`);
+                if (wInput) wInput.value = pos.width;
+
+                const hInput = document.querySelector(`input[name="${baseName}_height"]`);
+                if (hInput) hInput.value = pos.height;
+
+                if (elementType === 'name') {
+                    const fontSizeInput = document.querySelector('input[name="name_font_size"]');
+                    if (fontSizeInput) fontSizeInput.value = pos.fontSize || 12;
+                }
+            }
+        }
+
+        // Handle image upload
+        if (templateImageInput) {
+            templateImageInput.addEventListener('change', function (e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        templateImage.src = e.target.result;
+                        templateImage.style.display = 'block';
+                        noImageAlert.style.display = 'none';
+                        dimensionsText.textContent = `Dimensions: ${templateWidth} x ${templateHeight} mm`;
+                        templateImage.addEventListener('load', function () {
+                            Object.keys(elementPositions).forEach(elementType => {
+                                const pos = elementPositions[elementType];
+                                if (pos.x > 0 || pos.y > 0) {
+                                    createElementBox(elementType, false);
+                                }
+                            });
+                        }, { once: true });
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        // Update dimensions
+        document.querySelector('input[name="width"]').addEventListener('input', function () {
+            templateWidth = parseInt(this.value) || 85;
+            if (templateImage.style.display !== 'none') {
+                dimensionsText.textContent = `Dimensions: ${templateWidth} x ${templateHeight} mm`;
+            }
+        });
+
+        document.querySelector('input[name="height"]').addEventListener('input', function () {
+            templateHeight = parseInt(this.value) || 54;
+            if (templateImage.style.display !== 'none') {
+                dimensionsText.textContent = `Dimensions: ${templateWidth} x ${templateHeight} mm`;
+            }
+        });
+
+        // Element button clicks
+        elementButtons.forEach(btn => {
+            btn.addEventListener('click', function () {
+                elementButtons.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                selectedElement = this.dataset.element;
+                const existingBox = elementOverlay.querySelector(`[data-element="${selectedElement}"]`);
+                if (existingBox) {
+                    existingBox.classList.add('active');
+                    currentElementBox = existingBox;
+                } else {
+                    currentElementBox = createElementBox(selectedElement, true);
+                    if (currentElementBox) currentElementBox.classList.add('active');
+                }
+            });
+        });
+
+        // Drag functionality
+        document.addEventListener('mousemove', function (e) {
+            if (isDragging && currentElementBox) {
+                const containerRect = elementOverlay.getBoundingClientRect();
+                const newX = e.clientX - containerRect.left - dragOffset.x;
+                const newY = e.clientY - containerRect.top - dragOffset.y;
+                const boxWidth = currentElementBox.offsetWidth || 80;
+                const boxHeight = currentElementBox.offsetHeight || 30;
+                const maxX = containerRect.width - boxWidth;
+                const maxY = containerRect.height - boxHeight;
+                const constrainedX = Math.max(0, Math.min(newX, maxX));
+                const constrainedY = Math.max(0, Math.min(newY, maxY));
+                currentElementBox.style.left = constrainedX + 'px';
+                currentElementBox.style.top = constrainedY + 'px';
+            }
+        }, { passive: true });
+
+        document.addEventListener('mouseup', function () {
+            if (isDragging && currentElementBox) {
+                isDragging = false;
+                updatePositionFromBox(currentElementBox);
+                currentElementBox.classList.remove('active');
+                currentElementBox = null;
+            }
+        });
+
+        // Click on preview to position element
+        elementOverlay.addEventListener('click', function (e) {
+            if (e.target.closest('.element-box') || e.target.classList.contains('resize-handle')) return;
+            if (selectedElement && templateImage.style.display !== 'none') {
+                const containerRect = elementOverlay.getBoundingClientRect();
+                const templatePos = previewToTemplate(
+                    e.clientX - containerRect.left,
+                    e.clientY - containerRect.top
+                );
+                elementPositions[selectedElement].x = templatePos.x;
+                elementPositions[selectedElement].y = templatePos.y;
+                currentElementBox = createElementBox(selectedElement, true);
+                if (currentElementBox) currentElementBox.classList.add('active');
+                updateFormFields(selectedElement);
+            }
+        });
+
+        // Font Styling Functionality
+        const fontElementSelect = document.getElementById('fontElementSelect');
+        const fontSizeInput = document.getElementById('fontSizeInput');
+        const fontColorInput = document.getElementById('fontColorInput');
+        const fontColorText = document.getElementById('fontColorText');
+        const fontFamilySelect = document.getElementById('fontFamilySelect');
+        const fontWeightSelect = document.getElementById('fontWeightSelect');
+        const fontStyleSelect = document.getElementById('fontStyleSelect');
+
+        let currentFontElement = null;
+
+        function applyFontToPreview(elementType) {
+            if (!elementType || !fontProperties[elementType]) return;
+            const box = elementOverlay.querySelector(`[data-element="${elementType}"]`);
+            if (!box) return;
+            const props = fontProperties[elementType];
+            const label = box.querySelector('span');
+            if (label) {
+                label.style.fontSize = (props.size || 12) + 'px';
+                label.style.color = props.color || '#000000';
+                label.style.fontFamily = props.family || 'Arial';
+                label.style.fontWeight = props.weight || 'normal';
+                label.style.fontStyle = props.style || 'normal';
+            }
+        }
+
+        function saveFontProperties() {
+            Object.keys(fontProperties).forEach(elementType => {
+                const props = fontProperties[elementType];
+                ['size', 'color', 'family', 'weight', 'style'].forEach(prop => {
+                    const inputName = `${elementType}_font_${prop}`;
+                    let input = document.querySelector(`input[name="${inputName}"]`);
+                    if (!input) {
+                        input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = inputName;
+                        document.getElementById('templateForm').appendChild(input);
+                    }
+                    input.value = props[prop] || (prop === 'size' ? '12' : prop === 'color' ? '#000000' : prop === 'family' ? 'Arial' : 'normal');
+                });
+            });
+        }
+
+        fontElementSelect.addEventListener('change', function () {
+            const elementType = this.value;
+            if (elementType && fontProperties[elementType]) {
+                const props = fontProperties[elementType];
+                fontSizeInput.value = props.size || 12;
+                fontColorInput.value = props.color || '#000000';
+                fontColorText.value = props.color || '#000000';
+                fontFamilySelect.value = props.family || 'Arial';
+                fontWeightSelect.value = props.weight || 'normal';
+                fontStyleSelect.value = props.style || 'normal';
+                currentFontElement = elementType;
+            }
+        });
+
+        fontSizeInput.addEventListener('input', function () {
+            if (currentFontElement) {
+                fontProperties[currentFontElement].size = parseInt(this.value) || 12;
+                applyFontToPreview(currentFontElement);
+                saveFontProperties();
+            }
+        });
+
+        fontColorInput.addEventListener('input', function () {
+            if (currentFontElement) {
+                fontProperties[currentFontElement].color = this.value;
+                fontColorText.value = this.value;
+                applyFontToPreview(currentFontElement);
+                saveFontProperties();
+            }
+        });
+
+        fontColorText.addEventListener('input', function () {
+            const color = this.value;
+            if (/^#[0-9A-Fa-f]{6}$/.test(color) && currentFontElement) {
+                fontProperties[currentFontElement].color = color;
+                fontColorInput.value = color;
+                applyFontToPreview(currentFontElement);
+                saveFontProperties();
+            }
+        });
+
+        fontFamilySelect.addEventListener('change', function () {
+            if (currentFontElement) {
+                fontProperties[currentFontElement].family = this.value;
+                applyFontToPreview(currentFontElement);
+                saveFontProperties();
+            }
+        });
+
+        fontWeightSelect.addEventListener('change', function () {
+            if (currentFontElement) {
+                fontProperties[currentFontElement].weight = this.value;
+                applyFontToPreview(currentFontElement);
+                saveFontProperties();
+            }
+        });
+
+        fontStyleSelect.addEventListener('change', function () {
+            if (currentFontElement) {
+                fontProperties[currentFontElement].style = this.value;
+                applyFontToPreview(currentFontElement);
+                saveFontProperties();
+            }
+        });
+
+        // Auto-select font element when element button is clicked
+        elementButtons.forEach(btn => {
+            btn.addEventListener('click', function () {
+                const elementType = this.dataset.element;
+                if (['name', 'admission', 'class', 'section', 'father', 'mother', 'guardian', 'contact', 'address', 'dob', 'blood_group'].includes(elementType)) {
+                    fontElementSelect.value = elementType;
+                    const props = fontProperties[elementType];
+                    fontSizeInput.value = props.size || 12;
+                    fontColorInput.value = props.color || '#000000';
+                    fontColorText.value = props.color || '#000000';
+                    fontFamilySelect.value = props.family || 'Arial';
+                    fontWeightSelect.value = props.weight || 'normal';
+                    fontStyleSelect.value = props.style || 'normal';
+                    currentFontElement = elementType;
+                }
+            });
+        });
+
+        // Save font properties before form submit
+        document.getElementById('templateForm').addEventListener('submit', function () {
+            saveFontProperties();
+        });
+
+        // Initialize Bootstrap tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

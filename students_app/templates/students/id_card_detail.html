@@ -1,0 +1,118 @@
+{% extends "students/base_modern.html" %}
+{% block title %}ID Card Detail - {{ card.student.get_full_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-id-card me-2"></i>ID Card Detail</h2>
+            <p class="text-muted mb-0">{{ card.student.get_full_name }} | {{ card.student.admission_number }}</p>
+        </div>
+        <div>
+            <a href="{% url 'students_app:student_detail' admission_number=card.student.admission_number %}" class="btn btn-outline-primary me-2">
+                <i class="fas fa-user me-2"></i>View Student
+            </a>
+            <a href="{% url 'students_app:id_card_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-user me-2"></i>Student Information</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th width="40%">Student Name:</th>
+                            <td>{{ card.student.get_full_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Admission Number:</th>
+                            <td>{{ card.student.admission_number }}</td>
+                        </tr>
+                        <tr>
+                            <th>Class:</th>
+                            <td>{{ card.student.current_class.name }}</td>
+                        </tr>
+                        {% if card.student.section %}
+                        <tr>
+                            <th>Section:</th>
+                            <td>{{ card.student.section.name }}</td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <th>Card Number:</th>
+                            <td>{{ card.card_number }}</td>
+                        </tr>
+                        <tr>
+                            <th>Issue Date:</th>
+                            <td>{{ card.issue_date|date:"d M Y" }}</td>
+                        </tr>
+                        {% if card.valid_until %}
+                        <tr>
+                            <th>Valid Until:</th>
+                            <td>{{ card.valid_until|date:"d M Y" }}</td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <th>Status:</th>
+                            <td>
+                                <span class="badge bg-{% if card.status == 'active' %}success{% elif card.status == 'expired' %}warning{% else %}secondary{% endif %}">
+                                    {{ card.get_status_display }}
+                                </span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-image me-2"></i>ID Card Preview</h5>
+                </div>
+                <div class="card-body text-center">
+                    {% if card.generated_image %}
+                        {% if image_exists %}
+                            <img src="{{ card.generated_image.url }}" 
+                                 alt="ID Card" 
+                                 class="img-fluid border rounded shadow-sm mb-3"
+                                 style="max-height: 500px; max-width: 100%;">
+                        {% else %}
+                            <div class="alert alert-info mb-3">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Image file may be processing. Please try refreshing the page.
+                            </div>
+                        {% endif %}
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'students_app:download_id_card' card.id %}" class="btn btn-success btn-lg">
+                                <i class="fas fa-download me-2"></i> Download ID Card
+                            </a>
+                            <a href="{% url 'students_app:generate_id_card' card.student.id %}" class="btn btn-outline-primary">
+                                <i class="fas fa-sync me-2"></i> Regenerate Card
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                            <p class="mb-0"><strong>ID card image not generated yet.</strong></p>
+                            <p class="mb-0 mt-2">
+                                <a href="{% url 'students_app:generate_id_card' card.student.id %}" class="btn btn-primary">
+                                    <i class="fas fa-sync me-2"></i> Generate ID Card
+                                </a>
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+

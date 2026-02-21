@@ -1,0 +1,147 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Create Event{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Create New Event</h2>
+        <a href="{% url 'students_app:event_calendar' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Events
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            {% if messages %}
+            <div class="mb-4">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold">Title <span class="text-danger">*</span></label>
+                        <input type="text" name="title" class="form-control" required placeholder="Enter event title">
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold">Description <span class="text-danger">*</span></label>
+                        <textarea name="description" class="form-control" rows="4" required placeholder="Enter event description"></textarea>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Event Type <span class="text-danger">*</span></label>
+                        <select name="event_type" class="form-select" required>
+                            <option value="">-- Select Type --</option>
+                            <option value="academic">Academic</option>
+                            <option value="sports">Sports</option>
+                            <option value="cultural">Cultural</option>
+                            <option value="festival">Festival</option>
+                            <option value="holiday">Holiday</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Event Date <span class="text-danger">*</span></label>
+                        <input type="date" name="event_date" class="form-control" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Start Time</label>
+                        <input type="time" name="start_time" class="form-control">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">End Time</label>
+                        <input type="time" name="end_time" class="form-control">
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold">Venue</label>
+                        <input type="text" name="venue" class="form-control" placeholder="Event venue/location">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Status</label>
+                        <select name="status" class="form-select">
+                            <option value="draft">Draft</option>
+                            <option value="published" selected>Published</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                        <small class="text-muted">Draft events are only visible to admins</small>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Target Audience</label>
+                        <select name="target_audience" class="form-select">
+                            <option value="all" selected>All</option>
+                            <option value="students">Students Only</option>
+                            <option value="teachers">Teachers Only</option>
+                            <option value="parents">Parents Only</option>
+                            <option value="staff">Staff Only</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-12">
+                        <div class="form-check">
+                            <input type="checkbox" name="is_holiday" class="form-check-input" id="is_holiday">
+                            <label class="form-check-label fw-bold" for="is_holiday">
+                                Mark as Holiday
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <hr>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save me-2"></i>Create Event
+                            </button>
+                            <a href="{% url 'students_app:event_calendar' %}" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-control, .form-select {
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+}
+.form-control:focus, .form-select:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+.fw-bold {
+    font-weight: 600 !important;
+}
+</style>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

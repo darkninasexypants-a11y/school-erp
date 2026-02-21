@@ -1,0 +1,111 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Communication Dashboard - Parent{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4"><i class="fas fa-comments me-2"></i>Communication Dashboard</h2>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <!-- Messages Card -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-envelope fa-3x text-primary"></i>
+                    </div>
+                    <h5 class="card-title">Messages</h5>
+                    <p class="text-muted">Communicate with teachers</p>
+                    <a href="{% url 'students_app:message_list' %}" class="btn btn-primary">
+                        <i class="fas fa-arrow-right me-1"></i>View Messages
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Assignments Card -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-tasks fa-3x text-success"></i>
+                    </div>
+                    <h5 class="card-title">Assignments</h5>
+                    <p class="text-muted">View your child's assignments</p>
+                    <a href="{% url 'students_app:assignment_list' %}" class="btn btn-success">
+                        <i class="fas fa-arrow-right me-1"></i>View Assignments
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Homework Card -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-book fa-3x text-info"></i>
+                    </div>
+                    <h5 class="card-title">Homework</h5>
+                    <p class="text-muted">View your child's homework</p>
+                    <a href="{% url 'students_app:homework_list' %}" class="btn btn-info">
+                        <i class="fas fa-arrow-right me-1"></i>View Homework
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Timetable Card -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-calendar-alt fa-3x text-warning"></i>
+                    </div>
+                    <h5 class="card-title">Timetable</h5>
+                    <p class="text-muted">View class timetable</p>
+                    <a href="{% url 'students_app:timetable_view' %}" class="btn btn-warning">
+                        <i class="fas fa-arrow-right me-1"></i>View Timetable
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Events Card -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-calendar-check fa-3x text-danger"></i>
+                    </div>
+                    <h5 class="card-title">Events</h5>
+                    <p class="text-muted">View school events</p>
+                    <a href="{% url 'students_app:event_list' %}" class="btn btn-danger">
+                        <i class="fas fa-arrow-right me-1"></i>View Events
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'students_app:message_compose' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-paper-plane me-2"></i>Send Message to Teacher
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,102 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Messages{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-envelope me-2"></i>Messages</h2>
+                <a href="{% url 'students_app:message_compose' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Compose Message
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filters -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <a href="?type=inbox&status=all" class="btn btn-outline-primary {% if message_type == 'inbox' %}active{% endif %}">
+                                <i class="fas fa-inbox me-1"></i>Inbox
+                            </a>
+                            <a href="?type=sent&status=all" class="btn btn-outline-primary {% if message_type == 'sent' %}active{% endif %}">
+                                <i class="fas fa-paper-plane me-1"></i>Sent
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="?type={{ message_type }}&status=all" class="btn btn-sm btn-outline-secondary {% if filter_status == 'all' %}active{% endif %}">All</a>
+                            <a href="?type={{ message_type }}&status=unread" class="btn btn-sm btn-outline-secondary {% if filter_status == 'unread' %}active{% endif %}">Unread</a>
+                            <a href="?type={{ message_type }}&status=read" class="btn btn-sm btn-outline-secondary {% if filter_status == 'read' %}active{% endif %}">Read</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Messages List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    {% if messages %}
+                        <div class="list-group">
+                            {% for msg in messages %}
+                                <a href="{% url 'students_app:message_detail' msg.id %}" class="list-group-item list-group-item-action {% if not msg.is_read and message_type == 'inbox' %}list-group-item-primary{% endif %}">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">
+                                            {% if message_type == 'inbox' %}
+                                                From: {{ msg.sender.get_full_name|default:msg.sender.username }}
+                                            {% else %}
+                                                To: {{ msg.recipient.get_full_name|default:msg.recipient.username }}
+                                            {% endif %}
+                                            {% if not msg.is_read and message_type == 'inbox' %}
+                                                <span class="badge bg-primary">New</span>
+                                            {% endif %}
+                                        </h6>
+                                        <small>{{ msg.created_at|date:"M d, Y H:i" }}</small>
+                                    </div>
+                                    <p class="mb-1"><strong>{{ msg.subject }}</strong></p>
+                                    <p class="mb-0 text-muted">{{ msg.decrypted_message|truncatewords:20 }}</p>
+                                </a>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Pagination -->
+                        {% if messages.has_other_pages %}
+                            <nav aria-label="Page navigation" class="mt-4">
+                                <ul class="pagination justify-content-center">
+                                    {% if messages.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ messages.previous_page_number }}&type={{ message_type }}&status={{ filter_status }}">Previous</a>
+                                        </li>
+                                    {% endif %}
+                                    <li class="page-item active">
+                                        <span class="page-link">Page {{ messages.number }} of {{ messages.paginator.num_pages }}</span>
+                                    </li>
+                                    {% if messages.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ messages.next_page_number }}&type={{ message_type }}&status={{ filter_status }}">Next</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No messages found.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

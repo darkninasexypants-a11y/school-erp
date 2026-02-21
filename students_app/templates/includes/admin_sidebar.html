@@ -1,0 +1,158 @@
+<!-- Admin Sidebar - Consistent across all admin pages -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+        <div class="d-flex align-items-center gap-2">
+            {% if request.user.school_profile.school and request.user.school_profile.school.logo %}
+                <img src="{{ request.user.school_profile.school.logo.url }}" alt="{{ request.user.school_profile.school.name }}" style="width: 34px; height: 34px; object-fit: cover; border-radius: 8px;">
+            {% elif request.user.school_profile.school %}
+                <div style="width: 34px; height: 34px; background: rgba(255,255,255,0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700;">
+                    {{ request.user.school_profile.school.name.0|upper }}
+                </div>
+            {% else %}
+                <i class="bi bi-shield-check"></i>
+            {% endif %}
+
+            <div style="line-height: 1.1;">
+                <div style="font-weight: 700; color: rgba(255,255,255,0.95);">
+                    {% if request.user.school_profile.school %}
+                        {{ request.user.school_profile.school.name }}
+                    {% else %}
+                        Admin Panel
+                    {% endif %}
+                </div>
+                <div style="font-size: 0.75rem; color: rgba(255,255,255,0.80);">
+                    Admin
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Overview</div>
+        <a href="{% url 'students_app:admin_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}" data-title="Dashboard">
+            <i class="bi bi-grid-1x2-fill"></i> <span>Dashboard</span>
+        </a>
+        <a href="{% url 'students_app:unified_dashboard' %}" class="nav-link {% if 'unified_dashboard' in request.resolver_match.url_name %}active{% endif %}" data-title="CRM Dashboard">
+            <i class="bi bi-bar-chart-fill"></i> <span>CRM Dashboard</span>
+        </a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Students</div>
+        <a href="{% url 'students_app:student_list' %}" class="nav-link {% if 'student_list' in request.resolver_match.url_name or 'add_student' in request.resolver_match.url_name %}active{% endif %}" data-title="All Students">
+            <i class="bi bi-people"></i> <span>All Students</span>
+        </a>
+        <a href="{% url 'students_app:add_student' %}" class="nav-link {% if 'add_student' in request.resolver_match.url_name %}active{% endif %}" data-title="Add Student">
+            <i class="bi bi-person-plus"></i> <span>Add Student</span>
+        </a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Teachers</div>
+        <a href="{% url 'students_app:teacher_list' %}" class="nav-link {% if 'teacher_list' in request.resolver_match.url_name or 'add_teacher' in request.resolver_match.url_name %}active{% endif %}" data-title="All Teachers">
+            <i class="bi bi-person-video3"></i> <span>All Teachers</span>
+        </a>
+        <a href="{% url 'students_app:add_teacher' %}" class="nav-link {% if 'add_teacher' in request.resolver_match.url_name %}active{% endif %}" data-title="Add Teacher">
+            <i class="bi bi-person-plus-fill"></i> <span>Add Teacher</span>
+        </a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Staff</div>
+        <a href="{% url 'students_app:staff_list' %}" class="nav-link {% if 'staff_list' in request.resolver_match.url_name or 'add_staff' in request.resolver_match.url_name %}active{% endif %}" data-title="All Staff">
+            <i class="bi bi-people-fill"></i> <span>All Staff</span>
+        </a>
+        <a href="{% url 'students_app:add_staff' %}" class="nav-link {% if 'add_staff' in request.resolver_match.url_name %}active{% endif %}" data-title="Add Staff">
+            <i class="bi bi-person-plus-fill"></i> <span>Add Staff</span>
+        </a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Academics</div>
+        <a href="{% url 'students_app:attendance_mark' %}" class="nav-link {% if 'attendance' in request.path and 'teacher' not in request.path and 'staff' not in request.path %}active{% endif %}" data-title="Student Attendance">
+            <i class="bi bi-check2-square"></i> <span>Student Attendance</span>
+        </a>
+        <a href="{% url 'students_app:teacher_attendance_mark' %}" class="nav-link {% if 'teacher_attendance' in request.path %}active{% endif %}" data-title="Teacher Attendance">
+            <i class="bi bi-person-check"></i> <span>Teacher Attendance</span>
+        </a>
+        <a href="{% url 'students_app:staff_attendance_mark' %}" class="nav-link {% if 'staff_attendance' in request.path %}active{% endif %}" data-title="Staff Attendance">
+            <i class="bi bi-people"></i> <span>Staff Attendance</span>
+        </a>
+        <a href="{% url 'students_app:qr_attendance_scan' %}" class="nav-link {% if 'qr-scan' in request.path %}active{% endif %}" data-title="QR Scanner">
+            <i class="bi bi-qr-code-scan"></i> <span>QR Scanner</span>
+        </a>
+        <a href="{% url 'students_app:qr_attendance_records' %}" class="nav-link {% if 'qr-records' in request.path %}active{% endif %}" data-title="QR Attendance Records">
+            <i class="bi bi-qr-code"></i> <span>QR Records</span>
+        </a>
+        <a href="{% url 'students_app:marks_entry' %}" class="nav-link {% if 'marks' in request.path %}active{% endif %}" data-title="Marks Entry">
+            <i class="bi bi-journal-text"></i> <span>Marks Entry</span>
+        </a>
+        <a href="{% url 'students_app:exam_list' %}" class="nav-link {% if 'exam_list' in request.resolver_match.url_name or 'exam_create' in request.resolver_match.url_name %}active{% endif %}" data-title="Exams">
+            <i class="bi bi-file-earmark-text"></i> <span>Exams</span>
+        </a>
+        <a href="{% url 'students_app:exam_schedule_list' %}" class="nav-link {% if 'exam_schedule' in request.path %}active{% endif %}" data-title="Exam Schedules">
+            <i class="bi bi-calendar-event"></i> <span>Exam Schedules</span>
+        </a>
+        <a href="{% url 'students_app:view_timetable' %}" class="nav-link {% if 'timetable' in request.path and 'manage' not in request.path and 'conflicts' not in request.path and 'bulk' not in request.path and 'import' not in request.path and 'export' not in request.path %}active{% endif %}" data-title="Timetable">
+            <i class="bi bi-calendar3"></i> <span>Timetable</span>
+        </a>
+        <a href="{% url 'students_app:manage_timetables' %}" class="nav-link {% if 'manage_timetables' in request.resolver_match.url_name or 'timetable_conflicts' in request.resolver_match.url_name or 'bulk_timetable' in request.resolver_match.url_name or 'import_timetable' in request.resolver_match.url_name %}active{% endif %}" data-title="Timetable Management">
+            <i class="bi bi-calendar-check"></i> <span>Timetable Management</span>
+        </a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Finance</div>
+        <a href="{% url 'students_app:fee_collection' %}" class="nav-link {% if 'fee_collection' in request.resolver_match.url_name %}active{% endif %}" data-title="Fee Collection">
+            <i class="bi bi-currency-rupee"></i> <span>Fee Collection</span>
+        </a>
+        <a href="{% url 'students_app:fee_structure_management' %}" class="nav-link {% if 'fee_structure' in request.path %}active{% endif %}" data-title="Fee Structures">
+            <i class="bi bi-gear"></i> <span>Fee Structures</span>
+        </a>
+        <a href="{% url 'students_app:receipts_list' %}" class="nav-link {% if 'receipt' in request.path %}active{% endif %}" data-title="Receipts">
+            <i class="bi bi-receipt"></i> <span>Receipts</span>
+        </a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">CRM</div>
+        <a href="{% url 'students_app:lead_list' %}" class="nav-link {% if 'lead' in request.path %}active{% endif %}" data-title="Leads">
+            <i class="bi bi-people-fill"></i> <span>Leads</span>
+        </a>
+        <a href="{% url 'students_app:campaign_list' %}" class="nav-link {% if 'campaign' in request.path %}active{% endif %}" data-title="Campaigns">
+            <i class="bi bi-megaphone"></i> <span>Campaigns</span>
+        </a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Users</div>
+        <a href="{% url 'students_app:user_list' %}" class="nav-link {% if 'user_list' in request.resolver_match.url_name %}active{% endif %}" data-title="All Users">
+            <i class="bi bi-person-badge"></i> <span>All Users</span>
+        </a>
+        <a href="{% url 'students_app:create_user' %}" class="nav-link {% if 'create_user' in request.resolver_match.url_name %}active{% endif %}" data-title="Create User">
+            <i class="bi bi-person-plus-fill"></i> <span>Create User</span>
+        </a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Resources</div>
+        <a href="{% url 'students_app:generate_bulk_id_cards' %}" class="nav-link {% if 'id-card' in request.path or 'id_card' in request.path %}active{% endif %}" data-title="ID Cards">
+            <i class="bi bi-person-badge"></i> <span>ID Cards</span>
+        </a>
+        <a href="{% url 'students_app:notice_list' %}" class="nav-link {% if 'notice' in request.path %}active{% endif %}" data-title="Notices">
+            <i class="bi bi-megaphone"></i> <span>Notices</span>
+        </a>
+        <a href="{% url 'students_app:event_calendar' %}" class="nav-link {% if 'event' in request.path %}active{% endif %}" data-title="Events">
+            <i class="bi bi-calendar-event"></i> <span>Events</span>
+        </a>
+    </div>
+
+    <div class="nav-section" style="margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+        <a href="{% url 'students_app:user_logout' %}" class="nav-link text-danger" data-title="Logout" onclick="return confirm('Are you sure you want to logout?');">
+            <i class="bi bi-box-arrow-left"></i> <span>Logout</span>
+        </a>
+    </div>
+</div>
+
+
+

@@ -1,0 +1,60 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Message Detail{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-envelope me-2"></i>Message</h4>
+                    <a href="{% url 'students_app:message_list' %}" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Messages
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>From:</strong> {{ message.sender.get_full_name|default:message.sender.username }}<br>
+                        <strong>To:</strong> {{ message.recipient.get_full_name|default:message.recipient.username }}<br>
+                        <strong>Date:</strong> {{ message.created_at|date:"F d, Y H:i" }}<br>
+                        {% if message.related_student %}
+                            <strong>Related Student:</strong> {{ message.related_student.get_full_name }} - {{ message.related_student.get_class_section }}<br>
+                        {% endif %}
+                        {% if message.is_read %}
+                            <span class="badge bg-success">Read</span>
+                        {% else %}
+                            <span class="badge bg-primary">Unread</span>
+                        {% endif %}
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="mb-3">
+                        <h5>{{ message.subject }}</h5>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <p class="text-muted">{{ message.decrypted_message|linebreaks }}</p>
+                    </div>
+                    
+                    {% if message.attachment %}
+                        <div class="mb-3">
+                            <strong>Attachment:</strong><br>
+                            <a href="{{ message.attachment.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                <i class="fas fa-download me-1"></i>Download Attachment
+                            </a>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="mt-4">
+                        <a href="{% url 'students_app:message_compose' %}?reply_to={{ message.id }}" class="btn btn-primary">
+                            <i class="fas fa-reply me-1"></i>Reply
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

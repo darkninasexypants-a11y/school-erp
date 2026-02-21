@@ -1,0 +1,252 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Mark Student Attendance{% endblock %}
+
+{% block sidebar %}
+{% include 'includes/teacher_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="top-bar">
+    <div class="page-title">
+        <h1><i class="bi bi-person-check me-2"></i>Mark Student Attendance</h1>
+        <p>Mark attendance for students in your classes</p>
+    </div>
+    <div class="top-bar-actions">
+        <a href="{% url 'students_app:teacher_dashboard' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+</div>
+
+{% if messages %}
+<div class="mb-4">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Selection Card -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-calendar-check me-2"></i>Select Class & Date</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" id="attendanceForm">
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <label class="form-label fw-semibold">
+                        <i class="bi bi-book me-1"></i>Select Section
+                    </label>
+                    <select name="section_id" class="form-select" id="sectionSelect" required>
+                        <option value="">Choose Section...</option>
+                        {% for section in sections %}
+                        <option value="{{ section.id }}">
+                            {{ section.class_assigned.name }} - Section {{ section.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <small class="text-muted">Only sections you teach are shown</small>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">
+                        <i class="bi bi-calendar me-1"></i>Date
+                    </label>
+                    <input type="date" name="date" id="dateInput" class="form-control" value="{{ today|date:'Y-m-d' }}" required>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="button" id="loadBtn" class="btn btn-primary w-100" onclick="loadStudents()">
+                        <i class="bi bi-arrow-repeat me-2"></i>Load Students
+                    </button>
+                </div>
+            </div>
+        
+            <!-- Students List -->
+            <div id="studentsList" class="mt-4"></div>
+        </form>
+    </div>
+</div>
+
+{% if not sections %}
+<div class="alert alert-info">
+    <i class="bi bi-info-circle me-2"></i>
+    <strong>No classes assigned:</strong> You don't have any classes assigned in the timetable. Please contact the administrator.
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const sectionSelect = document.getElementById('sectionSelect');
+const studentsList = document.getElementById('studentsList');
+const dateInput = document.getElementById('dateInput');
+
+function loadStudents() {
+    const sectionId = sectionSelect.value;
+    const date = dateInput.value;
+    
+    if (!sectionId) {
+        studentsList.innerHTML = '<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>Please select a section first</div>';
+        return;
+    }
+    
+    if (!date) {
+        studentsList.innerHTML = '<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>Please select a date</div>';
+        return;
+    }
+
+    studentsList.innerHTML = `
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-3 text-muted">Loading students...</p>
+        </div>`;
+
+    fetch(`/teachers/attendance/students-by-section/${sectionId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                studentsList.innerHTML = `<div class="alert alert-danger"><i class="bi bi-x-circle me-2"></i>${data.error}</div>`;
+                return;
+            }
+            
+            if (data.students && data.students.length > 0) {
+                let html = `
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <span class="badge bg-primary fs-6 me-2">${data.students.length} Students</span>
+                            <span class="badge bg-light text-dark">Date: ${date}</span>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-sm btn-outline-success me-2" onclick="markAll('P')">
+                                <i class="bi bi-check-all me-1"></i>All Present
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-warning me-2" onclick="markAll('L')">
+                                <i class="bi bi-clock me-1"></i>All Late
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="markAll('A')">
+                                <i class="bi bi-x-lg me-1"></i>All Absent
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="8%">Roll No.</th>
+                                    <th width="35%">Student Name</th>
+                                    <th width="12%">Admission No.</th>
+                                    <th width="45%">Attendance Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+                
+                data.students.forEach((student, index) => {
+                    html += `
+                        <tr>
+                            <td><strong>${student.roll_number || (index + 1)}</strong></td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle me-2">
+                                        ${student.name.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold">${student.name}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><small class="text-muted">${student.admission_number || '-'}</small></td>
+                            <td>
+                                <div class="btn-group w-100" role="group">
+                                    <input type="radio" class="btn-check attendance-radio" name="status_${student.id}" id="present_${student.id}" value="P" checked>
+                                    <label class="btn btn-outline-success btn-sm" for="present_${student.id}">
+                                        <i class="bi bi-check-circle me-1"></i>Present
+                                    </label>
+                                    <input type="radio" class="btn-check attendance-radio" name="status_${student.id}" id="late_${student.id}" value="L">
+                                    <label class="btn btn-outline-warning btn-sm" for="late_${student.id}">
+                                        <i class="bi bi-clock me-1"></i>Late
+                                    </label>
+                                    <input type="radio" class="btn-check attendance-radio" name="status_${student.id}" id="absent_${student.id}" value="A">
+                                    <label class="btn btn-outline-danger btn-sm" for="absent_${student.id}">
+                                        <i class="bi bi-x-circle me-1"></i>Absent
+                                    </label>
+                                    <input type="radio" class="btn-check attendance-radio" name="status_${student.id}" id="halfday_${student.id}" value="H">
+                                    <label class="btn btn-outline-info btn-sm" for="halfday_${student.id}">
+                                        <i class="bi bi-hourglass-split me-1"></i>Half Day
+                                    </label>
+                                </div>
+                            </td>
+                        </tr>`;
+                });
+
+                html += `</tbody></table></div>
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-circle me-2"></i>Save Attendance for ${data.students.length} Students
+                        </button>
+                    </div>`;
+                
+                studentsList.innerHTML = html;
+            } else {
+                studentsList.innerHTML = '<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>No students found in this section</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            studentsList.innerHTML = '<div class="alert alert-danger"><i class="bi bi-x-circle me-2"></i>Error loading students. Please try again.</div>';
+        });
+}
+
+function markAll(status) {
+    document.querySelectorAll('.attendance-radio').forEach(radio => {
+        if (radio.value === status) {
+            radio.checked = true;
+            // Trigger visual update
+            radio.dispatchEvent(new Event('change'));
+        }
+    });
+}
+
+// Auto-load when section changes
+sectionSelect.addEventListener('change', function() {
+    if (sectionSelect.value && dateInput.value) {
+        loadStudents();
+    }
+});
+
+// Auto-load when date changes
+dateInput.addEventListener('change', function() {
+    if (sectionSelect.value && dateInput.value) {
+        loadStudents();
+    }
+});
+</script>
+
+<style>
+.avatar-circle {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.btn-group .btn-check:checked + .btn {
+    box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+}
+</style>
+{% endblock %}
+

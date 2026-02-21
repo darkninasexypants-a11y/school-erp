@@ -1,0 +1,183 @@
+{% extends "students/base_modern.html" %}
+{% block title %}{% if notice %}Edit Notice{% else %}Create Notice{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-{% if notice %}edit{% else %}plus-circle{% endif %} me-2"></i>
+            {% if notice %}Edit Notice{% else %}Create Notice{% endif %}
+        </h2>
+        <a href="{% url 'students_app:notice_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to List
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <strong>Please correct the errors below:</strong>
+                        <ul class="mb-0 mt-2">
+                            {% for field, errors in form.errors.items %}
+                                {% for error in errors %}
+                                    <li>{{ field|title }}: {{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">{{ form.title.label }} <span class="text-danger">*</span></label>
+                                {{ form.title }}
+                                {% if form.title.errors %}
+                                <div class="text-danger small">{{ form.title.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">{{ form.content.label }} <span class="text-danger">*</span></label>
+                                {{ form.content }}
+                                {% if form.content.errors %}
+                                <div class="text-danger small">{{ form.content.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">{{ form.notice_date.label }} <span class="text-danger">*</span></label>
+                                {{ form.notice_date }}
+                                {% if form.notice_date.errors %}
+                                <div class="text-danger small">{{ form.notice_date.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">{{ form.expiry_date.label }}</label>
+                                {{ form.expiry_date }}
+                                <small class="text-muted">Leave blank if notice doesn't expire</small>
+                                {% if form.expiry_date.errors %}
+                                <div class="text-danger small">{{ form.expiry_date.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">{{ form.target_audience.label }} <span class="text-danger">*</span></label>
+                                {{ form.target_audience }}
+                                {% if form.target_audience.errors %}
+                                <div class="text-danger small">{{ form.target_audience.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">{{ form.priority.label }} <span class="text-danger">*</span></label>
+                                {{ form.priority }}
+                                {% if form.priority.errors %}
+                                <div class="text-danger small">{{ form.priority.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">{{ form.status.label }} <span class="text-danger">*</span></label>
+                                {{ form.status }}
+                                <small class="text-muted">Publish to make the notice visible to parents, students, and staff.</small>
+                                {% if form.status.errors %}
+                                <div class="text-danger small">{{ form.status.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6" id="classField" style="display: none;">
+                                <label class="form-label fw-bold">{{ form.specific_class.label }}</label>
+                                {{ form.specific_class }}
+                                {% if form.specific_class.errors %}
+                                <div class="text-danger small">{{ form.specific_class.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6" id="sectionField" style="display: none;">
+                                <label class="form-label fw-bold">{{ form.specific_section.label }}</label>
+                                {{ form.specific_section }}
+                                {% if form.specific_section.errors %}
+                                <div class="text-danger small">{{ form.specific_section.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">{{ form.attachment.label }}</label>
+                                {{ form.attachment }}
+                                {% if notice and notice.attachment %}
+                                <div class="mt-2">
+                                    <small class="text-muted">Current: 
+                                        <a href="{{ notice.attachment.url }}" target="_blank">{{ notice.attachment.name }}</a>
+                                    </small>
+                                </div>
+                                {% endif %}
+                                {% if form.attachment.errors %}
+                                <div class="text-danger small">{{ form.attachment.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            {% if user_role in 'admin,super_admin,school_admin' or request.user.is_superuser %}
+                            <div class="col-md-12">
+                                <div class="form-check">
+                                    {{ form.is_active }}
+                                    <label class="form-check-label fw-bold" for="{{ form.is_active.id_for_label }}">
+                                        {{ form.is_active.label }}
+                                    </label>
+                                </div>
+                                {% if form.is_active.errors %}
+                                <div class="text-danger small">{{ form.is_active.errors }}</div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-save me-2"></i>{% if notice %}Update Notice{% else %}Create Notice{% endif %}
+                                </button>
+                                <a href="{% url 'students_app:notice_list' %}" class="btn btn-outline-secondary btn-lg ms-2">
+                                    <i class="fas fa-times me-2"></i>Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const audienceSelect = document.querySelector('select[name="target_audience"]');
+    const classField = document.getElementById('classField');
+    const sectionField = document.getElementById('sectionField');
+    
+    function toggleFields() {
+        const value = audienceSelect.value;
+        if (value === 'class' || value === 'section') {
+            classField.style.display = 'block';
+            if (value === 'section') {
+                sectionField.style.display = 'block';
+            } else {
+                sectionField.style.display = 'none';
+            }
+        } else {
+            classField.style.display = 'none';
+            sectionField.style.display = 'none';
+        }
+    }
+    
+    audienceSelect.addEventListener('change', toggleFields);
+    toggleFields(); // Initial call
+});
+</script>
+{% endblock %}
+
+
+

@@ -1,0 +1,49 @@
+<!-- Student Sidebar - Only for Students -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+        <h4><i class="bi bi-mortarboard"></i> <span>Student Portal</span></h4>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Dashboard</div>
+        <a href="{% url 'students_app:student_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'student_dashboard' %}active{% endif %}" data-title="Dashboard">
+            <i class="bi bi-grid-1x2-fill"></i> <span>Dashboard</span>
+        </a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">My Information</div>
+        <a href="{% url 'students_app:student_dashboard' %}" class="nav-link {% if 'student' in request.path and 'dashboard' in request.path %}active{% endif %}" data-title="My Profile">
+            <i class="bi bi-person"></i> <span>My Profile</span>
+        </a>
+        <a href="{% url 'students_app:view_timetable' %}" class="nav-link {% if 'timetable' in request.path %}active{% endif %}" data-title="Timetable">
+            <i class="bi bi-calendar3"></i> <span>My Timetable</span>
+        </a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Academic</div>
+        <a href="{% url 'students_app:student_dashboard' %}" class="nav-link" data-title="My Attendance">
+            <i class="bi bi-calendar-check"></i> <span>My Attendance</span>
+        </a>
+        <a href="{% url 'students_app:student_dashboard' %}" class="nav-link" data-title="My Marks">
+            <i class="bi bi-clipboard-data"></i> <span>My Marks</span>
+        </a>
+        <a href="{% url 'students_app:student_dashboard' %}" class="nav-link" data-title="Exams">
+            <i class="bi bi-file-text"></i> <span>Exams</span>
+        </a>
+    </div>
+
+    <div class="nav-section" style="margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+        <a href="{% url 'students_app:student_logout' %}" class="nav-link text-danger" data-title="Logout" onclick="return confirm('Are you sure you want to logout?');">
+            <i class="bi bi-box-arrow-left"></i> <span>Logout</span>
+        </a>
+    </div>
+</div>
+
+
+
+
+
+
+

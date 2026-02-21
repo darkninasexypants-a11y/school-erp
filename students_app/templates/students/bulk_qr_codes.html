@@ -1,0 +1,207 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Bulk QR Code Generation{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="fas fa-qrcode me-2"></i>Bulk QR Code Generation
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-4">
+                        Generate QR codes for multiple books at once. All QR codes will be downloaded as a ZIP file.
+                    </p>
+
+                    <form method="post" id="bulkQrForm">
+                        {% csrf_token %}
+                        
+                        <!-- Filter Type -->
+                        <div class="mb-4">
+                            <label class="form-label"><strong>Select Filter Type</strong></label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="filter_type" id="filter_all" value="all" checked onchange="toggleFilterOptions()">
+                                <label class="form-check-label" for="filter_all">
+                                    All Books
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="filter_type" id="filter_author" value="author" onchange="toggleFilterOptions()">
+                                <label class="form-check-label" for="filter_author">
+                                    By Author
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="filter_type" id="filter_category" value="category" onchange="toggleFilterOptions()">
+                                <label class="form-check-label" for="filter_category">
+                                    By Category
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="filter_type" id="filter_selected" value="selected" onchange="toggleFilterOptions()">
+                                <label class="form-check-label" for="filter_selected">
+                                    Selected Books (from list below)
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Author Filter -->
+                        <div class="mb-4" id="authorFilter" style="display: none;">
+                            <label for="author" class="form-label"><strong>Select Author</strong></label>
+                            <select class="form-select" id="author" name="author">
+                                <option value="">-- Select Author --</option>
+                                {% for author in authors %}
+                                <option value="{{ author }}">{{ author }}</option>
+                                {% endfor %}
+                            </select>
+                            <small class="form-text text-muted">All books by this author will be included</small>
+                        </div>
+
+                        <!-- Category Filter -->
+                        <div class="mb-4" id="categoryFilter" style="display: none;">
+                            <label for="category" class="form-label"><strong>Select Category</strong></label>
+                            <select class="form-select" id="category" name="category">
+                                <option value="">-- Select Category --</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat.id }}">{{ cat.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <small class="form-text text-muted">All books in this category will be included</small>
+                        </div>
+
+                        <!-- Selected Books List -->
+                        <div class="mb-4" id="selectedBooksFilter" style="display: none;">
+                            <label class="form-label"><strong>Select Books</strong></label>
+                            <div class="border rounded p-3" style="max-height: 400px; overflow-y: auto;">
+                                <div class="mb-2">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAll()">Select All</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll()">Deselect All</button>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th width="50">Select</th>
+                                                <th>Book ID</th>
+                                                <th>Title</th>
+                                                <th>Author</th>
+                                                <th>ISBN</th>
+                                                <th>Category</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for book in books %}
+                                            <tr>
+                                                <td>
+                                                    <input type="checkbox" name="book_ids" value="{{ book.id }}" class="form-check-input book-checkbox">
+                                                </td>
+                                                <td><span class="badge bg-secondary">#{{ book.id }}</span></td>
+                                                <td>{{ book.title }}</td>
+                                                <td>{{ book.author }}</td>
+                                                <td><code>{{ book.isbn }}</code></td>
+                                                <td>
+                                                    {% if book.category %}
+                                                    <span class="badge bg-info">{{ book.category.name }}</span>
+                                                    {% else %}
+                                                    <span class="text-muted">-</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'students_app:book_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Books
+                            </a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-download"></i> Generate & Download QR Codes (ZIP)
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Info Card -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h6><i class="fas fa-info-circle me-2 text-info"></i>How it works:</h6>
+                    <ul class="mb-0 text-muted">
+                        <li><strong>All Books:</strong> Generates QR codes for all books in the library</li>
+                        <li><strong>By Author:</strong> Generates QR codes for all books by a specific author (useful when one author has multiple books with different ISBNs)</li>
+                        <li><strong>By Category:</strong> Generates QR codes for all books in a specific category</li>
+                        <li><strong>Selected Books:</strong> Choose specific books from the list to generate QR codes</li>
+                        <li>All QR codes will be downloaded as a ZIP file with individual PNG files for each book</li>
+                        <li>Each QR code contains: Book ID, ISBN, Title, Author, and Publisher</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleFilterOptions() {
+        const filterType = document.querySelector('input[name="filter_type"]:checked').value;
+        
+        // Hide all filters
+        document.getElementById('authorFilter').style.display = 'none';
+        document.getElementById('categoryFilter').style.display = 'none';
+        document.getElementById('selectedBooksFilter').style.display = 'none';
+        
+        // Show relevant filter
+        if (filterType === 'author') {
+            document.getElementById('authorFilter').style.display = 'block';
+        } else if (filterType === 'category') {
+            document.getElementById('categoryFilter').style.display = 'block';
+        } else if (filterType === 'selected') {
+            document.getElementById('selectedBooksFilter').style.display = 'block';
+        }
+    }
+
+    function selectAll() {
+        document.querySelectorAll('.book-checkbox').forEach(cb => cb.checked = true);
+    }
+
+    function deselectAll() {
+        document.querySelectorAll('.book-checkbox').forEach(cb => cb.checked = false);
+    }
+
+    // Form validation
+    document.getElementById('bulkQrForm').addEventListener('submit', function(e) {
+        const filterType = document.querySelector('input[name="filter_type"]:checked').value;
+        
+        if (filterType === 'author') {
+            const author = document.getElementById('author').value;
+            if (!author) {
+                e.preventDefault();
+                alert('Please select an author.');
+                return false;
+            }
+        } else if (filterType === 'category') {
+            const category = document.getElementById('category').value;
+            if (!category) {
+                e.preventDefault();
+                alert('Please select a category.');
+                return false;
+            }
+        } else if (filterType === 'selected') {
+            const selected = document.querySelectorAll('.book-checkbox:checked');
+            if (selected.length === 0) {
+                e.preventDefault();
+                alert('Please select at least one book.');
+                return false;
+            }
+        }
+    });
+</script>
+{% endblock %}
+

@@ -1,0 +1,138 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Lead Details - CRM{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-user me-2 text-primary"></i>{{ lead.get_full_name }}</h2>
+            <p class="text-muted">Lead Details & Activity</p>
+        </div>
+        <div>
+            <a href="{% url 'students_app:lead_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <!-- Lead Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Lead Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <strong>Name:</strong> {{ lead.get_full_name }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Email:</strong> {{ lead.email }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Phone:</strong> {{ lead.phone }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Status:</strong> 
+                            <span class="badge bg-{% if lead.status == 'new' %}warning{% elif lead.status == 'enrolled' %}success{% else %}info{% endif %}">
+                                {{ lead.get_status_display }}
+                            </span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Source:</strong> {{ lead.source|default:"-" }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Priority:</strong> {{ lead.get_priority_display }}
+                        </div>
+                        {% if lead.interested_class %}
+                        <div class="col-md-6">
+                            <strong>Interested Class:</strong> {{ lead.interested_class }}
+                        </div>
+                        {% endif %}
+                        <div class="col-md-6">
+                            <strong>Enquiry Date:</strong> {{ lead.enquiry_date|date:"d M Y" }}
+                        </div>
+                        {% if lead.notes %}
+                        <div class="col-12">
+                            <strong>Notes:</strong>
+                            <p class="mb-0">{{ lead.notes }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activities -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Activity History</h5>
+                </div>
+                <div class="card-body">
+                    {% if activities %}
+                    {% for activity in activities %}
+                    <div class="border-start border-primary ps-3 mb-3">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong>{{ activity.get_activity_type_display }}</strong>
+                                {% if activity.subject %}
+                                <br><small class="text-muted">{{ activity.subject }}</small>
+                                {% endif %}
+                            </div>
+                            <small class="text-muted">{{ activity.activity_date|date:"d M Y H:i" }}</small>
+                        </div>
+                        {% if activity.description %}
+                        <p class="mb-0 mt-1">{{ activity.description }}</p>
+                        {% endif %}
+                        <small class="text-muted">By: {{ activity.performed_by.get_full_name|default:activity.performed_by.username }}</small>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-muted text-center">No activities yet</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary">
+                            <i class="fas fa-phone"></i> Log Call
+                        </button>
+                        <button class="btn btn-info">
+                            <i class="fas fa-envelope"></i> Send Email
+                        </button>
+                        <button class="btn btn-success">
+                            <i class="fas fa-calendar"></i> Schedule Follow-up
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Campaigns -->
+            {% if campaigns %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Related Campaigns</h5>
+                </div>
+                <div class="card-body">
+                    {% for campaign in campaigns %}
+                    <div class="mb-2">
+                        <strong>{{ campaign.name }}</strong>
+                        <br><small class="text-muted">{{ campaign.get_campaign_type_display }}</small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,1029 @@
+<!-- Hover Trigger Zone (Invisible strip on the left) -->
+<div class="sidebar-trigger"></div>
+
+<div class="sidebar" id="adminSidebar">
+    <!-- Logo Section -->
+    <div class="logo">
+        <a href="{% url 'students_app:admin_dashboard' %}" class="logo-link">
+            <div class="logo-icon">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <div class="logo-text">
+                <span class="logo-title">School ERP</span>
+                <span class="logo-subtitle">Admin Panel</span>
+            </div>
+        </a>
+    </div>
+
+    <!-- Sidebar Toggle Button (Visible only on Mobile) -->
+    <div class="collapse-btn mobile-toggle" id="collapseBtn">
+        <i class="fas fa-chevron-right"></i>
+    </div>
+
+    <!-- Language Switcher -->
+    <div class="language-switcher">
+        {% csrf_token %}
+        <div class="lang-buttons">
+            <button type="button" data-language="en"
+                class="lang-btn {% if request.session.language == 'en' or not request.session.language %}active{% endif %}">
+                <i class="fas fa-flag-usa"></i>
+                <span>EN</span>
+            </button>
+            <button type="button" data-language="hi"
+                class="lang-btn {% if request.session.language == 'hi' %}active{% endif %}">
+                <i class="fas fa-flag"></i>
+                <span>हिं</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Sidebar Menu -->
+    <div class="sidebar-menu" id="sidebar-menu">
+        {% with role=request.user.school_profile.role.name %}
+
+        <!-- Dashboard - Main Entry Point -->
+        <div class="menu-section">
+            <a href="{% url 'students_app:admin_dashboard' %}"
+                class="menu-item main-dashboard {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">
+                <div class="menu-icon">
+                    <i class="fas fa-home"></i>
+                </div>
+                <span class="menu-text">Admin Dashboard</span>
+            </a>
+        </div>
+
+        <!-- DASHBOARDS Section -->
+        <div class="menu-section">
+            <div class="menu-section-title">
+                <i class="fas fa-th-large"></i>
+                <span data-key="dashboards">DASHBOARDS</span>
+            </div>
+
+            {% load feature_check %}
+            {% if 'crm_enabled'|feature_enabled %}
+            <a href="{% url 'students_app:unified_dashboard' %}"
+                class="menu-item {% if 'unified_dashboard' in request.resolver_match.url_name or 'crm' in request.resolver_match.url_name or 'lead' in request.resolver_match.url_name or 'campaign' in request.resolver_match.url_name %}active{% endif %}"
+                title="CRM - Lead Management">
+                <div class="menu-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <span class="menu-text" data-key="crm_dashboard">CRM Dashboard</span>
+            </a>
+            {% endif %}
+        </div>
+
+
+        <!-- SCHOOLS MANAGEMENT Section -->
+        <div class="menu-section">
+            <div class="menu-section-title">
+                <i class="fas fa-school"></i>
+                <span data-key="schools">SCHOOLS</span>
+            </div>
+
+            {% if request.user.is_superuser or role == 'super_admin' or role == 'assistant_creator' %}
+            <a href="{% url 'students_app:create_school' %}"
+                class="menu-item {% if request.resolver_match.url_name == 'create_school' %}active{% endif %}"
+                title="Add New School">
+                <div class="menu-icon">
+                    <i class="fas fa-plus-circle"></i>
+                </div>
+                <span class="menu-text" data-key="add_school">Add School</span>
+            </a>
+            {% endif %}
+
+            <!-- Active state for per-school feature editor -->
+            {% if request.user.is_superuser or role == 'super_admin' %}
+            {% if request.resolver_match.url_name == 'edit_school_features' %}
+            <a href="{{ request.path }}" class="menu-item active" title="Edit School Features">
+                <div class="menu-icon">
+                    <i class="fas fa-sliders-h"></i>
+                </div>
+                <span class="menu-text" data-key="school_features">School Features</span>
+            </a>
+            {% endif %}
+            {% endif %}
+        </div>
+
+        <!-- MANAGEMENT Section -->
+        <div class="menu-section">
+            <div class="menu-section-title">
+                <i class="fas fa-crown"></i>
+                <span data-key="management">MANAGEMENT</span>
+            </div>
+
+            <a href="{% url 'students_app:student_list' %}"
+                class="menu-item {% if 'student_list' in request.resolver_match.url_name or 'add_student' in request.resolver_match.url_name %}active{% endif %}"
+                title="Students Management">
+                <div class="menu-icon">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <span class="menu-text" data-key="students">Students</span>
+            </a>
+
+            <a href="{% url 'students_app:teacher_list' %}"
+                class="menu-item {% if 'teacher_list' in request.resolver_match.url_name or 'add_teacher' in request.resolver_match.url_name or 'edit_teacher' in request.resolver_match.url_name %}active{% endif %}"
+                title="Teachers Management">
+                <div class="menu-icon">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                </div>
+                <span class="menu-text" data-key="teachers">Teachers</span>
+            </a>
+
+            <a href="{% url 'students_app:staff_list' %}"
+                class="menu-item {% if 'staff_list' in request.resolver_match.url_name or 'add_staff' in request.resolver_match.url_name %}active{% endif %}"
+                title="Staff Management">
+                <div class="menu-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <span class="menu-text" data-key="staff">Staff</span>
+            </a>
+
+            <a href="{% if request.user.is_superuser or role == 'super_admin' %}{% url 'students_app:super_admin_user_management' %}{% else %}{% url 'students_app:user_list' %}{% endif %}"
+                class="menu-item {% if 'super_admin_user_management' in request.resolver_match.url_name or request.resolver_match.url_name == 'user_list' %}active{% endif %}"
+                title="User Management">
+                <div class="menu-icon">
+                    <i class="fas fa-users-cog"></i>
+                </div>
+                <span class="menu-text" data-key="user_management">User Management</span>
+            </a>
+
+            {% if request.user.is_superuser or role == 'super_admin' %}
+            <a href="{% url 'students_app:super_admin_analytics' %}"
+                class="menu-item {% if 'super_admin_analytics' in request.resolver_match.url_name %}active{% endif %}"
+                title="Analytics & Reporting">
+                <div class="menu-icon">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <span class="menu-text" data-key="analytics">Analytics</span>
+            </a>
+
+            <a href="{% url 'students_app:school_billing_dashboard' %}"
+                class="menu-item {% if 'billing' in request.resolver_match.url_name %}active{% endif %}"
+                title="School Billing">
+                <div class="menu-icon">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+                <span class="menu-text" data-key="billing">Billing</span>
+            </a>
+
+            <a href="{% url 'students_app:super_admin_configuration' %}"
+                class="menu-item {% if 'super_admin_configuration' in request.resolver_match.url_name %}active{% endif %}"
+                title="Configuration Settings">
+                <div class="menu-icon">
+                    <i class="fas fa-sliders-h"></i>
+                </div>
+                <span class="menu-text" data-key="configuration">Configuration</span>
+            </a>
+
+            <a href="{% url 'students_app:super_admin_security' %}"
+                class="menu-item {% if 'super_admin_security' in request.resolver_match.url_name %}active{% endif %}"
+                title="Security Controls">
+                <div class="menu-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <span class="menu-text" data-key="security">Security</span>
+            </a>
+
+            <a href="{% url 'students_app:work_list' %}"
+                class="menu-item {% if 'work' in request.resolver_match.url_name %}active{% endif %}"
+                title="Work & Expense Tracking">
+                <div class="menu-icon">
+                    <i class="fas fa-briefcase"></i>
+                </div>
+                <span class="menu-text" data-key="work_tracking">Work Tracking</span>
+            </a>
+            {% endif %}
+        </div>
+
+        <!-- RESOURCES Section -->
+        <div class="menu-section">
+            <div class="menu-section-title">
+                <i class="fas fa-folder-open"></i>
+                <span data-key="resources">RESOURCES</span>
+            </div>
+
+            <a href="{% url 'students_app:generate_bulk_id_cards' %}"
+                class="menu-item {% if 'id-card' in request.path or 'id_card' in request.path %}active{% endif %}"
+                title="ID Card Generation">
+                <div class="menu-icon">
+                    <i class="fas fa-id-card"></i>
+                </div>
+                <span class="menu-text" data-key="id_cards">ID Cards</span>
+            </a>
+        </div>
+        {% endwith %}
+        <!-- SYSTEM Section -->
+        <div class="menu-section">
+            <div class="menu-section-title">
+                <i class="fas fa-server"></i>
+                <span data-key="system">SYSTEM</span>
+            </div>
+
+            <a href="{% url 'admin:index' %}" class="menu-item" title="Django Admin Panel" target="_blank">
+                <div class="menu-icon">
+                    <i class="fas fa-cogs"></i>
+                </div>
+                <span class="menu-text" data-key="admin_panel">Admin Panel</span>
+                <i class="fas fa-external-link-alt menu-external"></i>
+            </a>
+
+            <a href="{% url 'students_app:user_logout' %}" class="menu-item logout-item"
+                onclick="confirmLogout(event)" title="Logout from System">
+                <div class="menu-icon">
+                    <i class="fas fa-sign-out-alt"></i>
+                </div>
+                <span class="menu-text" data-key="logout">Logout</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* ============================================
+   ADMIN SIDEBAR STYLES - Professional Design
+   ============================================ */
+
+    /* Trigger Zone for Hover */
+    .sidebar-trigger {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 15px;
+        /* Width of the sensitive area */
+        height: 100vh;
+        z-index: 1002;
+        /* Above sidebar */
+        background: transparent;
+        /* Invisible */
+    }
+
+    /* Default sidebar - HIDDEN OFF SCREEN */
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 240px;
+        height: 100vh;
+        background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+        backdrop-filter: blur(20px);
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 0;
+        z-index: 1000;
+        overflow-y: auto;
+        overflow-x: visible;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        transition: transform 0.3s ease;
+        transform: translateX(-100%);
+        /* Completely hidden by default */
+    }
+
+    /* Main content adjustment - No margin when sidebar is hidden */
+    .container-fluid {
+        margin-left: 0 !important;
+        padding: 30px;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box;
+        transition: all 0.3s ease;
+    }
+
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        transition: all 0.3s ease;
+    }
+
+    /* Show sidebar on hover of trigger OR sidebar itself (Desktop Only) */
+    @media (min-width: 769px) {
+
+        .sidebar-trigger:hover~.sidebar,
+        .sidebar:hover {
+            transform: translateX(0);
+        }
+
+        /* Adjust content margin when sidebar is visible (on hover) */
+        body.sidebar-open .container-fluid {
+            margin-left: 240px !important;
+            width: calc(100vw - 240px) !important;
+            max-width: calc(100vw - 240px) !important;
+        }
+
+        body.sidebar-open .main-content {
+            margin-left: 240px !important;
+            width: calc(100vw - 240px) !important;
+            max-width: calc(100vw - 240px) !important;
+        }
+        
+        /* Also handle direct hover on sidebar */
+        .sidebar:hover ~ * .container-fluid,
+        .sidebar-trigger:hover ~ .sidebar ~ * .container-fluid {
+            margin-left: 240px !important;
+            width: calc(100vw - 240px) !important;
+            max-width: calc(100vw - 240px) !important;
+        }
+
+        .sidebar:hover ~ * .main-content,
+        .sidebar-trigger:hover ~ .sidebar ~ * .main-content {
+            margin-left: 240px !important;
+            width: calc(100vw - 240px) !important;
+            max-width: calc(100vw - 240px) !important;
+        }
+    }
+
+    /* Collapsed mode - Not used anymore for desktop default, but kept for reference if needed */
+    .sidebar.collapsed {
+        width: 240px;
+        /* Reset to full width if class persists */
+    }
+
+    /* Icons alignment */
+    .sidebar a i {
+        margin-right: 12px;
+    }
+
+    /* Collapse Button - Mobile Only */
+    .collapse-btn {
+        position: absolute;
+        right: -15px;
+        /* Stick out slightly */
+        top: 80px;
+        width: 30px;
+        height: 30px;
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        border: none;
+        border-radius: 50%;
+        color: white;
+        cursor: pointer;
+        display: none;
+        /* Hidden by default (Desktop) */
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        z-index: 1001;
+        box-shadow: 0 2px 8px rgba(99, 102, 241, 0.5);
+    }
+
+    /* Mobile Styles */
+    @media (max-width: 768px) {
+        .sidebar-trigger {
+            display: none;
+        }
+
+        .sidebar {
+            transform: translateX(-100%);
+            /* Hidden by default on mobile */
+            width: 240px !important;
+            /* Full width when shown */
+        }
+
+        .sidebar.mobile-show {
+            transform: translateX(0);
+        }
+
+        .collapse-btn {
+            display: flex;
+            /* Show on mobile */
+            right: -30px;
+            /* Outside the sidebar */
+        }
+
+        /* Disable hover effects on mobile */
+        .sidebar:hover {
+            width: 240px;
+        }
+    }
+
+
+    .sidebar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .sidebar::-webkit-scrollbar-track {
+        background: rgba(15, 23, 42, 0.5);
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+        background: rgba(99, 102, 241, 0.5);
+        border-radius: 10px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb:hover {
+        background: rgba(99, 102, 241, 0.7);
+    }
+
+    /* Logo Section */
+    .sidebar .logo {
+        padding: 24px 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(15, 23, 42, 0.5);
+        margin-bottom: 0;
+    }
+
+    .logo-link {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        text-decoration: none;
+        transition: transform 0.2s ease;
+    }
+
+    .logo-link:hover {
+        transform: translateX(2px);
+    }
+
+    .logo-icon {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    }
+
+    .logo-icon i {
+        font-size: 24px;
+        color: white;
+    }
+
+    .logo-text {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .logo-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #ffffff;
+        letter-spacing: -0.5px;
+        line-height: 1.2;
+    }
+
+    .logo-subtitle {
+        font-size: 11px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.6);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Language Switcher */
+    .language-switcher {
+        padding: 16px 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(15, 23, 42, 0.3);
+    }
+
+    .lang-buttons {
+        display: flex;
+        gap: 8px;
+    }
+
+    .lang-btn {
+        flex: 1;
+        padding: 8px 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    .lang-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.9);
+        transform: translateY(-1px);
+    }
+
+    .lang-btn.active {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        border-color: transparent;
+        color: white;
+        box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+    }
+
+    .lang-btn i {
+        font-size: 14px;
+    }
+
+    /* Sidebar Menu */
+    .sidebar-menu {
+        padding: 12px 0;
+    }
+
+    /* Menu Section */
+    .menu-section {
+        margin-bottom: 8px;
+    }
+
+    .menu-section-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 20px 8px;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-top: 4px;
+    }
+
+    .menu-section-title i {
+        font-size: 10px;
+        opacity: 0.6;
+    }
+
+    /* Menu Items */
+    .menu-item {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 12px 20px;
+        margin: 2px 12px;
+        color: rgba(255, 255, 255, 0.75);
+        text-decoration: none;
+        border-radius: 10px;
+        transition: all 0.2s ease;
+        position: relative;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+    }
+
+    .menu-item.main-dashboard {
+        background: rgba(99, 102, 241, 0.1);
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .menu-item.main-dashboard:hover {
+        background: rgba(99, 102, 241, 0.2);
+        border-color: rgba(99, 102, 241, 0.4);
+    }
+
+    .menu-item.main-dashboard.active {
+        background: linear-gradient(90deg, rgba(99, 102, 241, 0.3) 0%, rgba(139, 92, 246, 0.2) 100%);
+        border-color: rgba(99, 102, 241, 0.5);
+    }
+
+    .menu-external {
+        font-size: 10px;
+        opacity: 0.5;
+        margin-left: auto;
+    }
+
+    .menu-item::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 3px;
+        height: 0;
+        background: linear-gradient(180deg, #6366f1 0%, #8b5cf6 100%);
+        border-radius: 0 3px 3px 0;
+        transition: height 0.2s ease;
+    }
+
+    .menu-item:hover {
+        background: rgba(99, 102, 241, 0.1);
+        color: #ffffff;
+        transform: translateX(4px);
+    }
+
+    .menu-item.active {
+        background: linear-gradient(90deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.1) 100%);
+        color: #ffffff;
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
+    }
+
+    .menu-item.active::before {
+        height: 70%;
+    }
+
+    .menu-icon {
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .menu-icon i {
+        font-size: 16px;
+        transition: transform 0.2s ease;
+    }
+
+    .menu-item:hover .menu-icon i {
+        transform: scale(1.1);
+    }
+
+    .menu-item.active .menu-icon i {
+        color: #818cf8;
+    }
+
+    .menu-text {
+        flex: 1;
+        line-height: 1.4;
+        letter-spacing: 0.2px;
+    }
+
+    /* Logout Item Special Styling */
+    .menu-item.logout-item {
+        color: rgba(239, 68, 68, 0.8);
+        margin-top: 8px;
+    }
+
+    .menu-item.logout-item:hover {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+    }
+
+    .menu-item.logout-item .menu-icon i {
+        color: rgba(239, 68, 68, 0.8);
+    }
+
+    .menu-item.logout-item:hover .menu-icon i {
+        color: #ef4444;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .sidebar {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.show {
+            transform: translateX(0);
+        }
+    }
+
+    /* Smooth Animations */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .menu-item {
+        animation: slideIn 0.3s ease backwards;
+    }
+
+    .menu-item:nth-child(1) {
+        animation-delay: 0.05s;
+    }
+
+    .menu-item:nth-child(2) {
+        animation-delay: 0.1s;
+    }
+
+    .menu-item:nth-child(3) {
+        animation-delay: 0.15s;
+    }
+
+    .menu-item:nth-child(4) {
+        animation-delay: 0.2s;
+    }
+
+    .menu-item:nth-child(5) {
+        animation-delay: 0.25s;
+    }
+</style>
+
+<script>
+    // Sidebar Functionality (Hover + Mobile Toggle)
+    document.addEventListener('DOMContentLoaded', function () {
+        const sidebar = document.querySelector('.sidebar');
+        const sidebarTrigger = document.querySelector('.sidebar-trigger');
+        const mainContent = document.querySelector('.main-content');
+        const containerFluid = document.querySelector('.container-fluid');
+        const toggleBtn = document.getElementById('collapseBtn');
+        const body = document.body;
+
+        if (!sidebar) {
+            console.error('❌ Sidebar element not found!');
+            return;
+        }
+
+        // Function to adjust content when sidebar is visible
+        function adjustContentForSidebar(isVisible) {
+            if (isVisible) {
+                body.classList.add('sidebar-open');
+            } else {
+                body.classList.remove('sidebar-open');
+            }
+        }
+
+        // Handle sidebar hover
+        if (sidebar) {
+            sidebar.addEventListener('mouseenter', function() {
+                adjustContentForSidebar(true);
+            });
+            
+            sidebar.addEventListener('mouseleave', function() {
+                adjustContentForSidebar(false);
+            });
+        }
+
+        // Handle trigger hover
+        if (sidebarTrigger) {
+            sidebarTrigger.addEventListener('mouseenter', function() {
+                adjustContentForSidebar(true);
+            });
+            
+            sidebarTrigger.addEventListener('mouseleave', function() {
+                // Only hide if sidebar is not being hovered
+                setTimeout(function() {
+                    if (!sidebar.matches(':hover')) {
+                        adjustContentForSidebar(false);
+                    }
+                }, 100);
+            });
+        }
+
+        // --- Common Logic ---
+        function setContentMargin() {
+            const margin = '0px';
+            if (mainContent) {
+                mainContent.style.marginLeft = margin;
+                mainContent.style.width = '100%';
+                mainContent.style.maxWidth = '100%';
+            }
+            if (containerFluid) {
+                containerFluid.style.marginLeft = margin;
+                containerFluid.style.width = '100%';
+                containerFluid.style.maxWidth = '100%';
+            }
+        }
+
+        // Initialize
+        setContentMargin();
+        window.addEventListener('resize', setContentMargin);
+
+
+
+        // Toggle Button Click (Mobile Only)
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function () {
+                sidebar.classList.toggle('mobile-show');
+                const isOpen = sidebar.classList.contains('mobile-show');
+                adjustContentForSidebar(isOpen);
+                
+                const icon = toggleBtn.querySelector('i');
+                if (isOpen) {
+                    icon.classList.remove('fa-chevron-right');
+                    icon.classList.add('fa-chevron-left');
+                } else {
+                    icon.classList.remove('fa-chevron-left');
+                    icon.classList.add('fa-chevron-right');
+                }
+            });
+        }
+
+        console.log('✅ Sidebar functionality initialized (Desktop + Mobile)');
+    });
+
+    // Language switching functionality
+    document.addEventListener('DOMContentLoaded', function () {
+        // Load current language text
+        loadLanguageText();
+
+        // Add click handlers for language buttons
+        const languageButtons = document.querySelectorAll('.lang-btn');
+        languageButtons.forEach(button => {
+            button.addEventListener('click', function (e) {
+                e.preventDefault();
+                const language = this.getAttribute('data-language');
+                switchLanguage(language, this);
+            });
+        });
+    });
+
+    function switchLanguage(language, button) {
+        // Update active button
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        button.classList.add('active');
+
+        // Save language preference
+        fetch('{% url "students_app:switch_language" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: 'language=' + language
+        });
+
+        // Load new language text
+        loadLanguageText(language);
+    }
+
+    function loadLanguageText(language = null) {
+        if (!language) {
+            language = '{{ request.session.language|default:"en" }}';
+        }
+
+        // Language text mapping
+        const textMap = {
+            'en': {
+                'dashboard': 'Dashboard',
+                'dashboards': 'Dashboards',
+                'schools': 'Schools',
+                'admin_dashboard': 'Admin Dashboard',
+                'crm_dashboard': 'CRM Dashboard',
+                'add_school': 'Add School',
+                'school_features': 'School Features',
+                'user_management': 'User Management',
+                'analytics': 'Analytics',
+                'configuration': 'Configuration',
+                'security': 'Security',
+                'logout': 'Logout',
+                'admin_panel': 'Admin Panel',
+                'main_menu': 'MAIN MENU',
+                'students': 'Students',
+                'teachers': 'Teachers',
+                'staff': 'Staff',
+                'attendance': 'Attendance',
+                'academics': 'ACADEMICS',
+                'marks_entry': 'Marks Entry',
+                'timetable': 'Timetable',
+                'management': 'MANAGEMENT',
+                'fee_management': 'Fee Management',
+                'quick_actions': 'QUICK ACTIONS',
+                'add_new_school': 'Add New School',
+                'create_user': 'Create User',
+                'view_all_users': 'View All Users',
+                'id_card_generator': 'ID Card Generator',
+                'calculator': 'Calculator',
+                'system': 'SYSTEM',
+                'resources': 'RESOURCES',
+                'id_cards': 'ID Cards'
+            },
+            'hi': {
+                'dashboard': 'डैशबोर्ड',
+                'dashboards': 'डैशबोर्ड',
+                'schools': 'स्कूल',
+                'admin_dashboard': 'एडमिन डैशबोर्ड',
+                'crm_dashboard': 'सीआरएम डैशबोर्ड',
+                'add_school': 'स्कूल जोड़ें',
+                'school_features': 'स्कूल फीचर्स',
+                'user_management': 'यूज़र प्रबंधन',
+                'analytics': 'विश्लेषण',
+                'configuration': 'कॉन्फ़िगरेशन',
+                'security': 'सुरक्षा',
+                'logout': 'लॉगआउट',
+                'admin_panel': 'एडमिन पैनल',
+                'main_menu': 'मुख्य मेनू',
+                'students': 'छात्र',
+                'teachers': 'शिक्षक',
+                'staff': 'कर्मचारी',
+                'attendance': 'उपस्थिति',
+                'academics': 'शैक्षणिक',
+                'marks_entry': 'अंक प्रविष्टि',
+                'timetable': 'समय सारणी',
+                'management': 'प्रबंधन',
+                'fee_management': 'फीस प्रबंधन',
+                'quick_actions': 'त्वरित कार्य',
+                'add_new_school': 'नया स्कूल जोड़ें',
+                'create_user': 'यूजर बनाएं',
+                'view_all_users': 'सभी यूजर देखें',
+                'id_card_generator': 'ID कार्ड जनरेटर',
+                'calculator': 'कैलकुलेटर',
+                'system': 'सिस्टम',
+                'resources': 'संसाधन',
+                'id_cards': 'ID कार्ड'
+            }
+        };
+
+        const texts = textMap[language] || textMap['en'];
+
+        // Update all menu texts
+        document.querySelectorAll('.menu-text').forEach(element => {
+            const key = element.getAttribute('data-key');
+            if (key && texts[key]) {
+                element.textContent = texts[key];
+            }
+        });
+
+        // Update headings
+        document.querySelectorAll('.menu-section-title span').forEach(element => {
+            const key = element.getAttribute('data-key');
+            if (key && texts[key]) {
+                element.textContent = texts[key];
+            }
+        });
+    }
+
+    // Logout functionality
+    function confirmLogout(event) {
+        event.preventDefault();
+
+        // Get current language for confirmation message
+        const currentLang = '{{ request.session.language|default:"en" }}';
+        const messages = {
+            'en': {
+                'confirm': 'Are you sure you want to logout?',
+                'yes': 'Yes, Logout',
+                'no': 'Cancel'
+            },
+            'hi': {
+                'confirm': 'क्या आप वाकई लॉगआउट करना चाहते हैं?',
+                'yes': 'हाँ, लॉगआउट करें',
+                'no': 'रद्द करें'
+            }
+        };
+
+        const msg = messages[currentLang] || messages['en'];
+
+        // Create custom confirmation dialog
+        if (confirm(msg.confirm)) {
+            // Show loading state
+            const logoutBtn = event.target.closest('.logout-item');
+            const originalText = logoutBtn.innerHTML;
+            logoutBtn.innerHTML = '<div class="menu-icon"><i class="fas fa-spinner fa-spin"></i></div><span class="menu-text">Logging out...</span>';
+            logoutBtn.style.pointerEvents = 'none';
+
+            // Perform AJAX logout
+            fetch('{% url "students_app:ajax_logout" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success message
+                        showNotification(data.message, 'success');
+
+                        // Redirect after short delay
+                        setTimeout(() => {
+                            window.location.href = data.redirect_url;
+                        }, 1000);
+                    } else {
+                        // Show error message
+                        showNotification(data.message, 'error');
+
+                        // Restore button
+                        logoutBtn.innerHTML = originalText;
+                        logoutBtn.style.pointerEvents = 'auto';
+                    }
+                })
+                .catch(error => {
+                    console.error('Logout error:', error);
+                    showNotification('Logout failed. Please try again.', 'error');
+
+                    // Restore button
+                    logoutBtn.innerHTML = originalText;
+                    logoutBtn.style.pointerEvents = 'auto';
+                });
+        }
+    }
+
+    // Notification function
+    function showNotification(message, type = 'info') {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} alert-dismissible fade show position-fixed`;
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+
+        // Add to page
+        document.body.appendChild(notification);
+
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 5000);
+    }
+</script>

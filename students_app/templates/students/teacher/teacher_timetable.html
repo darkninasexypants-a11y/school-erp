@@ -1,0 +1,252 @@
+{% extends "students/base_modern.html" %}
+{% load static %}
+
+{% block title %}My Timetable - {{ teacher_info.teacher.user.get_full_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-0">
+                <i class="fas fa-calendar-alt me-2"></i>
+                My Timetable
+            </h4>
+            <p class="text-muted mb-0">
+                {{ teacher_info.teacher.user.get_full_name }} - Teaching Schedule
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'students_app:teacher_dashboard_restricted' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Access Level Info -->
+    {% if teacher_info.is_class_teacher %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-shield-alt me-2"></i>
+        <strong>Class Teacher:</strong> You have access to all your assigned classes and can manage students.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% else %}
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Subject Teacher:</strong> This timetable shows only your assigned teaching periods.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endif %}
+
+    <!-- Timetable Tabs -->
+    <div class="card shadow">
+        <div class="card-header bg-light">
+            <ul class="nav nav-tabs card-header-tabs" id="timetableTabs" role="tablist">
+                {% for day_num, day_data in timetable_by_day.items %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {% if forloop.first %}active{% endif %}" id="day-{{ day_num }}-tab"
+                        data-bs-toggle="tab" data-bs-target="#day-{{ day_num }}" type="button" role="tab">
+                        {{ day_data.name }}
+                        <span class="badge bg-primary ms-1">{{ day_data.periods|length }}</span>
+                    </button>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="card-body">
+            <div class="tab-content" id="timetableTabContent">
+                {% for day_num, day_data in timetable_by_day.items %}
+                <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="day-{{ day_num }}"
+                    role="tabpanel" aria-labelledby="day-{{ day_num }}-tab">
+
+                    {% if day_data.periods %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="120">Time</th>
+                                    <th>Class</th>
+                                    <th>Subject</th>
+                                    <th>Room</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for period in day_data.periods %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ period.time_slot.start_time|date:"H:i" }}</strong><br>
+                                        <small class="text-muted">{{ period.time_slot.end_time|date:"H:i" }}</small>
+                                    </td>
+                                    <td>
+                                        <strong>{{ period.section.class_assigned.name }}</strong><br>
+                                        <span class="badge bg-info">{{ period.section.name }}</span>
+                                        {% if period.section in teacher_info.assigned_sections %}
+                                        <span class="badge bg-success ms-1">Class Teacher</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ period.subject.name }}</span>
+                                    </td>
+                                    <td>{{ period.room_number|default:"-" }}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="{% url 'students_app:take_attendance' %}?class_id={{ period.section.class_assigned.id }}&section_id={{ period.section.id }}"
+                                                class="btn btn-outline-success" title="Take Attendance">
+                                                <i class="fas fa-user-check"></i>
+                                            </a>
+                                            <a href="{% url 'students_app:teacher_student_list' %}?section={{ period.section.id }}"
+                                                class="btn btn-outline-primary" title="View Students">
+                                                <i class="fas fa-users"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No Classes on {{ day_data.name }}</h5>
+                        <p class="text-muted">You have no teaching periods scheduled for this day.</p>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h4 class="mb-0">
+                        {% for day_num, day_data in timetable_by_day.items %}
+                        {{ day_data.periods|length }}
+                        {% if not forloop.last %}+{% endif %}
+                        {% endfor %}
+                    </h4>
+                    <p class="mb-0">Total Periods/Week</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h4 class="mb-0">{{ teacher_info.teaching_sections|length }}</h4>
+                    <p class="mb-0">Different Classes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h4 class="mb-0">{{ teacher_info.assigned_sections|length }}</h4>
+                    <p class="mb-0">Class Teacher Roles</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <h4 class="mb-0">
+                        {% with today_classes=timetable_by_day.1.periods %}
+                        {{ today_classes|length }}
+                        {% endwith %}
+                    </h4>
+                    <p class="mb-0">Today's Classes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card mt-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">
+                <i class="fas fa-tools me-2"></i>
+                Quick Actions
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3 mb-2">
+                    <a href="{% url 'students_app:teacher_student_list' %}" class="btn btn-primary w-100">
+                        <i class="fas fa-users me-2"></i>View All Students
+                    </a>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <a href="{% url 'students_app:attendance_dashboard' %}" class="btn btn-success w-100">
+                        <i class="fas fa-user-check me-2"></i>Take Attendance
+                    </a>
+                </div>
+                {% if teacher_info.is_class_teacher %}
+                <div class="col-md-3 mb-2">
+                    <a href="{% url 'students_app:student_import' %}" class="btn btn-info w-100">
+                        <i class="fas fa-file-import me-2"></i>Import Students
+                    </a>
+                </div>
+                {% endif %}
+                <div class="col-md-3 mb-2">
+                    <button type="button" class="btn btn-outline-primary w-100" onclick="printTimetable()">
+                        <i class="fas fa-print me-2"></i>Print Timetable
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function printTimetable() {
+        window.print();
+    }
+
+    // Auto-refresh today's schedule
+    function updateTodaySchedule() {
+        const today = new Date().getDay(); // 0=Sunday, 1=Monday, etc.
+        const dayMap = { 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 0: 0 }; // Convert to Monday=0 format
+        const todayDayNum = dayMap[today];
+
+        // Highlight today's tab
+        const todayTab = document.getElementById(`day-${todayDayNum}-tab`);
+        if (todayTab) {
+            todayTab.classList.add('bg-warning', 'text-dark');
+        }
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function () {
+        updateTodaySchedule();
+    });
+</script>
+
+<style>
+    @media print {
+
+        .btn,
+        .nav-tabs,
+        .card-header,
+        .alert {
+            display: none !important;
+        }
+
+        .tab-pane {
+            display: block !important;
+            page-break-inside: avoid;
+        }
+
+        .card {
+            border: 1px solid #000 !important;
+            box-shadow: none !important;
+        }
+
+        .table {
+            font-size: 12px;
+        }
+    }
+</style>
+{% endblock %}

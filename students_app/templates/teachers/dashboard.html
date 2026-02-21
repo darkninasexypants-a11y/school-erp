@@ -1,0 +1,330 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Teacher Portal - {{ teacher.user.get_full_name }}{% endblock %}
+
+{% block sidebar %}
+{% include 'includes/teacher_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="top-bar">
+    <div class="page-title">
+        <h1><i class="bi bi-person-badge me-2"></i>Teacher Portal</h1>
+        <p>Welcome, {{ teacher.user.get_full_name }}</p>
+    </div>
+    <div class="top-bar-actions">
+        <span class="badge bg-primary bg-opacity-10 text-primary" style="padding: 10px 15px; font-size: 0.9rem;">
+            <i class="bi bi-person-video3 me-1"></i>{{ teacher.employee_id }}
+        </span>
+    </div>
+</div>
+
+<!-- Teacher Profile Card -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-auto position-relative">
+                {% if teacher.photo %}
+                    <img src="{{ teacher.photo.url }}" alt="{{ teacher.user.get_full_name }}" 
+                         class="teacher-avatar-large" style="object-fit: cover;">
+                {% else %}
+                <div class="teacher-avatar-large">
+                    {{ teacher.user.first_name.0|default:"T" }}{{ teacher.user.last_name.0|default:"" }}
+                </div>
+                {% endif %}
+                <a href="{% url 'students_app:teacher_change_photo' %}" class="btn btn-sm btn-primary position-absolute bottom-0 end-0 rounded-circle" 
+                   style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.2);" 
+                   title="Change Photo">
+                    <i class="bi bi-camera" style="font-size: 0.9rem;"></i>
+                </a>
+            </div>
+            <div class="col">
+                <h3 class="mb-1">{{ teacher.user.get_full_name }}</h3>
+                <div class="row g-3 mt-2">
+                    <div class="col-md-6">
+                        <p class="mb-1"><i class="bi bi-badge-id me-2 text-primary"></i><strong>Employee ID:</strong> {{ teacher.employee_id }}</p>
+                        <p class="mb-1"><i class="bi bi-telephone me-2 text-primary"></i><strong>Phone:</strong> {{ teacher.phone }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1"><i class="bi bi-book me-2 text-primary"></i><strong>Subject:</strong> 
+                            {% if teacher.subjects.all %}
+                                {% for subject in teacher.subjects.all %}
+                                    {{ subject.name }}{% if not forloop.last %}, {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-muted">Not assigned</span>
+                            {% endif %}
+                        </p>
+                        <p class="mb-1"><i class="bi bi-people me-2 text-success"></i><strong>Class Teacher:</strong> 
+                            {% if class_teacher_assignments %}
+                                {% for assignment in class_teacher_assignments %}
+                                    <span class="badge bg-success">{{ assignment.section }}</span>{% if not forloop.last %} {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-muted">Not assigned</span>
+                            {% endif %}
+                        </p>
+                        {% if teacher.email %}
+                        <p class="mb-0"><i class="bi bi-envelope me-2 text-primary"></i><strong>Email:</strong> {{ teacher.email }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 action-card-modern">
+            <div class="card-body text-center">
+                <div class="action-icon-modern bg-primary">
+                    <i class="bi bi-clipboard-data"></i>
+                </div>
+                <h5 class="mt-3 mb-2">Marks Entry</h5>
+                <p class="text-muted small mb-3">Enter and manage student marks</p>
+                <a href="{% url 'students_app:marks_entry' %}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-arrow-right me-1"></i>Go to Marks
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 action-card-modern">
+            <div class="card-body text-center">
+                <div class="action-icon-modern bg-success">
+                    <i class="bi bi-calendar-check"></i>
+                </div>
+                <h5 class="mt-3 mb-2">Mark Student Attendance</h5>
+                <p class="text-muted small mb-3">Take daily attendance for your classes</p>
+                <a href="{% url 'students_app:teacher_student_attendance' %}" class="btn btn-success btn-sm">
+                    <i class="bi bi-arrow-right me-1"></i>Mark Attendance
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 action-card-modern">
+            <div class="card-body text-center">
+                <div class="action-icon-modern bg-info">
+                    <i class="bi bi-calendar3"></i>
+                </div>
+                <h5 class="mt-3 mb-2">View Timetable</h5>
+                <p class="text-muted small mb-3">Check your class schedule</p>
+                <a href="{% url 'students_app:view_timetable' %}" class="btn btn-info btn-sm">
+                    <i class="bi bi-arrow-right me-1"></i>View Timetable
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 action-card-modern">
+            <div class="card-body text-center">
+                <div class="action-icon-modern bg-warning">
+                    <i class="bi bi-file-text"></i>
+                </div>
+                <h5 class="mt-3 mb-2">Question Papers</h5>
+                <p class="text-muted small mb-3">Create and manage question papers</p>
+                <a href="{% url 'students_app:teacher_question_paper' %}" class="btn btn-warning btn-sm">
+                    <i class="bi bi-arrow-right me-1"></i>Create Paper
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 action-card-modern">
+            <div class="card-body text-center">
+                <div class="action-icon-modern bg-success" style="background: linear-gradient(135deg, #25D366, #128C7E) !important;">
+                    <i class="bi bi-whatsapp"></i>
+                </div>
+                <h5 class="mt-3 mb-2">WhatsApp Messaging</h5>
+                <p class="text-muted small mb-3">Send messages to students and parents</p>
+                <a href="{% url 'students_app:teacher_whatsapp' %}" class="btn btn-sm" style="background: linear-gradient(135deg, #25D366, #128C7E); color: white; border: none;">
+                    <i class="bi bi-arrow-right me-1"></i>Send Message
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 action-card-modern">
+            <div class="card-body text-center">
+                <div class="action-icon-modern bg-primary">
+                    <i class="bi bi-people"></i>
+                </div>
+                <h5 class="mt-3 mb-2">View Students</h5>
+                <p class="text-muted small mb-3">Browse and manage student information</p>
+                <a href="{% url 'students_app:student_list' %}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-arrow-right me-1"></i>View Students
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 action-card-modern">
+            <div class="card-body text-center">
+                <div class="action-icon-modern bg-danger">
+                    <i class="bi bi-person-check"></i>
+                </div>
+                <h5 class="mt-3 mb-2">My Attendance</h5>
+                <p class="text-muted small mb-3">View your attendance records</p>
+                <a href="{% url 'students_app:teacher_my_attendance' %}" class="btn btn-danger btn-sm">
+                    <i class="bi bi-arrow-right me-1"></i>View My Attendance
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-file-text me-2"></i>Recent Question Papers</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_papers %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Subject</th>
+                                <th>Class</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for paper in recent_papers %}
+                            <tr>
+                                <td>{{ paper.title }}</td>
+                                <td><span class="badge bg-info">{{ paper.subject.name }}</span></td>
+                                <td>{{ paper.class_assigned.name }}</td>
+                                <td><small class="text-muted">{{ paper.created_at|date:"M d, Y" }}</small></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-file-text" style="font-size: 3rem; color: #cbd5e1;"></i>
+                    <p class="text-muted mt-2">No question papers created yet</p>
+                    <a href="{% url 'students_app:teacher_question_paper' %}" class="btn btn-sm btn-primary mt-2">
+                        <i class="bi bi-plus-circle me-1"></i>Create First Paper
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Recent Class Tests</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_tests %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Test Name</th>
+                                <th>Subject</th>
+                                <th>Class</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for test in recent_tests %}
+                            <tr>
+                                <td>{{ test.name }}</td>
+                                <td><span class="badge bg-success">{{ test.subject.name }}</span></td>
+                                <td>{{ test.class_assigned.name }}</td>
+                                <td><small class="text-muted">{{ test.date|date:"M d, Y" }}</small></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-clipboard-x" style="font-size: 3rem; color: #cbd5e1;"></i>
+                    <p class="text-muted mt-2">No class tests found</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_css %}
+<style>
+.teacher-avatar-large {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 2rem;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+/* When teacher-avatar-large is applied to an img tag */
+img.teacher-avatar-large {
+    object-fit: cover;
+    display: block;
+    background: none;
+    font-size: inherit;
+    font-weight: inherit;
+}
+
+.action-card-modern {
+    transition: all 0.3s ease;
+    border: 1px solid var(--gray-200);
+}
+
+.action-card-modern:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.action-icon-modern {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    font-size: 1.5rem;
+    color: white;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+}
+
+.action-icon-modern.bg-success {
+    background: linear-gradient(135deg, var(--success), #059669) !important;
+}
+
+.action-icon-modern.bg-info {
+    background: linear-gradient(135deg, var(--secondary), #0284c7) !important;
+}
+
+.action-icon-modern.bg-warning {
+    background: linear-gradient(135deg, var(--warning), #d97706) !important;
+}
+</style>
+{% endblock %}
+{% endblock %}

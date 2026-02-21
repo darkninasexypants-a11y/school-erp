@@ -1,0 +1,196 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Edit ID Card Data{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="fas fa-edit me-2"></i>Edit ID Card Data</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <!-- Student Information -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">Student Information</h6>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.name.id_for_label }}" class="form-label">Student Name *</label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                    <div class="text-danger">{{ form.name.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.admission_no.id_for_label }}" class="form-label">Admission No *</label>
+                                {{ form.admission_no }}
+                                {% if form.admission_no.errors %}
+                                    <div class="text-danger">{{ form.admission_no.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.father_name.id_for_label }}" class="form-label">Father's Name *</label>
+                                {{ form.father_name }}
+                                {% if form.father_name.errors %}
+                                    <div class="text-danger">{{ form.father_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.mother_name.id_for_label }}" class="form-label">Mother's Name</label>
+                                {{ form.mother_name }}
+                                {% if form.mother_name.errors %}
+                                    <div class="text-danger">{{ form.mother_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.date_of_birth.id_for_label }}" class="form-label">Date of Birth *</label>
+                                {{ form.date_of_birth }}
+                                {% if form.date_of_birth.errors %}
+                                    <div class="text-danger">{{ form.date_of_birth.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.blood_group.id_for_label }}" class="form-label">Blood Group</label>
+                                {{ form.blood_group }}
+                                {% if form.blood_group.errors %}
+                                    <div class="text-danger">{{ form.blood_group.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Academic Details -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">Academic Details</h6>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.class_name.id_for_label }}" class="form-label">Class *</label>
+                                {{ form.class_name }}
+                                {% if form.class_name.errors %}
+                                    <div class="text-danger">{{ form.class_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.section.id_for_label }}" class="form-label">Section</label>
+                                {{ form.section }}
+                                {% if form.section.errors %}
+                                    <div class="text-danger">{{ form.section.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.roll_number.id_for_label }}" class="form-label">Roll Number</label>
+                                {{ form.roll_number }}
+                                {% if form.roll_number.errors %}
+                                    <div class="text-danger">{{ form.roll_number.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Contact Information -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">Contact Information</h6>
+                            </div>
+                            <div class="col-12">
+                                <label for="{{ form.address.id_for_label }}" class="form-label">Address *</label>
+                                {{ form.address }}
+                                {% if form.address.errors %}
+                                    <div class="text-danger">{{ form.address.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mt-3">
+                                <label for="{{ form.mobile.id_for_label }}" class="form-label">Mobile *</label>
+                                {{ form.mobile }}
+                                {% if form.mobile.errors %}
+                                    <div class="text-danger">{{ form.mobile.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mt-3">
+                                <label for="{{ form.emergency_contact.id_for_label }}" class="form-label">Emergency Contact</label>
+                                {{ form.emergency_contact }}
+                                {% if form.emergency_contact.errors %}
+                                    <div class="text-danger">{{ form.emergency_contact.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Photo and Validity -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">Additional Information</h6>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.photo.id_for_label }}" class="form-label">Student Photo</label>
+                                {{ form.photo }}
+                                {% if form.photo.errors %}
+                                    <div class="text-danger">{{ form.photo.errors }}</div>
+                                {% endif %}
+                                {% if card.photo %}
+                                    <div class="mt-2">
+                                        <small class="text-muted">Current photo:</small>
+                                        <img src="{{ card.photo.url }}" alt="{{ card.name }}" class="img-thumbnail" width="100" height="100">
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.valid_until.id_for_label }}" class="form-label">Valid Until</label>
+                                {{ form.valid_until }}
+                                {% if form.valid_until.errors %}
+                                    <div class="text-danger">{{ form.valid_until.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Status Information -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">Status Information</h6>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="alert alert-info">
+                                    <strong>Created:</strong> {{ card.created_at|date:"M d, Y H:i" }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                {% if card.is_generated %}
+                                    <div class="alert alert-success">
+                                        <strong>Status:</strong> Generated on {{ card.generated_at|date:"M d, Y H:i" }}
+                                    </div>
+                                {% else %}
+                                    <div class="alert alert-warning">
+                                        <strong>Status:</strong> Pending Generation
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'students_app:id_card_data_entry' card.generator.id %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Data Entry
+                            </a>
+                            <div>
+                                <button type="reset" class="btn btn-warning me-2">
+                                    <i class="fas fa-undo"></i> Reset
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Update Card Data
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

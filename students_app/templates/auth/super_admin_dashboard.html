@@ -1,0 +1,582 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Super Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* QuickCampus Inspired Design */
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 40px;
+        color: #fff;
+        margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
+    }
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 400px;
+        height: 400px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+    }
+    .hero-section::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: 10%;
+        width: 200px;
+        height: 200px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 50%;
+    }
+    .hero-section h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+        position: relative;
+        z-index: 1;
+    }
+    .hero-section p {
+        opacity: 0.9;
+        font-size: 1rem;
+        position: relative;
+        z-index: 1;
+    }
+    .hero-stats {
+        display: flex;
+        gap: 40px;
+        margin-top: 30px;
+        position: relative;
+        z-index: 1;
+    }
+    .hero-stat {
+        text-align: center;
+    }
+    .hero-stat .value {
+        font-size: 2.5rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+    .hero-stat .label {
+        font-size: 0.85rem;
+        opacity: 0.8;
+        margin-top: 5px;
+    }
+    
+    /* Module Cards - QuickCampus Style */
+    .module-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 25px;
+        text-align: center;
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+        height: 100%;
+        text-decoration: none;
+        display: block;
+    }
+    .module-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        border-color: transparent;
+    }
+    .module-card .icon-wrapper {
+        width: 70px;
+        height: 70px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 1.8rem;
+    }
+    .module-card h5 {
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 8px;
+    }
+    .module-card p {
+        color: #64748b;
+        font-size: 0.85rem;
+        margin: 0;
+    }
+    
+    /* Feature Grid */
+    .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+    }
+    
+    /* School Cards */
+    .school-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s ease;
+    }
+    .school-card:hover {
+        box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+    }
+    .school-logo {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 1.2rem;
+        font-weight: 700;
+    }
+    
+    /* Status Pills */
+    .status-pill {
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .status-pill.active {
+        background: #dcfce7;
+        color: #166534;
+    }
+    .status-pill.inactive {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+    
+    /* Activity Timeline */
+    .activity-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 15px;
+        padding: 15px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+    .activity-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-top: 5px;
+        flex-shrink: 0;
+    }
+    .activity-dot.blue { background: #3b82f6; }
+    .activity-dot.green { background: #10b981; }
+    .activity-dot.purple { background: #8b5cf6; }
+    .activity-dot.orange { background: #f59e0b; }
+    
+    /* Quick Action Buttons */
+    .quick-btn {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 15px 20px;
+        background: #f8fafc;
+        border-radius: 12px;
+        text-decoration: none;
+        color: #334155;
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+    }
+    .quick-btn:hover {
+        background: #fff;
+        border-color: #6366f1;
+        color: #6366f1;
+        transform: translateX(5px);
+    }
+    .quick-btn .icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+    }
+    
+    /* Progress Ring */
+    .progress-ring {
+        width: 120px;
+        height: 120px;
+        position: relative;
+    }
+    .progress-ring svg {
+        transform: rotate(-90deg);
+    }
+    .progress-ring .value {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1e293b;
+    }
+
+    /* Welcome Badge Styling */
+    .welcome-badge {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        padding: 24px 32px;
+        display: inline-flex;
+        align-items: center;
+        gap: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+    .welcome-badge:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        background: rgba(255, 255, 255, 0.2);
+    }
+    .badge-icon {
+        background: rgba(255, 255, 255, 0.3);
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: #fff;
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+    .badge-text {
+        text-align: left;
+    }
+    .badge-label {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        opacity: 0.9;
+        margin-bottom: 4px;
+        font-weight: 500;
+    }
+    .badge-company {
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        background: linear-gradient(90deg, #fff, #f0f0f0);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+</style>
+{% endblock %}
+
+{% block sidebar %}
+{% include 'includes/super_admin_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section - QuickCampus Style -->
+<div class="hero-section">
+    <div class="row align-items-center">
+        <div class="col-lg-7">
+            <h1>Welcome to School ERP Admin Panel 👋</h1>
+            <p>Manage all schools, users, and system settings from one powerful dashboard. Your cloud-based solution for complete school management.</p>
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <div class="value">{{ total_schools|default:0 }}</div>
+                    <div class="label">Schools</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="value">{{ total_users|default:0 }}</div>
+                    <div class="label">Users</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="value">{{ active_schools|default:0 }}</div>
+                    <div class="label">Active</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="value">{{ system_health.active_schools_percentage|floatformat:0|default:100 }}%</div>
+                    <div class="label">Uptime</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5 text-end d-none d-lg-block">
+            <div class="welcome-badge">
+                <div class="badge-icon">
+                    <i class="bi bi-star-fill"></i>
+                </div>
+                <div class="badge-text">
+                    <div class="badge-label">Powered By</div>
+                    <div class="badge-company">Alfa X Solutions</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Modules Grid - QuickCampus Style -->
+<div class="row g-4 mb-4">
+    <div class="col-6 col-md-4 col-lg-2">
+        <a href="{% url 'students_app:create_school' %}" class="module-card">
+            <div class="icon-wrapper" style="background: linear-gradient(135deg, #dbeafe, #bfdbfe);">
+                <i class="bi bi-building-add" style="color: #2563eb;"></i>
+                        </div>
+            <h5>Add School</h5>
+            <p>Register new school</p>
+                            </a>
+                        </div>
+    <div class="col-6 col-md-4 col-lg-2">
+        <a href="{% url 'students_app:create_user' %}" class="module-card">
+            <div class="icon-wrapper" style="background: linear-gradient(135deg, #dcfce7, #bbf7d0);">
+                <i class="bi bi-person-plus" style="color: #16a34a;"></i>
+            </div>
+            <h5>Add User</h5>
+            <p>Create new user</p>
+        </a>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+        <a href="{% url 'students_app:super_admin_user_management' %}" class="module-card">
+            <div class="icon-wrapper" style="background: linear-gradient(135deg, #ede9fe, #ddd6fe);">
+                <i class="bi bi-people" style="color: #7c3aed;"></i>
+            </div>
+            <h5>Users</h5>
+            <p>Manage all users</p>
+                            </a>
+                        </div>
+    <div class="col-6 col-md-4 col-lg-2">
+        <a href="{% url 'students_app:super_admin_analytics' %}" class="module-card">
+            <div class="icon-wrapper" style="background: linear-gradient(135deg, #fef3c7, #fde68a);">
+                <i class="bi bi-bar-chart" style="color: #d97706;"></i>
+            </div>
+            <h5>Analytics</h5>
+            <p>View reports</p>
+        </a>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+        <a href="{% url 'students_app:super_admin_configuration' %}" class="module-card">
+            <div class="icon-wrapper" style="background: linear-gradient(135deg, #fee2e2, #fecaca);">
+                <i class="bi bi-gear" style="color: #dc2626;"></i>
+            </div>
+            <h5>Settings</h5>
+            <p>Configuration</p>
+        </a>
+        </div>
+    <div class="col-6 col-md-4 col-lg-2">
+        <a href="{% url 'students_app:super_admin_security' %}" class="module-card">
+            <div class="icon-wrapper" style="background: linear-gradient(135deg, #e0f2fe, #bae6fd);">
+                <i class="bi bi-shield-lock" style="color: #0284c7;"></i>
+            </div>
+            <h5>Security</h5>
+            <p>Access control</p>
+        </a>
+        </div>
+    </div>
+
+<div class="row g-4">
+    <!-- Schools Section -->
+    <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0"><i class="bi bi-building me-2"></i>Registered Schools</h5>
+                    <small class="text-muted">All schools in the system</small>
+                </div>
+                <a href="{% url 'students_app:create_school' %}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-lg me-1"></i>Add New
+                </a>
+            </div>
+            <div class="card-body p-0">
+                    {% if schools %}
+                        <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead style="background: #f8fafc;">
+                                    <tr>
+                                <th class="border-0">School</th>
+                                <th class="border-0">Status</th>
+                                <th class="border-0">Users</th>
+                                <th class="border-0">Subscription</th>
+                                <th class="border-0 text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for school in schools %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                        <div class="school-logo me-3">
+                                            {% if school.logo %}
+                                                <img src="{{ school.logo.url }}" alt="{{ school.name }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 12px;">
+                                            {% else %}
+                                                {{ school.name.0|upper }}
+                                            {% endif %}
+                                                    </div>
+                                                <div>
+                                            <strong>{{ school.name }}</strong>
+                                            <small class="d-block text-muted">
+                                                <i class="bi bi-telephone me-1"></i>{{ school.phone|default:'No phone' }}
+                                            </small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if school.subscription_active %}
+                                    <span class="status-pill active">
+                                        <i class="bi bi-check-circle me-1"></i>Active
+                                    </span>
+                                            {% else %}
+                                    <span class="status-pill inactive">
+                                        <i class="bi bi-x-circle me-1"></i>Inactive
+                                    </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-2">
+                                            <strong>{{ school.schooluser_set.count }}</strong>
+                                            <small class="text-muted">/{{ school.max_users }}</small>
+                                        </div>
+                                        <div class="progress flex-grow-1" style="height: 4px; width: 60px;">
+                                            {% widthratio school.schooluser_set.count school.max_users 100 as user_percent %}
+                                            <div class="progress-bar bg-primary" style="width: {{ user_percent }}%"></div>
+                                        </div>
+                                    </div>
+                                        </td>
+                                        <td>
+                                    <small class="text-muted">
+                                        <i class="bi bi-calendar me-1"></i>{{ school.subscription_end_date|date:"M d, Y"|default:"N/A" }}
+                                    </small>
+                                        </td>
+                                <td class="text-end">
+                                    <a href="{% url 'admin:students_app_school_change' school.id %}" class="btn btn-sm btn-light" title="Edit School">
+                                        <i class="bi bi-pencil"></i>
+                                                </a>
+                                    <a href="{% url 'students_app:user_list' %}?school={{ school.id }}" class="btn btn-sm btn-light" title="View Users">
+                                        <i class="bi bi-people"></i>
+                                                </a>
+                                    <a href="{% url 'students_app:edit_school_features' school.id %}" class="btn btn-sm btn-light" title="Features">
+                                        <i class="bi bi-gear"></i>
+                                                </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                <div class="text-center py-5">
+                    <div class="mb-4">
+                        <i class="bi bi-building text-muted" style="font-size: 4rem;"></i>
+                    </div>
+                    <h5>No Schools Registered</h5>
+                    <p class="text-muted">Start by adding your first school to the system</p>
+                            <a href="{% url 'students_app:create_school' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-lg me-2"></i>Add First School
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    <!-- Right Sidebar -->
+    <div class="col-lg-4">
+        <!-- System Health -->
+            <div class="card mb-4">
+                <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-heart-pulse me-2"></i>System Health</h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="progress-ring mx-auto mb-3">
+                    <svg width="120" height="120">
+                        <circle cx="60" cy="60" r="54" fill="none" stroke="#e2e8f0" stroke-width="8"/>
+                        <circle cx="60" cy="60" r="54" fill="none" stroke="#10b981" stroke-width="8" 
+                                stroke-dasharray="339.3" 
+                                stroke-dashoffset="{{ 339.3|add:'-'|add:system_health.active_schools_percentage|default:100|floatformat:0|stringformat:'s'|slice:':3' }}"
+                                stroke-linecap="round"/>
+                    </svg>
+                    <div class="value">{{ system_health.active_schools_percentage|floatformat:0|default:100 }}%</div>
+                </div>
+                <div class="alert alert-success py-2 mb-0">
+                    <i class="bi bi-check-circle me-2"></i>
+                    All Systems Operational
+                </div>
+                </div>
+            </div>
+
+        <!-- Quick Actions -->
+        <div class="card mb-4">
+                <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-lightning-charge me-2"></i>Quick Actions</h5>
+            </div>
+            <div class="card-body p-2">
+                <a href="{% url 'students_app:create_school' %}" class="quick-btn mb-2">
+                    <div class="icon" style="background: #dbeafe; color: #2563eb;">
+                        <i class="bi bi-building-add"></i>
+                    </div>
+                    <div>
+                        <strong>Add New School</strong>
+                        <small class="d-block text-muted">Register a new institution</small>
+                    </div>
+                </a>
+                <a href="{% url 'students_app:create_user' %}" class="quick-btn mb-2">
+                    <div class="icon" style="background: #dcfce7; color: #16a34a;">
+                        <i class="bi bi-person-plus"></i>
+                </div>
+                    <div>
+                        <strong>Create User</strong>
+                        <small class="d-block text-muted">Add admin or staff</small>
+                        </div>
+                </a>
+                <a href="{% url 'students_app:super_admin_analytics' %}" class="quick-btn">
+                    <div class="icon" style="background: #ede9fe; color: #7c3aed;">
+                        <i class="bi bi-graph-up"></i>
+                        </div>
+                    <div>
+                        <strong>View Analytics</strong>
+                        <small class="d-block text-muted">Reports & insights</small>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Recent Users -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Recent Users</h5>
+                <a href="{% url 'students_app:super_admin_user_management' %}" class="btn btn-sm btn-light">View All</a>
+            </div>
+            <div class="card-body p-0">
+                {% if recent_users %}
+                {% for user in recent_users %}
+                <div class="activity-item px-3">
+                    <div class="activity-dot {% cycle 'blue' 'green' 'purple' 'orange' %}"></div>
+                    <div class="flex-grow-1">
+                        <strong style="font-size: 0.9rem;">{{ user.user.get_full_name|default:user.user.username }}</strong>
+                        <small class="d-block text-muted">
+                            {{ user.role.display_name|default:'User' }} • {{ user.created_at|timesince }} ago
+                        </small>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-people text-muted" style="font-size: 2rem;"></i>
+                    <p class="text-muted mt-2 mb-0 small">No recent users</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

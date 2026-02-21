@@ -1,0 +1,52 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Delete Staff{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Confirm Delete Staff
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Warning:</strong> This action cannot be undone. The staff record and related login will be permanently deleted.
+                    </div>
+
+                    <h6>Staff Details:</h6>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th width="30%">Name:</th>
+                            <td>{{ staff.get_full_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Employee ID:</th>
+                            <td>{{ staff.employee_id }}</td>
+                        </tr>
+                        <tr>
+                            <th>Phone:</th>
+                            <td>{{ staff.phone }}</td>
+                        </tr>
+                    </table>
+
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'students_app:staff_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-2"></i>Yes, Delete Staff
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

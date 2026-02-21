@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Attendance - Minimal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 50px 0;
+        }
+
+        .test-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="test-card">
+            <h2 class="mb-4">🧪 Attendance Test Page</h2>
+
+            <form id="attendanceForm" method="post" action="/attendance/mark/">
+                <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Select Class</label>
+                        <select name="class_id" class="form-select form-select-lg" id="classSelect" required>
+                            <option value="">Choose Class...</option>
+                            {% for class in classes %}
+                            <option value="{{ class.id }}">{{ class.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Date</label>
+                        <input type="date" name="date" class="form-control form-control-lg"
+                            value="{{ today|date:'Y-m-d' }}" required>
+                    </div>
+                </div>
+
+                <div id="studentsList" class="mt-4"></div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        console.log('Script loaded!');
+
+        const classSelect = document.getElementById('classSelect');
+        const studentsList = document.getElementById('studentsList');
+
+        console.log('Elements found:', classSelect, studentsList);
+
+        classSelect.addEventListener('change', function () {
+            const classId = this.value;
+            console.log('Class selected:', classId);
+
+            if (!classId) {
+                studentsList.innerHTML = '';
+                return;
+            }
+
+            studentsList.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Loading students...</p></div>';
+
+            const url = `/attendance/students-by-class/${classId}/`;
+            console.log('Fetching from:', url);
+
+            fetch(url)
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Data received:', data);
+
+                    if (data.students && data.students.length > 0) {
+                        let html = '<h5 class="mb-3">✅ Found ' + data.students.length + ' Students</h5>';
+                        html += '<div class="table-responsive"><table class="table table-bordered table-hover">';
+                        html += '<thead class="table-primary"><tr><th>Roll No</th><th>Name</th><th>Section</th><th>Status</th></tr></thead><tbody>';
+
+                        data.students.forEach(student => {
+                            html += `<tr>
+                                <td>${student.roll_number || '-'}</td>
+                                <td><strong>${student.name}</strong></td>
+                                <td>${student.section || '-'}</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <input type="radio" class="btn-check" name="status_${student.id}" id="present_${student.id}" value="P" checked>
+                                        <label class="btn btn-outline-success" for="present_${student.id}">✓ Present</label>
+                                        
+                                        <input type="radio" class="btn-check" name="status_${student.id}" id="absent_${student.id}" value="A">
+                                        <label class="btn btn-outline-danger" for="absent_${student.id}">✗ Absent</label>
+                                    </div>
+                                </td>
+                            </tr>`;
+                        });
+
+                        html += '</tbody></table></div>';
+                        html += '<button type="submit" class="btn btn-primary btn-lg mt-3"><i class="bi bi-save"></i> Save Attendance</button>';
+                        studentsList.innerHTML = html;
+                    } else {
+                        studentsList.innerHTML = '<div class="alert alert-warning">⚠️ No students found in this class.</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    studentsList.innerHTML = '<div class="alert alert-danger">❌ Error loading students: ' + error.message + '</div>';
+                });
+        });
+    </script>
+</body>
+
+</html>

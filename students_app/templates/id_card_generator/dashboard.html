@@ -1,0 +1,203 @@
+{% extends "students/base_modern.html" %}
+{% block title %}ID Card Generator Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-id-card me-2 text-primary"></i>ID Card Generator Dashboard</h2>
+            <p class="text-muted">Create and manage ID cards offline</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'students_app:create_id_card_generator' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Create New Generator
+            </a>
+            <a href="{% url 'students_app:calculator' %}" class="btn btn-warning">
+                <i class="fas fa-calculator"></i> Calculator
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ total_generators }}</h4>
+                            <p class="mb-0">Total Generators</p>
+                        </div>
+                        <i class="fas fa-cogs fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ total_cards }}</h4>
+                            <p class="mb-0">Total Cards</p>
+                        </div>
+                        <i class="fas fa-id-card fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ generated_cards }}</h4>
+                            <p class="mb-0">Generated Cards</p>
+                        </div>
+                        <i class="fas fa-check-circle fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ total_cards|add:"-"|add:generated_cards }}</h4>
+                            <p class="mb-0">Pending Cards</p>
+                        </div>
+                        <i class="fas fa-clock fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generators List -->
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>ID Card Generators</h5>
+                    <a href="{% url 'students_app:create_id_card_generator' %}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus"></i> New Generator
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if generators %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Generator</th>
+                                        <th>Page Size</th>
+                                        <th>Type</th>
+                                        <th>School</th>
+                                        <th>Status</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for generator in generators %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ generator.get_card_type_display }}</strong>
+                                            <br><small class="text-muted">{{ generator.get_orientation_display }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">{{ generator.get_page_size_display }}</span>
+                                            <br><small class="text-muted">{{ generator.get_cards_per_page }} cards/page</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">{{ generator.get_card_type_display }}</span>
+                                        </td>
+                                        <td>
+                                            <strong>{{ generator.school_name }}</strong>
+                                            <br><small class="text-muted">{{ generator.school_phone }}</small>
+                                        </td>
+                                        <td>
+                                            {% if generator.is_active %}
+                                                <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ generator.created_at|date:"M d, Y" }}</td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{% url 'students_app:id_card_data_entry' generator.id %}" class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-edit"></i> Data Entry
+                                                </a>
+                                                <a href="{% url 'students_app:edit_id_card_generator' generator.id %}" class="btn btn-sm btn-warning">
+                                                    <i class="fas fa-cog"></i> Edit
+                                                </a>
+                                                <a href="{% url 'students_app:generate_id_cards_pdf' generator.id %}" class="btn btn-sm btn-success">
+                                                    <i class="fas fa-file-pdf"></i> Generate PDF
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-id-card fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No ID Card Generators Found</h5>
+                            <p class="text-muted">Create your first ID card generator to get started.</p>
+                            <a href="{% url 'students_app:create_id_card_generator' %}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Create Generator
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Cards -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Recent Cards</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_cards %}
+                        {% for card in recent_cards %}
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="flex-shrink-0">
+                                {% if card.photo %}
+                                    <img src="{{ card.photo.url }}" alt="{{ card.name }}" class="rounded-circle" width="40" height="40">
+                                {% else %}
+                                    <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="fas fa-user text-white"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="mb-0">{{ card.name }}</h6>
+                                <small class="text-muted">{{ card.admission_no }} - {{ card.class_name }}</small>
+                                <br>
+                                {% if card.is_generated %}
+                                    <span class="badge bg-success">Generated</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Pending</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-id-card fa-2x text-muted mb-2"></i>
+                            <p class="text-muted mb-0">No cards created yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

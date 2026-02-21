@@ -1,0 +1,129 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Fee Reconciliation{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-balance-scale me-2 text-info"></i>Fee Reconciliation</h2>
+    </div>
+
+    <!-- Reconciliation Summary -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h6>Total Reconciliations</h6>
+                    <h2>{{ total_reconciliations }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h6>Matched</h6>
+                    <h2>{{ matched_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-danger">
+                <div class="card-body">
+                    <h6>Mismatches</h6>
+                    <h2>{{ mismatch_count }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create New Reconciliation -->
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>New Reconciliation</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-3">
+                        <label class="form-label">Reconciliation Date</label>
+                        <input type="date" name="reconciliation_date" class="form-control" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Bank Name</label>
+                        <input type="text" name="bank_name" class="form-control" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Bank Statement Amount (₹)</label>
+                        <input type="number" step="0.01" name="bank_statement_amount" class="form-control" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Notes</label>
+                        <input type="text" name="notes" class="form-control" placeholder="Optional">
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-info">
+                        <i class="fas fa-check me-1"></i>Create Reconciliation
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Reconciliation History -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-list me-2"></i>Reconciliation History</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Bank</th>
+                            <th>Bank Amount</th>
+                            <th>System Amount</th>
+                            <th>Difference</th>
+                            <th>Status</th>
+                            <th>Reconciled By</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for recon in reconciliations %}
+                        <tr>
+                            <td>{{ recon.reconciliation_date|date:"d M Y" }}</td>
+                            <td><strong>{{ recon.bank_name }}</strong></td>
+                            <td>₹{{ recon.bank_statement_amount|floatformat:2 }}</td>
+                            <td>₹{{ recon.system_recorded_amount|floatformat:2 }}</td>
+                            <td>
+                                <span class="badge bg-{% if recon.difference == 0 %}success{% else %}danger{% endif %}">
+                                    ₹{{ recon.difference|floatformat:2 }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-{% if recon.status == 'matched' %}success{% elif recon.status == 'mismatch' %}danger{% else %}warning{% endif %}">
+                                    {{ recon.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ recon.reconciled_by.get_full_name|default:"N/A" }}</td>
+                            <td>
+                                {% if recon.notes %}
+                                <button class="btn btn-sm btn-outline-info" title="{{ recon.notes }}">
+                                    <i class="fas fa-info-circle"></i>
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="8" class="text-center text-muted">No reconciliations found</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

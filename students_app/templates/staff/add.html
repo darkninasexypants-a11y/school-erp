@@ -1,0 +1,123 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Add Staff{% endblock %}
+
+{% block sidebar %}
+{% include 'includes/admin_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="top-bar">
+    <div class="page-title">
+        <h1><i class="bi bi-person-plus me-2"></i>Add New Staff</h1>
+        <p>Add a new non-teaching staff member</p>
+    </div>
+    <div class="top-bar-actions">
+        <a href="{% url 'students_app:staff_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Staff List
+        </a>
+    </div>
+</div>
+
+{% if messages %}
+<div class="mb-4">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Staff Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Name <span class="text-danger">*</span></label>
+                            <input type="text" name="name" class="form-control" required placeholder="Enter staff name">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Phone <span class="text-danger">*</span></label>
+                            <input type="tel" name="phone" class="form-control" required placeholder="Enter phone number">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Designation</label>
+                            <input type="text" name="designation" class="form-control" placeholder="e.g., Accountant, Librarian, etc.">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Email</label>
+                            <input type="email" name="email" class="form-control" placeholder="Enter email address">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Department</label>
+                            <input type="text" name="department" class="form-control" placeholder="e.g., Administration, Accounts, etc.">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Joining Date</label>
+                            <input type="date" name="joining_date" class="form-control">
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{% url 'students_app:staff_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save me-2"></i>Save Staff
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0"><i class="bi bi-lightbulb me-2"></i>Quick Tips</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-3">
+                        <i class="bi bi-check-circle text-success me-2"></i>
+                        <strong>Name & Phone</strong> are required fields
+                    </li>
+                    <li class="mb-3">
+                        <i class="bi bi-info-circle text-primary me-2"></i>
+                        Designation helps categorize staff members
+                    </li>
+                    <li class="mb-3">
+                        <i class="bi bi-envelope text-warning me-2"></i>
+                        Email is optional but recommended
+                    </li>
+                    <li>
+                        <i class="bi bi-calendar text-info me-2"></i>
+                        Joining date helps track service duration
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+
+
+

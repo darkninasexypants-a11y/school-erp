@@ -1,0 +1,168 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Bulk Timetable Operations{% endblock %}
+
+{% block sidebar %}
+{% include 'includes/admin_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="top-bar">
+    <div class="page-title">
+        <h1><i class="bi bi-gear me-2"></i>Bulk Timetable Operations</h1>
+        <p>Perform bulk operations on timetables</p>
+    </div>
+    <div class="top-bar-actions">
+        <a href="{% url 'students_app:manage_timetables' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Management
+        </a>
+    </div>
+</div>
+
+<!-- Academic Year Info -->
+{% if current_year %}
+<div class="alert alert-info mb-4">
+    <i class="bi bi-info-circle me-2"></i>
+    <strong>Current Academic Year:</strong> {{ current_year.name }}
+</div>
+{% else %}
+<div class="alert alert-warning mb-4">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    <strong>Warning:</strong> No active academic year found.
+</div>
+{% endif %}
+
+<div class="row">
+    <!-- Copy Timetable -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-copy me-2"></i>Copy Timetable</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Copy timetable from one section to another.</p>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="copy_timetable">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Source Section</label>
+                        <select name="source_section" class="form-select" required>
+                            <option value="">Select source section...</option>
+                            {% for section in sections %}
+                            <option value="{{ section.id }}">
+                                {{ section.class_assigned.name }} - {{ section.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <small class="form-text text-muted">Section to copy from</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Target Section</label>
+                        <select name="target_section" class="form-select" required>
+                            <option value="">Select target section...</option>
+                            {% for section in sections %}
+                            <option value="{{ section.id }}">
+                                {{ section.class_assigned.name }} - {{ section.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <small class="form-text text-muted">Section to copy to</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="clear_target" id="clear_target">
+                            <label class="form-check-label" for="clear_target">
+                                Clear existing timetable in target section first
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-copy me-2"></i>Copy Timetable
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Clear Timetable -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="bi bi-trash me-2"></i>Clear Timetable</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Clear timetable entries for selected sections.</p>
+                <form method="post" id="clearForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="clear_timetable">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Select Sections</label>
+                        <div style="max-height: 300px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 0.375rem; padding: 0.5rem;">
+                            {% for section in sections %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" 
+                                       name="section_ids" value="{{ section.id }}" 
+                                       id="section_{{ section.id }}">
+                                <label class="form-check-label" for="section_{{ section.id }}">
+                                    {{ section.class_assigned.name }} - {{ section.name }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <small class="form-text text-muted">Select one or more sections to clear</small>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-danger" onclick="return confirmClear()">
+                        <i class="bi bi-trash me-2"></i>Clear Selected Timetables
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Instructions -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Instructions</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6><i class="bi bi-copy text-primary me-2"></i>Copy Timetable</h6>
+                <ul class="small text-muted">
+                    <li>Select the source section (section to copy from)</li>
+                    <li>Select the target section (section to copy to)</li>
+                    <li>Optionally check "Clear existing timetable" to remove existing entries first</li>
+                    <li>Click "Copy Timetable" to perform the operation</li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h6><i class="bi bi-trash text-danger me-2"></i>Clear Timetable</h6>
+                <ul class="small text-muted">
+                    <li>Select one or more sections from the list</li>
+                    <li>Click "Clear Selected Timetables" to remove all timetable entries</li>
+                    <li><strong>Warning:</strong> This action cannot be undone!</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmClear() {
+    const checked = document.querySelectorAll('input[name="section_ids"]:checked');
+    if (checked.length === 0) {
+        alert('Please select at least one section to clear.');
+        return false;
+    }
+    return confirm(`Are you sure you want to clear timetables for ${checked.length} section(s)? This action cannot be undone!`);
+}
+</script>
+{% endblock %}
+

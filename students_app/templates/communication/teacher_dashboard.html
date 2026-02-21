@@ -1,0 +1,200 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Teacher Dashboard{% endblock %}
+
+{% block sidebar %}
+<!-- Teacher Sidebar -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+        <h4><i class="bi bi-person-video3"></i> <span>Teacher</span></h4>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Overview</div>
+        <a href="{% url 'students_app:teacher_dashboard' %}" class="nav-link active" data-title="Dashboard">
+            <i class="bi bi-grid-1x2-fill"></i> <span>Dashboard</span>
+        </a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Teaching</div>
+        <a href="{% url 'students_app:attendance_mark' %}" class="nav-link" data-title="Mark Attendance">
+            <i class="bi bi-check2-square"></i> <span>Mark Attendance</span>
+        </a>
+        <a href="{% url 'students_app:marks_entry' %}" class="nav-link" data-title="Enter Marks">
+            <i class="bi bi-journal-text"></i> <span>Enter Marks</span>
+        </a>
+        <a href="{% url 'students_app:homework_list' %}" class="nav-link" data-title="Homework">
+            <i class="bi bi-book"></i> <span>Homework</span>
+        </a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Communication</div>
+        <a href="{% url 'students_app:message_list' %}" class="nav-link" data-title="Messages">
+            <i class="bi bi-envelope"></i> <span>Messages</span>
+        </a>
+        <a href="{% url 'students_app:notice_list' %}" class="nav-link" data-title="Notices">
+            <i class="bi bi-megaphone"></i> <span>Notices</span>
+        </a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Schedule</div>
+        <a href="{% url 'students_app:timetable_view' %}" class="nav-link" data-title="Timetable">
+            <i class="bi bi-calendar3"></i> <span>Timetable</span>
+        </a>
+        <a href="{% url 'students_app:event_calendar' %}" class="nav-link" data-title="Events">
+            <i class="bi bi-calendar-event"></i> <span>Events</span>
+        </a>
+    </div>
+
+    <div class="nav-section" style="margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+        <a href="{% url 'students_app:teacher_logout' %}" class="nav-link text-danger" data-title="Logout">
+            <i class="bi bi-box-arrow-left"></i> <span>Logout</span>
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="top-bar">
+    <div class="page-title">
+        <h1>Welcome, Teacher! 👋</h1>
+        <p>Manage your classes and communicate with students</p>
+    </div>
+</div>
+
+<!-- Quick Actions Grid -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-lg-3">
+        <a href="{% url 'students_app:attendance_mark' %}" class="text-decoration-none">
+            <div class="stat-card text-center">
+                <div class="stat-icon blue mx-auto"><i class="bi bi-check2-square"></i></div>
+                <h5 class="mt-3 mb-1">Attendance</h5>
+                <small class="text-muted">Mark today's attendance</small>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <a href="{% url 'students_app:marks_entry' %}" class="text-decoration-none">
+            <div class="stat-card text-center">
+                <div class="stat-icon green mx-auto"><i class="bi bi-journal-text"></i></div>
+                <h5 class="mt-3 mb-1">Marks Entry</h5>
+                <small class="text-muted">Enter exam marks</small>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <a href="{% url 'students_app:homework_list' %}" class="text-decoration-none">
+            <div class="stat-card text-center">
+                <div class="stat-icon purple mx-auto"><i class="bi bi-book"></i></div>
+                <h5 class="mt-3 mb-1">Homework</h5>
+                <small class="text-muted">Assign homework</small>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <a href="{% url 'students_app:message_list' %}" class="text-decoration-none">
+            <div class="stat-card text-center">
+                <div class="stat-icon orange mx-auto"><i class="bi bi-envelope"></i></div>
+                <h5 class="mt-3 mb-1">Messages</h5>
+                <small class="text-muted">View messages</small>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Module Cards -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="mx-auto mb-3" style="width: 60px; height: 60px; background: #dbeafe; border-radius: 14px; display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-tasks text-primary" style="font-size: 1.5rem;"></i>
+                </div>
+                <h5>Assignments</h5>
+                <p class="text-muted small">Create and manage assignments</p>
+                <a href="{% url 'students_app:assignment_list' %}" class="btn btn-primary w-100">
+                    <i class="bi bi-arrow-right me-1"></i>View Assignments
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="mx-auto mb-3" style="width: 60px; height: 60px; background: #dcfce7; border-radius: 14px; display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-calendar3 text-success" style="font-size: 1.5rem;"></i>
+                </div>
+                <h5>Timetable</h5>
+                <p class="text-muted small">View your class schedule</p>
+                <a href="{% url 'students_app:timetable_view' %}" class="btn btn-success w-100">
+                    <i class="bi bi-arrow-right me-1"></i>View Timetable
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="mx-auto mb-3" style="width: 60px; height: 60px; background: #fef3c7; border-radius: 14px; display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-calendar-event text-warning" style="font-size: 1.5rem;"></i>
+                </div>
+                <h5>Events</h5>
+                <p class="text-muted small">School events calendar</p>
+                <a href="{% url 'students_app:event_calendar' %}" class="btn btn-warning w-100">
+                    <i class="bi bi-arrow-right me-1"></i>View Events
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="mx-auto mb-3" style="width: 60px; height: 60px; background: #ede9fe; border-radius: 14px; display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-people text-primary" style="font-size: 1.5rem;"></i>
+                </div>
+                <h5>Students</h5>
+                <p class="text-muted small">View student list</p>
+                <a href="{% url 'students_app:student_list' %}" class="btn btn-outline-primary w-100">
+                    <i class="bi bi-arrow-right me-1"></i>View Students
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="mx-auto mb-3" style="width: 60px; height: 60px; background: #fee2e2; border-radius: 14px; display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-megaphone text-danger" style="font-size: 1.5rem;"></i>
+                </div>
+                <h5>Notices</h5>
+                <p class="text-muted small">School announcements</p>
+                <a href="{% url 'students_app:notice_list' %}" class="btn btn-outline-danger w-100">
+                    <i class="bi bi-arrow-right me-1"></i>View Notices
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="mx-auto mb-3" style="width: 60px; height: 60px; background: #e0f2fe; border-radius: 14px; display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-bar-chart text-info" style="font-size: 1.5rem;"></i>
+                </div>
+                <h5>Reports</h5>
+                <p class="text-muted small">View class reports</p>
+                <a href="{% url 'students_app:attendance_report' %}" class="btn btn-outline-info w-100">
+                    <i class="bi bi-arrow-right me-1"></i>View Reports
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

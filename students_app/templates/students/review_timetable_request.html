@@ -1,0 +1,261 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Review Timetable Change Request{% endblock %}
+
+{% block sidebar %}
+{% include 'includes/admin_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="top-bar">
+    <div class="page-title">
+        <h1><i class="bi bi-clipboard-check me-2"></i>Review Timetable Change Request</h1>
+        <p>Review and respond to teacher's timetable change request</p>
+    </div>
+    <div class="top-bar-actions">
+        <a href="{% url 'students_app:manage_timetable_requests' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Requests
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Request Details Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Request Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <strong>Teacher:</strong><br>
+                        {{ change_request.teacher.user.get_full_name }}<br>
+                        <small class="text-muted">{{ change_request.teacher.employee_id }}</small>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Academic Year:</strong><br>
+                        {{ change_request.academic_year.year }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Submitted On:</strong><br>
+                        {{ change_request.created_at|date:"F d, Y" }} at {{ change_request.created_at|time:"g:i A" }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Current Status:</strong><br>
+                        {% if change_request.status == 'pending' %}
+                        <span class="badge bg-warning">Pending</span>
+                        {% elif change_request.status == 'approved' %}
+                        <span class="badge bg-success">Approved</span>
+                        {% elif change_request.status == 'rejected' %}
+                        <span class="badge bg-danger">Rejected</span>
+                        {% elif change_request.status == 'in_progress' %}
+                        <span class="badge bg-info">In Progress</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Timetable Entry -->
+        {% if change_request.current_timetable_entry %}
+        <div class="card mb-4">
+            <div class="card-header bg-warning bg-opacity-10">
+                <h5 class="mb-0"><i class="bi bi-calendar-event me-2"></i>Current Schedule (To Be Changed)</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <strong>Day:</strong><br>
+                        {{ change_request.current_timetable_entry.get_weekday_display }}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Time:</strong><br>
+                        {{ change_request.current_timetable_entry.time_slot.start_time|time:"g:i A" }} - {{ change_request.current_timetable_entry.time_slot.end_time|time:"g:i A" }}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Subject:</strong><br>
+                        {{ change_request.current_timetable_entry.subject.name|default:"—" }}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Class:</strong><br>
+                        {{ change_request.current_timetable_entry.section.class_assigned.name }}-{{ change_request.current_timetable_entry.section.name }}
+                    </div>
+                    {% if change_request.current_timetable_entry.room_number %}
+                    <div class="col-md-3">
+                        <strong>Room:</strong><br>
+                        {{ change_request.current_timetable_entry.room_number }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Reason -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-question-circle me-2"></i>Reason for Change</h5>
+            </div>
+            <div class="card-body">
+                <p>{{ change_request.reason|linebreaks }}</p>
+            </div>
+        </div>
+
+        <!-- Preferred Changes -->
+        {% if change_request.preferred_day or change_request.preferred_time_slot or change_request.preferred_section or change_request.preferred_subject or change_request.preferred_room %}
+        <div class="card mb-4">
+            <div class="card-header bg-success bg-opacity-10">
+                <h5 class="mb-0"><i class="bi bi-star me-2"></i>Preferred Changes</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    {% if change_request.preferred_day is not None %}
+                    <div class="col-md-6">
+                        <strong>Preferred Day:</strong><br>
+                        {{ change_request.get_preferred_day_display_name }}
+                    </div>
+                    {% endif %}
+                    {% if change_request.preferred_time_slot %}
+                    <div class="col-md-6">
+                        <strong>Preferred Time:</strong><br>
+                        {{ change_request.preferred_time_slot.start_time|time:"g:i A" }} - {{ change_request.preferred_time_slot.end_time|time:"g:i A" }}
+                    </div>
+                    {% endif %}
+                    {% if change_request.preferred_section %}
+                    <div class="col-md-6">
+                        <strong>Preferred Class:</strong><br>
+                        {{ change_request.preferred_section.class_assigned.name }}-{{ change_request.preferred_section.name }}
+                    </div>
+                    {% endif %}
+                    {% if change_request.preferred_subject %}
+                    <div class="col-md-6">
+                        <strong>Preferred Subject:</strong><br>
+                        {{ change_request.preferred_subject.name }}
+                    </div>
+                    {% endif %}
+                    {% if change_request.preferred_room %}
+                    <div class="col-md-6">
+                        <strong>Preferred Room:</strong><br>
+                        {{ change_request.preferred_room }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Additional Notes -->
+        {% if change_request.additional_notes %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-sticky me-2"></i>Additional Notes</h5>
+            </div>
+            <div class="card-body">
+                <p>{{ change_request.additional_notes|linebreaks }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Admin Review Section -->
+        {% if change_request.reviewed_by %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-person-check me-2"></i>Review Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <strong>Reviewed By:</strong><br>
+                        {{ change_request.reviewed_by.get_full_name }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Reviewed On:</strong><br>
+                        {{ change_request.reviewed_at|date:"F d, Y" }} at {{ change_request.reviewed_at|time:"g:i A" }}
+                    </div>
+                    {% if change_request.admin_notes %}
+                    <div class="col-12">
+                        <strong>Admin Notes:</strong><br>
+                        <p class="mb-0">{{ change_request.admin_notes|linebreaks }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Action Form -->
+        {% if change_request.status == 'pending' or change_request.status == 'in_progress' %}
+        <div class="card">
+            <div class="card-header bg-primary bg-opacity-10">
+                <h5 class="mb-0"><i class="bi bi-gear me-2"></i>Take Action</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="admin_notes" class="form-label">Admin Notes / Response</label>
+                        <textarea name="admin_notes" id="admin_notes" class="form-control" rows="4" placeholder="Add your response or notes for the teacher...">{{ change_request.admin_notes }}</textarea>
+                        <small class="text-muted">This will be visible to the teacher</small>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" name="action" value="approve" class="btn btn-success">
+                            <i class="bi bi-check-circle me-2"></i>Approve Request
+                        </button>
+                        <button type="submit" name="action" value="reject" class="btn btn-danger">
+                            <i class="bi bi-x-circle me-2"></i>Reject Request
+                        </button>
+                        <button type="submit" name="action" value="in_progress" class="btn btn-info">
+                            <i class="bi bi-hourglass-split me-2"></i>Mark as In Progress
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Quick Info Card -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Quick Info</h6>
+            </div>
+            <div class="card-body">
+                <div class="small">
+                    <p class="mb-2"><strong>Request ID:</strong> #{{ change_request.id }}</p>
+                    <p class="mb-2"><strong>Status:</strong> 
+                        {% if change_request.status == 'pending' %}
+                        <span class="badge bg-warning">Pending</span>
+                        {% elif change_request.status == 'approved' %}
+                        <span class="badge bg-success">Approved</span>
+                        {% elif change_request.status == 'rejected' %}
+                        <span class="badge bg-danger">Rejected</span>
+                        {% elif change_request.status == 'in_progress' %}
+                        <span class="badge bg-info">In Progress</span>
+                        {% endif %}
+                    </p>
+                    <p class="mb-2"><strong>Days Since Request:</strong> {{ change_request.created_at|timesince }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Card -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-question-circle me-2"></i>Review Guidelines</h6>
+            </div>
+            <div class="card-body">
+                <ul class="small mb-0 ps-3">
+                    <li class="mb-2">Review the teacher's reason and preferred changes</li>
+                    <li class="mb-2">Check for conflicts with existing timetables</li>
+                    <li class="mb-2">Add notes explaining your decision</li>
+                    <li class="mb-2">Approve if the change is feasible</li>
+                    <li>Reject with clear explanation if not possible</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

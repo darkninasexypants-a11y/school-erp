@@ -1,0 +1,153 @@
+{% extends "students/base_modern.html" %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block sidebar %}
+{% include 'includes/admin_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="top-bar">
+    <div class="page-title">
+        <h1><i class="bi bi-file-earmark-plus me-2"></i>{{ title }}</h1>
+        <p>{% if title == 'Create New Exam' %}Create a new exam for your academic year{% else %}Update exam details{% endif %}</p>
+    </div>
+    <div class="top-bar-actions">
+        <a href="{% url 'students_app:exam_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Exams
+        </a>
+    </div>
+</div>
+
+{% if messages %}
+<div class="mb-4">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Form Card -->
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header" style="background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: #fff;">
+                <h5 class="mb-0">
+                    <i class="bi bi-file-earmark-text me-2"></i>{{ title }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-pencil me-1"></i>Exam Name <span class="text-danger">*</span>
+                        </label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                        <div class="text-danger small mt-1">{{ form.name.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">Enter a descriptive name for the exam (e.g., Mid Term 2025)</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-calendar-year me-1"></i>Academic Year <span class="text-danger">*</span>
+                        </label>
+                        {{ form.academic_year }}
+                        {% if form.academic_year.errors %}
+                        <div class="text-danger small mt-1">{{ form.academic_year.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">Select the academic year for this exam</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-tag me-1"></i>Term <span class="text-danger">*</span>
+                        </label>
+                        {{ form.term }}
+                        {% if form.term.errors %}
+                        <div class="text-danger small mt-1">{{ form.term.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">Select the term type for this exam</div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-calendar-check me-1"></i>Start Date
+                                </label>
+                                {{ form.start_date }}
+                                {% if form.start_date.errors %}
+                                <div class="text-danger small mt-1">{{ form.start_date.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-calendar-x me-1"></i>End Date
+                                </label>
+                                {{ form.end_date }}
+                                {% if form.end_date.errors %}
+                                <div class="text-danger small mt-1">{{ form.end_date.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            {{ form.is_published }}
+                            <label class="form-check-label fw-bold" for="{{ form.is_published.id_for_label }}">
+                                <i class="bi bi-eye me-1"></i>Published
+                            </label>
+                        </div>
+                        {% if form.is_published.errors %}
+                        <div class="text-danger small mt-1">{{ form.is_published.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">Publish this exam to make it visible to teachers and students</div>
+                    </div>
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                    {% endif %}
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-circle me-2"></i>
+                            {% if title == 'Create New Exam' %}Create Exam{% else %}Update Exam{% endif %}
+                        </button>
+                        <a href="{% url 'students_app:exam_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle me-2"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Info Card -->
+        <div class="card mt-4 border-info">
+            <div class="card-body">
+                <h6 class="text-info mb-3">
+                    <i class="bi bi-info-circle me-2"></i>Important Notes
+                </h6>
+                <ul class="mb-0 small">
+                    <li>After creating an exam, you can add exam schedules for different classes and subjects</li>
+                    <li>Published exams are visible to teachers for marks entry</li>
+                    <li>Make sure the date range covers all scheduled exam dates</li>
+                    <li>You can manage exam schedules from the Exam Schedules page</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

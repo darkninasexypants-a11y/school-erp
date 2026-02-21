@@ -1,0 +1,398 @@
+{% extends "students/base_modern.html" %}
+{% load static %}
+
+{% block title %}Class List Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-0">
+                <i class="fas fa-school me-2"></i>
+                Class List Management
+            </h4>
+            <p class="text-muted mb-0">
+                Manage classes and sections for {{ current_year.name }}
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addClassModal">
+                <i class="fas fa-plus me-2"></i>Add Class
+            </button>
+            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#addSectionModal">
+                <i class="fas fa-plus me-2"></i>Add Section
+            </button>
+            <button type="button" class="btn btn-warning" onclick="exportClassData()">
+                <i class="fas fa-download me-2"></i>Export Data
+            </button>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ total_classes }}</h4>
+                            <p class="mb-0">Total Classes</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-school fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ total_sections }}</h4>
+                            <p class="mb-0">Total Sections</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-layer-group fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ total_students }}</h4>
+                            <p class="mb-0">Total Students</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <h5 class="mb-0">Quick Actions</h5>
+                    <div class="mt-2">
+                        <button type="button" class="btn btn-sm btn-light" onclick="bulkCreateSections()">
+                            <i class="fas fa-layer-group me-1"></i>Bulk Create Sections
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Classes List -->
+    <div class="card shadow">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">
+                <i class="fas fa-school me-2"></i>
+                Classes and Sections
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if classes %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Class</th>
+                            <th>Grade</th>
+                            <th>Sections</th>
+                            <th>Total Students</th>
+                            <th width="150">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for class_obj in classes %}
+                        <tr>
+                            <td>
+                                <strong>{{ class_obj.name }}</strong>
+                                {% if class_obj.numeric_value %}
+                                <span class="badge bg-info ms-2">Grade {{ class_obj.numeric_value }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ class_obj.numeric_value }}</td>
+                            <td>
+                                <span class="badge bg-primary">{{ class_obj.total_sections }}</span>
+                                {% if class_obj.sections %}
+                                <div class="mt-2">
+                                    {% for section in class_obj.sections %}
+                                    <span class="badge bg-secondary me-1">{{ section.name }}</span>
+                                        <small class="text-muted">({{ section.student_count }})</small>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <span class="text-muted">No sections</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ class_obj.total_students }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="editClass({{ class_obj.id }})">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-success btn-sm" onclick="manageSections({{ class_obj.id }})">
+                                        <i class="fas fa-layer-group"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-warning btn-sm" onclick="viewStudents({{ class_obj.id }})">
+                                        <i class="fas fa-users"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteClass({{ class_obj.id }})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-school fa-4x text-muted mb-3"></i>
+                <h5 class="text-muted">No Classes Found</h5>
+                <p class="text-muted">Start by adding your first class.</p>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addClassModal">
+                    <i class="fas fa-plus me-2"></i>Add First Class
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Add Class Modal -->
+    <div class="modal fade" id="addClassModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Class</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addClassForm">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Class Name *</label>
+                                <input type="text" class="form-control" name="name" id="className" required>
+                                <small class="text-muted">e.g., Class 10, Nursery, LKG</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Grade/Level *</label>
+                                <input type="number" class="form-control" name="numeric_value" id="classGrade" min="1" max="12" required>
+                                <small class="text-muted">e.g., 1 for Class 1, 10 for Class 10</small>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveClass()">Save Class</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Section Modal -->
+    <div class="modal fade" id="addSectionModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Section</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addSectionForm">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Class *</label>
+                                <select class="form-select" name="class_id" id="sectionClassId" required>
+                                    <option value="">Select Class</option>
+                                    {% for class_obj in classes %}
+                                    <option value="{{ class_obj.id }}">{{ class_obj.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Section Name *</label>
+                                <input type="text" class="form-control" name="name" id="sectionName" required>
+                                <small class="text-muted">e.g., A, B, C</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Capacity</label>
+                                <input type="number" class="form-control" name="capacity" id="sectionCapacity" min="1" max="100" value="50">
+                                <small class="text-muted">Maximum students per section</small>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveSection()">Save Section</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function saveClass() {
+    const form = document.getElementById('addClassForm');
+    const formData = new FormData(form);
+    
+    fetch('/class-management/add/', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            bootstrap.Modal.getInstance(document.getElementById('addClassModal')).hide();
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error saving class. Please try again.');
+    });
+}
+
+function saveSection() {
+    const form = document.getElementById('addSectionForm');
+    const formData = new FormData(form);
+    
+    fetch('/class-management/add-section/', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            bootstrap.Modal.getInstance(document.getElementById('addSectionModal')).hide();
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error saving section. Please try again.');
+    });
+}
+
+function editClass(classId) {
+    fetch(`/class-management/edit/${classId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Populate edit form (you can implement this)
+                document.getElementById('className').value = data.class.name;
+                document.getElementById('classGrade').value = data.class.numeric_value;
+                bootstrap.Modal.getInstance(document.getElementById('addClassModal')).show();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error loading class data.');
+        });
+}
+
+function manageSections(classId) {
+    // This would open a section management modal
+    alert('Section management feature would open here for class ID: ' + classId);
+}
+
+function viewStudents(classId) {
+    window.location.href = '/students/list/?class_id=' + classId;
+}
+
+function deleteClass(classId) {
+    if (confirm('Are you sure you want to delete this class? This will also delete all sections and cannot be undone.')) {
+        fetch(`/class-management/delete/${classId}/`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting class. Please try again.');
+        });
+    }
+}
+
+function bulkCreateSections() {
+    if (confirm('This will create default sections (A, B, C) for all classes without sections. Continue?')) {
+        fetch('/class-management/bulk-create-sections/', {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error creating sections. Please try again.');
+        });
+    }
+}
+
+function exportClassData() {
+    window.location.href = '/class-management/export/';
+}
+</script>
+
+<style>
+.modal-dialog {
+    max-width: 600px;
+}
+
+.badge {
+    font-size: 0.8em;
+}
+
+.btn-group-sm > .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.table-responsive {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.card {
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}

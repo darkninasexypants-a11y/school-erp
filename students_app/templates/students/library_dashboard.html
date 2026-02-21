@@ -1,0 +1,216 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Library Dashboard{% endblock %}
+
+{% block sidebar %}
+<!-- Library Sidebar -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+        <h4><i class="bi bi-book-half"></i> <span>Library</span></h4>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Overview</div>
+        <a href="{% url 'students_app:library_dashboard' %}" class="nav-link active" data-title="Dashboard">
+            <i class="bi bi-grid-1x2-fill"></i> <span>Dashboard</span>
+        </a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Books</div>
+        <a href="{% url 'students_app:book_list' %}" class="nav-link" data-title="All Books">
+            <i class="bi bi-collection"></i> <span>All Books</span>
+        </a>
+        <a href="{% url 'students_app:add_book' %}" class="nav-link" data-title="Add Book">
+            <i class="bi bi-plus-circle"></i> <span>Add Book</span>
+        </a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Circulation</div>
+        <a href="{% url 'students_app:issue_book' %}" class="nav-link" data-title="Issue Book">
+            <i class="bi bi-box-arrow-right"></i> <span>Issue Book</span>
+        </a>
+        <a href="{% url 'students_app:book_list' %}" class="nav-link" data-title="Return Book">
+            <i class="bi bi-box-arrow-in-left"></i> <span>Return Book</span>
+        </a>
+    </div>
+
+    <div class="nav-section" style="margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+        <a href="{% url 'students_app:librarian_logout' %}" class="nav-link text-danger" data-title="Logout">
+            <i class="bi bi-box-arrow-left"></i> <span>Logout</span>
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="top-bar">
+    <div class="page-title">
+        <h1>Library Dashboard</h1>
+        <p>Manage books and circulation</p>
+    </div>
+    <div class="top-bar-actions">
+        <a href="{% url 'students_app:issue_book' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-2"></i>Issue Book
+        </a>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class="bi bi-book"></i></div>
+            <div class="stat-value">{{ total_books|default:0 }}</div>
+            <div class="stat-label">Total Books</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon green"><i class="bi bi-check-circle"></i></div>
+            <div class="stat-value">{{ available_books|default:0 }}</div>
+            <div class="stat-label">Available</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon purple"><i class="bi bi-arrow-left-right"></i></div>
+            <div class="stat-value">{{ issued_books|default:0 }}</div>
+            <div class="stat-label">Issued</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon red"><i class="bi bi-exclamation-triangle"></i></div>
+            <div class="stat-value">{{ overdue_books|default:0 }}</div>
+            <div class="stat-label">Overdue</div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-lightning-charge me-2"></i>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3 col-6">
+                        <a href="{% url 'students_app:issue_book' %}" class="quick-action">
+                            <div class="icon" style="background: #dbeafe; color: #2563eb;">
+                                <i class="bi bi-box-arrow-right"></i>
+                            </div>
+                            <div>
+                                <strong>Issue Book</strong>
+                                <small class="d-block text-muted">Lend to student</small>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <a href="{% url 'students_app:add_book' %}" class="quick-action">
+                            <div class="icon" style="background: #dcfce7; color: #16a34a;">
+                                <i class="bi bi-plus-circle"></i>
+                            </div>
+                            <div>
+                                <strong>Add Book</strong>
+                                <small class="d-block text-muted">New entry</small>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <a href="{% url 'students_app:book_list' %}" class="quick-action">
+                            <div class="icon" style="background: #ede9fe; color: #7c3aed;">
+                                <i class="bi bi-collection"></i>
+                            </div>
+                            <div>
+                                <strong>All Books</strong>
+                                <small class="d-block text-muted">View catalog</small>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <a href="{% url 'students_app:book_list' %}" class="quick-action">
+                            <div class="icon" style="background: #ffedd5; color: #ea580c;">
+                                <i class="bi bi-box-arrow-in-left"></i>
+                            </div>
+                            <div>
+                                <strong>Return Book</strong>
+                                <small class="d-block text-muted">Process return</small>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Issues -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Recent Book Issues</h5>
+    </div>
+    <div class="card-body p-0">
+        {% if recent_issues %}
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Book</th>
+                        <th>Issue Date</th>
+                        <th>Due Date</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for issue in recent_issues %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="me-2" style="width: 32px; height: 32px; background: linear-gradient(135deg, var(--primary), var(--primary-light)); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.8rem;">
+                                    {{ issue.student.first_name.0|upper }}
+                                </div>
+                                <span>{{ issue.student.get_full_name }}</span>
+                            </div>
+                        </td>
+                        <td>{{ issue.book.title }}</td>
+                        <td>{{ issue.issue_date|date:"d M Y" }}</td>
+                        <td>{{ issue.due_date|date:"d M Y" }}</td>
+                        <td>
+                            {% if issue.status == 'issued' %}
+                            <span class="badge bg-warning">Issued</span>
+                            {% else %}
+                            <span class="badge bg-success">Returned</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if issue.status == 'issued' %}
+                            <a href="{% url 'students_app:return_book' issue.id %}" class="btn btn-sm btn-light">
+                                <i class="bi bi-arrow-return-left"></i> Return
+                            </a>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-book text-muted" style="font-size: 3rem;"></i>
+            <h6 class="mt-3 text-muted">No recent book issues</h6>
+            <a href="{% url 'students_app:issue_book' %}" class="btn btn-primary mt-2">
+                <i class="bi bi-plus"></i> Issue First Book
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

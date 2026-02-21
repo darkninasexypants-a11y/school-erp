@@ -1,0 +1,248 @@
+{% extends "students/base_modern.html" %}
+{% load static %}
+
+{% block title %}My Students - {{ teacher_info.teacher.user.get_full_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-0">
+                <i class="fas fa-users me-2"></i>
+                My Students
+            </h4>
+            <p class="text-muted mb-0">
+                {{ students|length }} student{{ students|length|pluralize }} from your assigned classes
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            {% if can_import_students %}
+            <a href="{% url 'students_app:student_import' %}" class="btn btn-success">
+                <i class="fas fa-file-import me-2"></i>Import Students
+            </a>
+            {% endif %}
+            <a href="{% url 'students_app:teacher_dashboard_restricted' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Access Level Alert -->
+    {% if not can_import_students %}
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Limited Access:</strong> You can only view students from your assigned classes. Only class teachers can import new students.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endif %}
+
+    <!-- Filter by Class -->
+    {% if teacher_info.accessible_sections %}
+    <div class="card shadow mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">
+                <i class="fas fa-filter me-2"></i>
+                Filter by Class
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label">Select Class</label>
+                    <select class="form-select" id="classFilter" onchange="filterStudents()">
+                        <option value="">All Classes</option>
+                        {% for section in teacher_info.accessible_sections %}
+                        <option value="{{ section.id }}">
+                            {{ section.class_assigned.name }} - {{ section.name }}
+                            {% if section in teacher_info.assigned_sections %}
+                            (Class Teacher)
+                            {% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Search Student</label>
+                    <input type="text" class="form-control" id="searchStudent" placeholder="Search by name or admission number..." onkeyup="filterStudents()">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid">
+                        <button type="button" class="btn btn-outline-secondary" onclick="resetFilters()">
+                            <i class="fas fa-undo me-2"></i>Reset Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Students List -->
+    <div class="card shadow">
+        <div class="card-header bg-light">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-users me-2"></i>
+                    Student List
+                </h5>
+                <span class="badge bg-primary" id="studentCount">{{ students|length }}</span>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if students %}
+            <div class="table-responsive">
+                <table class="table table-hover" id="studentsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="60">#</th>
+                            <th width="80">Photo</th>
+                            <th>Student Name</th>
+                            <th>Admission No</th>
+                            <th>Class</th>
+                            <th>Section</th>
+                            <th>Roll No</th>
+                            <th>Status</th>
+                            <th width="150">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                        <tr data-section-id="{{ student.section.id }}" data-name="{{ student.get_full_name|lower }}" data-admission="{{ student.admission_number|lower }}">
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                {% if student.photo %}
+                                <img src="{{ student.photo.url }}" alt="{{ student.get_full_name }}" 
+                                     class="rounded-circle" width="40" height="40" 
+                                     style="object-fit: cover;">
+                                {% else %}
+                                <img src="{% static 'images/default-avatar.png' %}" alt="No Photo" 
+                                     class="rounded-circle" width="40" height="40">
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong>{{ student.get_full_name }}</strong>
+                                {% if student.designation and student.designation != 'Student' %}
+                                <span class="badge bg-info ms-2">{{ student.designation }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ student.admission_number }}</td>
+                            <td>{{ student.current_class.name }}</td>
+                            <td>{{ student.section.name }}</td>
+                            <td>{{ student.roll_number|default:"-" }}</td>
+                            <td>
+                                {% if student.status == 'active' %}
+                                <span class="badge bg-success">Active</span>
+                                {% elif student.status == 'inactive' %}
+                                <span class="badge bg-warning">Inactive</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ student.status|title }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="#" class="btn btn-outline-primary" onclick="viewStudentDetails({{ student.id }})">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'students_app:take_attendance' %}?class_id={{ student.current_class.id }}&section_id={{ student.section.id }}" 
+                                       class="btn btn-outline-success">
+                                        <i class="fas fa-user-check"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-users fa-4x text-muted mb-3"></i>
+                <h5 class="text-muted">No Students Found</h5>
+                <p class="text-muted">
+                    {% if can_import_students %}
+                    You haven't been assigned any classes or there are no students in your assigned classes.
+                    {% else %}
+                    You haven't been assigned to any classes yet.
+                    {% endif %}
+                </p>
+                <p class="text-muted">Please contact the school administrator.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Student Details Modal -->
+<div class="modal fade" id="studentDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Student Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="studentDetailsContent">
+                <!-- Content will be loaded via AJAX -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function filterStudents() {
+    const classFilter = document.getElementById('classFilter').value;
+    const searchFilter = document.getElementById('searchStudent').value.toLowerCase();
+    const rows = document.querySelectorAll('#studentsTable tbody tr');
+    
+    let visibleCount = 0;
+    
+    rows.forEach(row => {
+        const sectionId = row.getAttribute('data-section-id');
+        const name = row.getAttribute('data-name');
+        const admission = row.getAttribute('data-admission');
+        
+        const matchesClass = !classFilter || sectionId === classFilter;
+        const matchesSearch = !searchFilter || 
+                            name.includes(searchFilter) || 
+                            admission.includes(searchFilter);
+        
+        if (matchesClass && matchesSearch) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    document.getElementById('studentCount').textContent = visibleCount;
+}
+
+function resetFilters() {
+    document.getElementById('classFilter').value = '';
+    document.getElementById('searchStudent').value = '';
+    filterStudents();
+}
+
+function viewStudentDetails(studentId) {
+    // You can implement this to show student details in modal
+    // For now, just show a simple message
+    const modal = new bootstrap.Modal(document.getElementById('studentDetailsModal'));
+    document.getElementById('studentDetailsContent').innerHTML = `
+        <div class="text-center py-4">
+            <i class="fas fa-user fa-3x text-primary mb-3"></i>
+            <h6>Student ID: ${studentId}</h6>
+            <p class="text-muted">Student details view can be implemented here.</p>
+        </div>
+    `;
+    modal.show();
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    filterStudents();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,110 @@
+<!-- Hover trigger strip -->
+<div class="sidebar-trigger"></div>
+
+<div class="sidebar school-sidebar" id="sidebar">
+    <div class="logo">
+        <h3><i class="bi bi-mortarboard-fill"></i> School ERP</h3>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Main Menu</div>
+        <a href="{% url 'students_app:dashboard' %}"
+            class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+            <i class="bi bi-speedometer2"></i>
+            <span>Dashboard</span>
+        </a>
+        <a href="{% url 'students_app:student_list' %}"
+            class="nav-link {% if 'student' in request.path %}active{% endif %}">
+            <i class="bi bi-people-fill"></i>
+            <span>Students</span>
+        </a>
+        <a href="{% url 'students_app:attendance_mark' %}"
+            class="nav-link {% if 'attendance' in request.path %}active{% endif %}">
+            <i class="bi bi-calendar-check"></i>
+            <span>Attendance</span>
+        </a>
+        <a href="{% url 'students_app:marks_entry' %}"
+            class="nav-link {% if 'marks' in request.path %}active{% endif %}">
+            <i class="bi bi-clipboard-data"></i>
+            <span>Marks Entry</span>
+        </a>
+        <a href="{% url 'students_app:view_timetable' %}"
+            class="nav-link {% if 'timetable' in request.path %}active{% endif %}">
+            <i class="bi bi-table"></i>
+            <span>Timetable</span>
+        </a>
+        <a href="{% url 'students_app:fee_collection' %}"
+            class="nav-link {% if 'fee' in request.path %}active{% endif %}">
+            <i class="bi bi-currency-rupee"></i>
+            <span>Fee Management</span>
+        </a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">System</div>
+        <a href="{% url 'students_app:user_logout' %}" class="nav-link" onclick="return confirm('Logout?');">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Logout</span>
+        </a>
+    </div>
+</div>
+
+<style>
+    /* Hover-based reveal for school sidebar */
+    .sidebar-trigger {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 15px;
+        height: 100vh;
+        z-index: 1002;
+        background: transparent;
+    }
+
+    .sidebar.school-sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 240px;
+        height: 100vh;
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(20px);
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 20px 0;
+        z-index: 1000;
+        overflow-y: auto;
+        overflow-x: visible;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+        transition: transform 0.3s ease;
+        transform: translateX(-100%);
+    }
+
+    @media (min-width: 769px) {
+        .sidebar-trigger:hover ~ .sidebar.school-sidebar,
+        .sidebar.school-sidebar:hover {
+            transform: translateX(0);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .sidebar-trigger {
+            display: none;
+        }
+        .sidebar.school-sidebar {
+            transform: translateX(-100%);
+            width: 240px !important;
+        }
+        .sidebar.school-sidebar.mobile-show {
+            transform: translateX(0);
+        }
+    }
+
+    /* Let page content use full width (sidebar is off-canvas until hover) */
+    body:has(.sidebar.school-sidebar) .container-fluid,
+    body:has(.sidebar.school-sidebar) .main-content {
+        margin-left: 0;
+        width: 100%;
+        max-width: 100%;
+    }
+</style>
+

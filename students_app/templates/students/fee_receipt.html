@@ -1,0 +1,308 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Fee Receipt{% endblock %}
+
+{% block extra_css %}
+<style>
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        .receipt-container, .receipt-container * {
+            visibility: visible;
+        }
+        .receipt-container {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+        .no-print {
+            display: none !important;
+        }
+    }
+    
+    .receipt-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    
+    .receipt-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+    }
+    
+    .school-logo-container {
+        margin-bottom: 20px;
+    }
+    
+    .school-logo {
+        max-height: 80px;
+        max-width: 200px;
+        object-fit: contain;
+        background: white;
+        padding: 10px;
+        border-radius: 8px;
+    }
+    
+    .school-name {
+        font-size: 28px;
+        font-weight: 700;
+        margin: 15px 0 10px 0;
+        letter-spacing: 1px;
+    }
+    
+    .school-address {
+        font-size: 14px;
+        opacity: 0.9;
+        margin-top: 8px;
+    }
+    
+    .receipt-title {
+        font-size: 24px;
+        font-weight: 600;
+        margin-top: 20px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+    
+    .receipt-body {
+        padding: 40px;
+    }
+    
+    .receipt-number {
+        text-align: center;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin-bottom: 30px;
+    }
+    
+    .receipt-number strong {
+        font-size: 18px;
+        color: #667eea;
+    }
+    
+    .info-section {
+        margin-bottom: 30px;
+    }
+    
+    .info-section h5 {
+        color: #667eea;
+        font-weight: 600;
+        margin-bottom: 15px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid #f1f3f5;
+    }
+    
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    
+    .info-label {
+        font-weight: 600;
+        color: #64748b;
+        width: 40%;
+    }
+    
+    .info-value {
+        color: #1e293b;
+        width: 60%;
+        text-align: right;
+    }
+    
+    .amount-section {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 25px;
+        border-radius: 10px;
+        margin-top: 30px;
+    }
+    
+    .amount-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        font-size: 16px;
+    }
+    
+    .amount-total {
+        font-size: 24px;
+        font-weight: 700;
+        color: #667eea;
+        padding-top: 15px;
+        border-top: 2px solid #667eea;
+        margin-top: 10px;
+    }
+    
+    .receipt-footer {
+        text-align: center;
+        padding: 30px;
+        background: #f8f9fa;
+        border-top: 2px solid #e2e8f0;
+        color: #64748b;
+        font-size: 13px;
+    }
+    
+    .print-btn {
+        margin: 30px auto;
+        display: block;
+        padding: 12px 40px;
+        font-size: 16px;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="receipt-container">
+        <!-- Header with School Logo and Name -->
+        <div class="receipt-header">
+            <div class="school-logo-container">
+                {% if school and school.logo %}
+                    <img src="{{ school.logo.url }}" alt="{{ school.name }}" class="school-logo">
+                {% elif school_settings.school_logo %}
+                    <img src="{{ school_settings.school_logo.url }}" alt="{{ school_settings.school_name }}" class="school-logo">
+                {% else %}
+                    <div style="height: 60px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-graduation-cap" style="font-size: 48px; opacity: 0.8;"></i>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="school-name">
+                {% if school %}
+                    {{ school.name|upper }}
+                {% elif school_settings %}
+                    {{ school_settings.school_name|upper }}
+                {% else %}
+                    SCHOOL NAME
+                {% endif %}
+            </div>
+            
+            {% if school_settings %}
+            <div class="school-address">
+                {{ school_settings.school_address }}<br>
+                {% if school_settings.school_phone %}Phone: {{ school_settings.school_phone }}{% endif %}
+                {% if school_settings.school_email %} | Email: {{ school_settings.school_email }}{% endif %}
+            </div>
+            {% elif school %}
+            <div class="school-address">
+                {{ school.address }}<br>
+                Phone: {{ school.phone }} | Email: {{ school.email }}
+            </div>
+            {% endif %}
+            
+            <div class="receipt-title">Fee Payment Receipt</div>
+        </div>
+        
+        <!-- Receipt Body -->
+        <div class="receipt-body">
+            <!-- Receipt Number -->
+            <div class="receipt-number">
+                <strong>Receipt No: {{ receipt.receipt_number|default:payment.receipt_number }}</strong>
+            </div>
+            
+            <!-- Student Details -->
+            <div class="info-section">
+                <h5><i class="fas fa-user-graduate me-2"></i>Student Details</h5>
+                <div class="info-row">
+                    <span class="info-label">Student Name:</span>
+                    <span class="info-value">{{ receipt.student.get_full_name|default:payment.student.get_full_name }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Admission No:</span>
+                    <span class="info-value">{{ receipt.student.admission_number|default:payment.student.admission_number }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Class:</span>
+                    <span class="info-value">{{ receipt.student.current_class.name|default:payment.student.current_class.name }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Section:</span>
+                    <span class="info-value">{{ receipt.student.section.name|default:payment.student.section.name|default:"N/A" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Roll No:</span>
+                    <span class="info-value">{{ receipt.student.roll_number|default:payment.student.roll_number|default:"N/A" }}</span>
+                </div>
+            </div>
+            
+            <!-- Payment Details -->
+            <div class="info-section">
+                <h5><i class="fas fa-money-bill-wave me-2"></i>Payment Details</h5>
+                <div class="info-row">
+                    <span class="info-label">Payment Date:</span>
+                    <span class="info-value">{{ receipt.payment_date|date:"d M Y"|default:payment.payment_date|date:"d M Y" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Payment Method:</span>
+                    <span class="info-value">{{ receipt.get_payment_method_display|default:payment.get_payment_method_display }}</span>
+                </div>
+                {% if receipt.transaction_id or payment.transaction_id %}
+                <div class="info-row">
+                    <span class="info-label">Transaction ID:</span>
+                    <span class="info-value">{{ receipt.transaction_id|default:payment.transaction_id }}</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Amount Section -->
+            <div class="amount-section">
+                <div class="amount-row">
+                    <span>Amount Paid:</span>
+                    <span><strong>₹{{ receipt.amount_paid|default:payment.amount_paid|floatformat:2 }}</strong></span>
+                </div>
+                {% if receipt.discount or payment.discount %}
+                <div class="amount-row" style="color: #10b981;">
+                    <span>Discount:</span>
+                    <span>-₹{{ receipt.discount|default:payment.discount|floatformat:2 }}</span>
+                </div>
+                {% endif %}
+                {% if receipt.late_fee or payment.late_fee %}
+                <div class="amount-row" style="color: #ef4444;">
+                    <span>Late Fee:</span>
+                    <span>+₹{{ receipt.late_fee|default:payment.late_fee|floatformat:2 }}</span>
+                </div>
+                {% endif %}
+                <div class="amount-row amount-total">
+                    <span>Total Amount:</span>
+                    <span>₹{{ receipt.get_net_amount|default:payment.get_net_amount|floatformat:2 }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="receipt-footer">
+            {% if school_settings and school_settings.receipt_footer_text %}
+                {{ school_settings.receipt_footer_text|linebreaks }}
+            {% else %}
+                <p><strong>This is a computer generated receipt and does not require signature.</strong></p>
+                <p>For any queries, please contact the school office.</p>
+            {% endif %}
+            <p style="margin-top: 15px; font-size: 11px; opacity: 0.7;">
+                Generated on: {{ receipt.payment_date|date:"d M Y"|default:payment.payment_date|date:"d M Y" }}
+            </p>
+        </div>
+    </div>
+    
+    <!-- Print Button -->
+    <div class="text-center no-print">
+        <button onclick="window.print()" class="btn btn-primary print-btn">
+            <i class="fas fa-print me-2"></i> Print Receipt
+        </button>
+    </div>
+</div>
+{% endblock %}

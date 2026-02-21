@@ -1,0 +1,264 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Calculator{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="fas fa-calculator me-2"></i>Calculator</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Calculator Display -->
+                    <div class="mb-4">
+                        <input type="text" id="display" class="form-control form-control-lg text-end" readonly value="0" style="font-size: 2rem; height: 80px;">
+                    </div>
+
+                    <!-- Calculator Buttons -->
+                    <div class="row g-2">
+                        <!-- Row 1 -->
+                        <div class="col-3">
+                            <button class="btn btn-outline-secondary w-100 py-3" onclick="clearAll()">C</button>
+                        </div>
+                        <div class="col-3">
+                            <button class="btn btn-outline-secondary w-100 py-3" onclick="clearEntry()">CE</button>
+                        </div>
+                        <div class="col-3">
+                            <button class="btn btn-outline-secondary w-100 py-3" onclick="backspace()">⌫</button>
+                        </div>
+                        <div class="col-3">
+                            <button class="btn btn-outline-warning w-100 py-3" onclick="appendOperator('/')">÷</button>
+                        </div>
+
+                        <!-- Row 2 -->
+                        <div class="col-3">
+                            <button class="btn btn-outline-primary w-100 py-3" onclick="appendNumber('7')">7</button>
+                        </div>
+                        <div class="col-3">
+                            <button class="btn btn-outline-primary w-100 py-3" onclick="appendNumber('8')">8</button>
+                        </div>
+                        <div class="col-3">
+                            <button class="btn btn-outline-primary w-100 py-3" onclick="appendNumber('9')">9</button>
+                        </div>
+                        <div class="col-3">
+                            <button class="btn btn-outline-warning w-100 py-3" onclick="appendOperator('*')">×</button>
+                        </div>
+
+                        <!-- Row 3 -->
+                        <div class="col-3">
+                            <button class="btn btn-outline-primary w-100 py-3" onclick="appendNumber('4')">4</button>
+                        </div>
+                        <div class="col-3">
+                            <button class="btn btn-outline-primary w-100 py-3" onclick="appendNumber('5')">5</button>
+                        </div>
+                        <div class="col-3">
+                            <button class="btn btn-outline-primary w-100 py-3" onclick="appendNumber('6')">6</button>
+                        </div>
+                        <div class="col-3">
+                            <button class="btn btn-outline-warning w-100 py-3" onclick="appendOperator('-')">-</button>
+                        </div>
+
+                        <!-- Row 4 -->
+                        <div class="col-3">
+                            <button class="btn btn-outline-primary w-100 py-3" onclick="appendNumber('1')">1</button>
+                        </div>
+                        <div class="col-3">
+                            <button class="btn btn-outline-primary w-100 py-3" onclick="appendNumber('2')">2</button>
+                        </div>
+                        <div class="col-3">
+                            <button class="btn btn-outline-primary w-100 py-3" onclick="appendNumber('3')">3</button>
+                        </div>
+                        <div class="col-3">
+                            <button class="btn btn-outline-warning w-100 py-3" onclick="appendOperator('+')">+</button>
+                        </div>
+
+                        <!-- Row 5 -->
+                        <div class="col-3">
+                            <button class="btn btn-outline-primary w-100 py-3" onclick="appendNumber('0')">0</button>
+                        </div>
+                        <div class="col-3">
+                            <button class="btn btn-outline-primary w-100 py-3" onclick="appendNumber('.')">.</button>
+                        </div>
+                        <div class="col-3">
+                            <button class="btn btn-outline-primary w-100 py-3" onclick="appendOperator('(')">(</button>
+                        </div>
+                        <div class="col-3">
+                            <button class="btn btn-outline-primary w-100 py-3" onclick="appendOperator(')')">)</button>
+                        </div>
+
+                        <!-- Row 6 -->
+                        <div class="col-12">
+                            <button class="btn btn-success w-100 py-3" onclick="calculate()" style="font-size: 1.2rem;">
+                                <i class="fas fa-equals me-2"></i>Calculate
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="mt-4">
+                        <h6 class="text-muted mb-3">Quick Actions</h6>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <button class="btn btn-outline-info w-100" onclick="appendOperator('**')">Power (^)</button>
+                            </div>
+                            <div class="col-6">
+                                <button class="btn btn-outline-info w-100" onclick="appendOperator('sqrt(')">√</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- History -->
+                    <div class="mt-4">
+                        <h6 class="text-muted mb-3">Calculation History</h6>
+                        <div id="history" class="border rounded p-3" style="height: 150px; overflow-y: auto; background-color: #f8f9fa;">
+                            <p class="text-muted text-center">No calculations yet</p>
+                        </div>
+                        <button class="btn btn-outline-danger btn-sm mt-2" onclick="clearHistory()">
+                            <i class="fas fa-trash"></i> Clear History
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let display = document.getElementById('display');
+let currentInput = '0';
+let operator = null;
+let previousInput = null;
+let shouldResetDisplay = false;
+let history = [];
+
+function updateDisplay() {
+    display.value = currentInput;
+}
+
+function clearAll() {
+    currentInput = '0';
+    operator = null;
+    previousInput = null;
+    shouldResetDisplay = false;
+    updateDisplay();
+}
+
+function clearEntry() {
+    currentInput = '0';
+    updateDisplay();
+}
+
+function backspace() {
+    if (currentInput.length > 1) {
+        currentInput = currentInput.slice(0, -1);
+    } else {
+        currentInput = '0';
+    }
+    updateDisplay();
+}
+
+function appendNumber(num) {
+    if (shouldResetDisplay) {
+        currentInput = num;
+        shouldResetDisplay = false;
+    } else {
+        currentInput = currentInput === '0' ? num : currentInput + num;
+    }
+    updateDisplay();
+}
+
+function appendOperator(op) {
+    if (op === 'sqrt(') {
+        currentInput = 'Math.sqrt(' + currentInput + ')';
+        updateDisplay();
+    } else if (op === '**') {
+        currentInput += '**';
+        updateDisplay();
+    } else {
+        currentInput += op;
+        updateDisplay();
+    }
+}
+
+function calculate() {
+    try {
+        let expression = currentInput;
+        let result = eval(expression);
+        
+        // Add to history
+        history.unshift({
+            expression: expression,
+            result: result,
+            timestamp: new Date().toLocaleTimeString()
+        });
+        
+        // Keep only last 10 calculations
+        if (history.length > 10) {
+            history.pop();
+        }
+        
+        updateHistory();
+        
+        currentInput = result.toString();
+        shouldResetDisplay = true;
+        updateDisplay();
+        
+    } catch (error) {
+        currentInput = 'Error';
+        shouldResetDisplay = true;
+        updateDisplay();
+    }
+}
+
+function updateHistory() {
+    const historyDiv = document.getElementById('history');
+    if (history.length === 0) {
+        historyDiv.innerHTML = '<p class="text-muted text-center">No calculations yet</p>';
+        return;
+    }
+    
+    let html = '';
+    history.forEach(item => {
+        html += `
+            <div class="d-flex justify-content-between align-items-center mb-2 p-2 border-bottom">
+                <div>
+                    <small class="text-muted">${item.expression}</small>
+                    <br>
+                    <strong>= ${item.result}</strong>
+                </div>
+                <small class="text-muted">${item.timestamp}</small>
+            </div>
+        `;
+    });
+    historyDiv.innerHTML = html;
+}
+
+function clearHistory() {
+    history = [];
+    updateHistory();
+}
+
+// Keyboard support
+document.addEventListener('keydown', function(event) {
+    const key = event.key;
+    
+    if (key >= '0' && key <= '9') {
+        appendNumber(key);
+    } else if (key === '.') {
+        appendNumber('.');
+    } else if (['+', '-', '*', '/'].includes(key)) {
+        appendOperator(key);
+    } else if (key === 'Enter' || key === '=') {
+        calculate();
+    } else if (key === 'Escape') {
+        clearAll();
+    } else if (key === 'Backspace') {
+        backspace();
+    }
+});
+
+// Initialize
+updateDisplay();
+</script>
+{% endblock %}

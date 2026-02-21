@@ -1,0 +1,239 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Generate Staff ID Cards{% endblock %}
+
+{% block sidebar %}
+{% if request.user.is_authenticated %}
+    {% with teacher=request.user.teacher %}
+        {% if teacher %}
+            {% include 'includes/teacher_sidebar.html' %}
+        {% else %}
+            {% with role_name=request.user.school_profile.role.name|default_if_none:''|lower %}
+                {% if request.user.is_superuser or role_name == 'super_admin' %}
+                    {% include 'includes/super_admin_sidebar.html' %}
+                {% elif role_name == 'school admin' or role_name == 'school_admin' or role_name == 'admin' %}
+                    {% include 'includes/admin_sidebar.html' %}
+                {% else %}
+                    {% include 'includes/admin_sidebar.html' %}
+                {% endif %}
+            {% endwith %}
+        {% endif %}
+    {% endwith %}
+{% else %}
+    {% include 'includes/admin_sidebar.html' %}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="top-bar">
+    <div class="page-title">
+        <h1><i class="bi bi-card-image me-2"></i>Generate Staff ID Cards</h1>
+        <p>Generate ID cards with QR codes for attendance punching</p>
+    </div>
+    <div class="top-bar-actions">
+        <a href="{% url 'students_app:qr_attendance_scan' %}" class="btn btn-info">
+            <i class="bi bi-qr-code-scan me-2"></i>QR Scanner
+        </a>
+    </div>
+</div>
+
+{% if messages %}
+<div class="mb-4">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-gear me-2"></i>Generate ID Cards</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" id="generateForm">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-layout-text-window me-2"></i>Template <span class="text-danger">*</span>
+                        </label>
+                        <select name="template_id" class="form-select" required>
+                            <option value="">Select Template...</option>
+                            {% for template in templates %}
+                            <option value="{{ template.id }}">{{ template.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Select an ID card template</div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-people me-2"></i>Staff Type <span class="text-danger">*</span>
+                        </label>
+                        <select name="staff_type" class="form-select" id="staffType" required>
+                            <option value="">Select Type...</option>
+                            <option value="teacher">Teachers</option>
+                            <option value="staff">Non-Teaching Staff</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Teachers Section -->
+                    <div id="teachersSection" class="mb-4" style="display: none;">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-person-video3 me-2"></i>Select Teachers
+                        </label>
+                        <div class="card" style="max-height: 400px; overflow-y: auto;">
+                            <div class="card-body">
+                                <div class="mb-2">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAll('teacher')">Select All</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll('teacher')">Deselect All</button>
+                                </div>
+                                {% for teacher in teachers %}
+                                <div class="form-check">
+                                    <input type="checkbox" name="staff_ids" value="{{ teacher.id }}" class="form-check-input teacher-checkbox" id="teacher_{{ teacher.id }}">
+                                    <label class="form-check-label" for="teacher_{{ teacher.id }}">
+                                        {{ teacher.user.get_full_name }} - {{ teacher.designation|default:"Teacher" }}
+                                    </label>
+                                </div>
+                                {% empty %}
+                                <p class="text-muted">No teachers found.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Staff Section -->
+                    <div id="staffSection" class="mb-4" style="display: none;">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-people-fill me-2"></i>Select Staff Members
+                        </label>
+                        <div class="card" style="max-height: 400px; overflow-y: auto;">
+                            <div class="card-body">
+                                <div class="mb-2">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAll('staff')">Select All</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll('staff')">Deselect All</button>
+                                </div>
+                                {% for staff in staff_members %}
+                                <div class="form-check">
+                                    <input type="checkbox" name="staff_ids" value="{{ staff.id }}" class="form-check-input staff-checkbox" id="staff_{{ staff.id }}">
+                                    <label class="form-check-label" for="staff_{{ staff.id }}">
+                                        {{ staff.get_full_name }} - {{ staff.designation }}
+                                    </label>
+                                </div>
+                                {% empty %}
+                                <p class="text-muted">No staff members found.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                        <i class="bi bi-gear me-2"></i>Generate ID Cards with QR Codes
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Info Card -->
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>About QR Code Attendance</h5>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>QR codes on staff ID cards contain attendance punching data</li>
+                    <li>Each QR code can only be used once per day for attendance</li>
+                    <li>Use the QR Scanner page to scan and mark attendance</li>
+                    <li>QR codes are verified using cryptographic hashing for security</li>
+                    <li>Attendance is automatically marked as "Present" when scanned</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Recent ID Cards</h5>
+            </div>
+            <div class="card-body">
+                {% if staff_cards %}
+                <div class="list-group list-group-flush">
+                    {% for card in staff_cards %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ card.get_staff_member.get_full_name }}</h6>
+                                <small class="text-muted">{{ card.card_number }}</small>
+                                <br>
+                                <small class="text-muted">{{ card.created_at|date:"d M Y" }}</small>
+                            </div>
+                            {% if card.generated_image %}
+                            <a href="{{ card.generated_image.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted text-center">No ID cards generated yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.getElementById('staffType').addEventListener('change', function() {
+    const staffType = this.value;
+    const teachersSection = document.getElementById('teachersSection');
+    const staffSection = document.getElementById('staffSection');
+    
+    // Hide both sections
+    teachersSection.style.display = 'none';
+    staffSection.style.display = 'none';
+    
+    // Uncheck all checkboxes
+    document.querySelectorAll('.teacher-checkbox, .staff-checkbox').forEach(cb => cb.checked = false);
+    
+    // Show relevant section
+    if (staffType === 'teacher') {
+        teachersSection.style.display = 'block';
+    } else if (staffType === 'staff') {
+        staffSection.style.display = 'block';
+    }
+});
+
+function selectAll(type) {
+    const checkboxes = document.querySelectorAll(`.${type}-checkbox`);
+    checkboxes.forEach(cb => cb.checked = true);
+}
+
+function deselectAll(type) {
+    const checkboxes = document.querySelectorAll(`.${type}-checkbox`);
+    checkboxes.forEach(cb => cb.checked = false);
+}
+
+// Form validation
+document.getElementById('generateForm').addEventListener('submit', function(e) {
+    const staffType = document.getElementById('staffType').value;
+    const checkedBoxes = document.querySelectorAll(`.${staffType}-checkbox:checked`);
+    
+    if (checkedBoxes.length === 0) {
+        e.preventDefault();
+        alert('Please select at least one staff member.');
+        return false;
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}
+

@@ -1,0 +1,233 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Teacher Attendance{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-chalkboard-teacher me-2 text-primary"></i>Teacher Attendance</h2>
+            <p class="text-muted mb-0">Mark attendance for teaching staff with OCR and Face Verification</p>
+        </div>
+        <div>
+            <button type="button" class="btn btn-warning me-2" data-bs-toggle="modal" data-bs-target="#ocrVerificationModal">
+                <i class="fas fa-eye me-2"></i> Verify with OCR
+            </button>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#faceVerificationModal">
+                <i class="fas fa-user-check me-2"></i> Face Verification
+            </button>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="post" id="attendanceForm">
+                {% csrf_token %}
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Date <span class="text-danger">*</span></label>
+                        <input type="date" name="date" class="form-control" value="{{ today|date:'Y-m-d' }}" required>
+                    </div>
+                    <div class="col-md-8 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="fas fa-save me-2"></i>Save Attendance
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="markAllPresent()">
+                            <i class="fas fa-check-double me-2"></i>Mark All Present
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="5%">#</th>
+                                <th width="12%">Employee ID</th>
+                                <th width="18%">Name</th>
+                                <th width="8%">Status</th>
+                                <th width="10%">Check-In</th>
+                                <th width="10%">Check-Out</th>
+                                <th width="20%">Remarks</th>
+                                <th width="15%">Verification</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in teachers_with_attendance %}
+                            {% with teacher=item.teacher attendance=item.attendance %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td><strong>{{ teacher.employee_id }}</strong></td>
+                                <td>
+                                    {% if teacher.photo %}
+                                    <img src="{{ teacher.photo.url }}" alt="{{ teacher.user.get_full_name }}" class="rounded-circle me-2" width="32" height="32">
+                                    {% else %}
+                                    <div class="bg-secondary rounded-circle d-inline-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                        <i class="fas fa-user text-white small"></i>
+                                    </div>
+                                    {% endif %}
+                                    {{ teacher.user.get_full_name }}
+                                </td>
+                                <td>
+                                    <select name="status_{{ teacher.id }}" class="form-select form-select-sm status-select" required>
+                                        <option value="P" {% if attendance and attendance.status == 'P' %}selected{% endif %}>Present</option>
+                                        <option value="A" {% if attendance and attendance.status == 'A' %}selected{% endif %}>Absent</option>
+                                        <option value="L" {% if attendance and attendance.status == 'L' %}selected{% endif %}>Late</option>
+                                        <option value="H" {% if attendance and attendance.status == 'H' %}selected{% endif %}>Half Day</option>
+                                        <option value="E" {% if attendance and attendance.status == 'E' %}selected{% endif %}>Excused</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="time" name="check_in_{{ teacher.id }}" class="form-control form-control-sm" 
+                                           value="{% if attendance and attendance.check_in_time %}{{ attendance.check_in_time|time:'H:i' }}{% endif %}">
+                                </td>
+                                <td>
+                                    <input type="time" name="check_out_{{ teacher.id }}" class="form-control form-control-sm" 
+                                           value="{% if attendance and attendance.check_out_time %}{{ attendance.check_out_time|time:'H:i' }}{% endif %}">
+                                </td>
+                                <td>
+                                    <input type="text" name="remarks_{{ teacher.id }}" class="form-control form-control-sm" 
+                                           placeholder="Remarks..." value="{% if attendance %}{{ attendance.remarks }}{% endif %}">
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <button type="button" class="btn btn-outline-warning btn-sm" onclick="verifyWithOCR({{ teacher.id }})" title="Verify with OCR">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="verifyWithFace({{ teacher.id }})" title="Face Verification">
+                                            <i class="fas fa-user-check"></i>
+                                        </button>
+                                    </div>
+                                    {% if attendance and attendance.verification_method != 'manual' %}
+                                    <div class="mt-1">
+                                        <small class="badge bg-{% if attendance.face_match_result %}success{% else %}danger{% endif %}">
+                                            {% if attendance.verification_method == 'ocr' %}OCR{% elif attendance.verification_method == 'face' %}Face{% else %}Both{% endif %}
+                                        </small>
+                                    </div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endwith %}
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    <i class="fas fa-info-circle me-2"></i>No teachers found.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- OCR Verification Modal -->
+<div class="modal fade" id="ocrVerificationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title"><i class="fas fa-eye me-2"></i>Verify with OCR</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'students_app:teacher_attendance_ocr_verify' %}" enctype="multipart/form-data" id="ocrVerifyForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Select Teacher</label>
+                        <select name="teacher_id" class="form-select" required id="ocrTeacherSelect">
+                            <option value="">-- Select Teacher --</option>
+                            {% for item in teachers_with_attendance %}
+                            <option value="{{ item.teacher.id }}">{{ item.teacher.user.get_full_name }} ({{ item.teacher.employee_id }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Upload ID Card Image</label>
+                        <input type="file" name="id_card_image" class="form-control" accept="image/*" required>
+                        <small class="text-muted">Upload a clear image of the ID card to extract data</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date</label>
+                        <input type="date" name="date" class="form-control" value="{{ today|date:'Y-m-d' }}" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-search me-2"></i>Extract & Verify
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Face Verification Modal -->
+<div class="modal fade" id="faceVerificationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-user-check me-2"></i>Face Verification</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'students_app:teacher_attendance_face_verify' %}" enctype="multipart/form-data" id="faceVerifyForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Select Teacher</label>
+                        <select name="teacher_id" class="form-select" required id="faceTeacherSelect">
+                            <option value="">-- Select Teacher --</option>
+                            {% for item in teachers_with_attendance %}
+                            <option value="{{ item.teacher.id }}">{{ item.teacher.user.get_full_name }} ({{ item.teacher.employee_id }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Upload Current Photo</label>
+                        <input type="file" name="current_photo" class="form-control" accept="image/*" required>
+                        <small class="text-muted">Upload a photo of the teacher for face matching</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date</label>
+                        <input type="date" name="date" class="form-control" value="{{ today|date:'Y-m-d' }}" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-user-check me-2"></i>Verify Face
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function markAllPresent() {
+    document.querySelectorAll('.status-select').forEach(select => {
+        select.value = 'P';
+    });
+}
+
+function verifyWithOCR(teacherId) {
+    document.getElementById('ocrTeacherSelect').value = teacherId;
+    const modal = new bootstrap.Modal(document.getElementById('ocrVerificationModal'));
+    modal.show();
+}
+
+function verifyWithFace(teacherId) {
+    document.getElementById('faceTeacherSelect').value = teacherId;
+    const modal = new bootstrap.Modal(document.getElementById('faceVerificationModal'));
+    modal.show();
+}
+</script>
+{% endblock %}
+
+
+
+
+
+
+

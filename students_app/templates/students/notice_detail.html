@@ -1,0 +1,199 @@
+{% extends "students/base_modern.html" %}
+{% block title %}{{ notice.title }}{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/universal_delete.js' %}"></script>
+<script>
+    function deleteNotice(id, title) {
+        universalDelete(
+            '{% url "students_app:notice_delete" 0 %}'.replace('0', id),
+            id,
+            title,
+            'notice'
+        );
+    }
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-bullhorn me-2"></i>{{ notice.title }}</h2>
+        <div>
+            {% if user_role in 'admin,super_admin,teacher,school_admin' or request.user.is_superuser %}
+                {% if notice.created_by == request.user or user_role in 'admin,super_admin,school_admin' or request.user.is_superuser %}
+                <a href="{% url 'students_app:notice_edit' notice.id %}" class="btn btn-warning me-2">
+                    <i class="fas fa-edit me-2"></i>Edit
+                </a>
+                {% endif %}
+                {% if user_role in 'admin,super_admin,school_admin' or request.user.is_superuser %}
+                <form method="post" action="{% url 'students_app:notice_toggle_publish' notice.id %}" class="d-inline me-2">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-{% if notice.status == 'published' %}secondary{% else %}success{% endif %}">
+                        <i class="fas fa-bullhorn me-2"></i>
+                        {% if notice.status == 'published' %}Unpublish{% else %}Publish{% endif %}
+                    </button>
+                </form>
+                <form method="post" action="{% url 'students_app:notice_toggle_active' notice.id %}" class="d-inline me-2">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-{% if notice.is_active %}secondary{% else %}success{% endif %}">
+                        <i class="fas fa-{% if notice.is_active %}eye-slash{% else %}check{% endif %} me-2"></i>
+                        {% if notice.is_active %}Deactivate{% else %}Activate{% endif %}
+                    </button>
+                </form>
+                {% endif %}
+            {% endif %}
+            <a href="{% url 'students_app:notice_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header 
+                    {% if notice.priority == 'urgent' %}bg-danger text-white
+                    {% elif notice.priority == 'high' %}bg-warning text-dark
+                    {% elif notice.priority == 'medium' %}bg-info text-white
+                    {% else %}bg-secondary text-white{% endif %}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-light text-dark me-2">{{ notice.get_target_audience_display }}</span>
+                            <span class="badge bg-dark">{{ notice.get_priority_display }}</span>
+                            {% if not notice.is_active %}
+                            <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                            {% if is_expired %}
+                            <span class="badge bg-danger">Expired</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h4>{{ notice.title }}</h4>
+                        <div class="text-muted mb-3">
+                            <i class="fas fa-calendar me-2"></i>
+                            <strong>Notice Date:</strong> {{ notice.notice_date|date:"l, d F Y" }}
+                            {% if notice.expiry_date %}
+                            <span class="ms-3">
+                                <i class="fas fa-clock me-2"></i>
+                                <strong>Expiry Date:</strong> {{ notice.expiry_date|date:"l, d F Y" }}
+                                {% if is_expired %}
+                                <span class="badge bg-danger ms-2">Expired</span>
+                                {% endif %}
+                            </span>
+                            {% endif %}
+                        </div>
+                        {% if notice.specific_class %}
+                        <div class="text-muted mb-2">
+                            <i class="fas fa-users me-2"></i>
+                            <strong>Target:</strong> {{ notice.specific_class.name }}
+                            {% if notice.specific_section %} - Section {{ notice.specific_section.name }}{% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <h6><i class="fas fa-align-left me-2"></i>Content</h6>
+                        <div class="border rounded p-3 bg-light">
+                            {{ notice.content|linebreaks }}
+                        </div>
+                    </div>
+
+                    {% if notice.attachment %}
+                    <div class="mb-3">
+                        <h6><i class="fas fa-paperclip me-2"></i>Attachment</h6>
+                        <a href="{{ notice.attachment.url }}" target="_blank" class="btn btn-outline-primary">
+                            <i class="fas fa-download me-2"></i>Download Attachment
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-transparent">
+                    <small class="text-muted">
+                        <i class="fas fa-user me-1"></i>
+                        Created by: {{ notice.created_by.get_full_name|default:notice.created_by.username }}
+                        on {{ notice.created_at|date:"d M Y, h:i A" }}
+                        {% if notice.updated_at != notice.created_at %}
+                        | Last updated: {{ notice.updated_at|date:"d M Y, h:i A" }}
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Notice Information</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th width="40%">Priority:</th>
+                            <td>
+                                <span class="badge bg-{% if notice.priority == 'urgent' %}danger{% elif notice.priority == 'high' %}warning{% elif notice.priority == 'medium' %}info{% else %}secondary{% endif %}">
+                                    {{ notice.get_priority_display }}
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Audience:</th>
+                            <td>{{ notice.get_target_audience_display }}</td>
+                        </tr>
+                        <tr>
+                            <th>Publish Status:</th>
+                            <td>
+                                <span class="badge bg-{% if notice.status == 'published' %}success{% else %}secondary{% endif %}">
+                                    {{ notice.get_status_display }}
+                                </span>
+                                {% if notice.status == 'published' and notice.published_at %}
+                                <small class="text-muted ms-2">on {{ notice.published_at|date:"d M Y, h:i A" }}</small>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Status:</th>
+                            <td>
+                                <span class="badge bg-{% if notice.is_active %}success{% else %}secondary{% endif %}">
+                                    {% if notice.is_active %}Active{% else %}Inactive{% endif %}
+                                </span>
+                            </td>
+                        </tr>
+                        {% if notice.expiry_date %}
+                        <tr>
+                            <th>Expiry:</th>
+                            <td>
+                                {{ notice.expiry_date|date:"d M Y" }}
+                                {% if is_expired %}
+                                <span class="badge bg-danger ms-1">Expired</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+
+            {% if user_role in 'admin,super_admin,school_admin' or request.user.is_superuser %}
+            <div class="card mt-3">
+                <div class="card-header bg-danger text-white">
+                    <h6 class="mb-0"><i class="fas fa-trash me-2"></i>Danger Zone</h6>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted">Once deleted, this notice cannot be recovered.</p>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="deleteNotice('{{ notice.id }}', '{{ notice.title|escapejs }}')">
+                        <i class="fas fa-trash me-2"></i>Delete Notice
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+

@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ class_obj.name }} Games - School ERP</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fredoka:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <!-- AOS Animation -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --math-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --science-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --hindi-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            --english-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Animated Background */
+        .bg-animated {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3), transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(138, 92, 246, 0.3), transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(59, 130, 246, 0.2), transparent 50%);
+            animation: gradientShift 15s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+        
+        /* Header */
+        .class-header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 0 0 30px 30px;
+            padding: 40px 0;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+        }
+        
+        .class-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            z-index: -1;
+        }
+        
+        .class-title {
+            color: white;
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 15px;
+            text-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            font-family: 'Fredoka', sans-serif;
+        }
+        
+        .class-subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+        
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+        
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        /* Game Categories */
+        .category-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            padding: 40px;
+            margin: 40px 0;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .category-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 20px;
+            font-family: 'Fredoka', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .category-icon {
+            font-size: 2.5rem;
+        }
+        
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .game-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+        }
+        
+        .game-card.math::before {
+            background: var(--math-gradient);
+        }
+        
+        .game-card.science::before {
+            background: var(--science-gradient);
+        }
+        
+        .game-card.hindi::before {
+            background: var(--hindi-gradient);
+        }
+        
+        .game-card.english::before {
+            background: var(--english-gradient);
+        }
+        
+        .game-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .game-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+        
+        .game-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 10px;
+            font-family: 'Fredoka', sans-serif;
+        }
+        
+        .game-description {
+            color: #64748b;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        
+        .game-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .difficulty-badge {
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .difficulty-easy {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .difficulty-medium {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .difficulty-hard {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .game-type {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        
+        .game-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: #6b7280;
+        }
+        
+        .play-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .play-btn.math {
+            background: var(--math-gradient);
+            color: white;
+        }
+        
+        .play-btn.science {
+            background: var(--science-gradient);
+            color: white;
+        }
+        
+        .play-btn.hindi {
+            background: var(--hindi-gradient);
+            color: white;
+        }
+        
+        .play-btn.english {
+            background: var(--english-gradient);
+            color: white;
+        }
+        
+        .play-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .play-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .play-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        /* No Games Message */
+        .no-games {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+        
+        .no-games-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+        
+        .no-games-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #374151;
+        }
+        
+        .no-games-description {
+            font-size: 1rem;
+            margin-bottom: 30px;
+        }
+        
+        .create-game-btn {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .create-game-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="bg-animated"></div>
+    
+    <!-- Back Button -->
+    <button class="back-btn" onclick="goBack()">
+        <i class="bi bi-arrow-left"></i> Back to Games
+    </button>
+    
+    <div class="container-fluid">
+        <!-- Class Header -->
+        <div class="class-header">
+            <h1 class="class-title" data-aos="fade-up">
+                {% if class_obj.numeric_value <= 2 %}
+                    🧸 {{ class_obj.name }} Games
+                {% elif class_obj.numeric_value <= 5 %}
+                    🎨 {{ class_obj.name }} Games
+                {% elif class_obj.numeric_value <= 8 %}
+                    🎯 {{ class_obj.name }} Games
+                {% else %}
+                    🎓 {{ class_obj.name }} Games
+                {% endif %}
+            </h1>
+            <p class="class-subtitle" data-aos="fade-up" data-aos-delay="200">
+                {{ total_games }} games available for your class level
+            </p>
+        </div>
+        
+        <div class="container">
+            {% if games_by_category %}
+                {% for category, games in games_by_category.items %}
+                <div class="category-section" data-aos="fade-up">
+                    <h2 class="category-title">
+                        <span class="category-icon">
+                            {% if category|lower == 'maths' or category|lower == 'math' %}
+                                🔢
+                            {% elif category|lower == 'science' %}
+                                🔬
+                            {% elif category|lower == 'hindi' %}
+                                📝
+                            {% elif category|lower == 'english' %}
+                                📖
+                            {% else %}
+                                🎮
+                            {% endif %}
+                        </span>
+                        {{ category }} Games
+                    </h2>
+                    
+                    <div class="games-grid">
+                        {% for game in games %}
+                        <div class="game-card {{ game.category.name|lower }}" onclick="playGame({{ game.id }})" data-aos="zoom-in" data-aos-delay="{{ forloop.counter0|add:100 }}">
+                            <span class="game-icon">
+                                {% if game.game_type == 'quiz' %}
+                                    ❓
+                                {% elif game.game_type == 'puzzle' %}
+                                    🧩
+                                {% elif game.game_type == 'memory' %}
+                                    🧠
+                                {% elif game.game_type == 'word' %}
+                                    📝
+                                {% elif game.game_type == 'number' %}
+                                    🔢
+                                {% elif game.game_type == 'science' %}
+                                    🔬
+                                {% elif game.game_type == 'story' %}
+                                    📚
+                                {% else %}
+                                    🎮
+                                {% endif %}
+                            </span>
+                            
+                            <h3 class="game-title">{{ game.title }}</h3>
+                            <p class="game-description">{{ game.description }}</p>
+                            
+                            <div class="game-meta">
+                                <span class="difficulty-badge difficulty-{{ game.difficulty }}">
+                                    {{ game.difficulty|title }}
+                                </span>
+                                <span class="game-type">{{ game.game_type|title }}</span>
+                            </div>
+                            
+                            <div class="game-stats">
+                                <div class="stat-item">
+                                    <div class="stat-value">{{ game.max_score }}</div>
+                                    <div class="stat-label">Max Score</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">{{ game.time_limit|floatformat:0 }}</div>
+                                    <div class="stat-label">Seconds</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">{{ game.questions.count }}</div>
+                                    <div class="stat-label">Questions</div>
+                                </div>
+                            </div>
+                            
+                            <button class="play-btn {{ game.category.name|lower }}">
+                                <i class="bi bi-play-fill"></i> Play Game
+                            </button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="category-section">
+                    <div class="no-games">
+                        <div class="no-games-icon">🎮</div>
+                        <h3 class="no-games-title">No Games Available</h3>
+                        <p class="no-games-description">
+                            There are no games available for {{ class_obj.name }} yet. 
+                            Check back later or try a different class!
+                        </p>
+                        <button class="create-game-btn" onclick="goBack()">
+                            <i class="bi bi-arrow-left"></i> Back to Games
+                        </button>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- AOS Animation -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    
+    <script>
+        // Initialize AOS
+        AOS.init({
+            duration: 1000,
+            once: true,
+            offset: 100
+        });
+        
+        // Functions
+        function playGame(gameId) {
+            window.location.href = `/games/play/${gameId}/`;
+        }
+        
+        function goBack() {
+            window.location.href = '/games/';
+        }
+        
+        // Add hover effects to game cards
+        document.querySelectorAll('.game-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-10px) scale(1.02)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+    </script>
+</body>
+</html>

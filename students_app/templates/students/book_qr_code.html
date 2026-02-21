@@ -1,0 +1,279 @@
+{% extends "students/base_modern.html" %}
+{% block title %}QR Code - {{ book.title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-qrcode me-2"></i>Book QR Code
+                    </h4>
+                </div>
+                <div class="card-body text-center">
+                    <!-- Book Information -->
+                    <div class="mb-4">
+                        <h5 class="text-primary">{{ book.title }}</h5>
+                        <p class="text-muted mb-2">
+                            <strong>Author:</strong> {{ book.author }}<br>
+                            <strong>ISBN:</strong> <code>{{ book.isbn }}</code><br>
+                            <strong>Book ID:</strong> #{{ book.id }}
+                        </p>
+                    </div>
+
+                    <!-- QR Code Display - Print Friendly -->
+                    <div class="mb-4 qr-code-print">
+                        <div class="book-info">
+                            <h6 class="mb-2"><strong>{{ book.title }}</strong></h6>
+                            <p class="text-muted small mb-1">ISBN: <code>{{ book.isbn }}</code></p>
+                            <p class="text-muted small mb-0">Author: {{ book.author }}</p>
+                        </div>
+                        <div class="d-inline-block p-3 bg-white border rounded shadow-sm mt-3">
+                            <img id="qr-code-image" src="{{ qr_code_image }}" alt="QR Code for {{ book.title }}" class="img-fluid" style="width: 200px; height: 200px; object-fit: contain; display: block;">
+                        </div>
+                        <p class="text-muted small mt-2 no-print">Size: 150x150 pixels (suitable for book covers)</p>
+                    </div>
+
+                    <!-- QR Code Data -->
+                    <div class="alert alert-light mb-4 no-print">
+                        <h6 class="alert-heading">QR Code Contains:</h6>
+                        <pre class="mb-0 text-start" style="white-space: pre-wrap; font-size: 12px;">{{ qr_code_data }}</pre>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-center gap-2 flex-wrap">
+                        <a href="{% url 'students_app:book_qr_code' book.id %}" class="btn btn-primary" download>
+                            <i class="fas fa-download"></i> Download QR Code
+                        </a>
+                        <button type="button" onclick="showPrintOptions()" class="btn btn-secondary">
+                            <i class="fas fa-print"></i> Print QR Code
+                        </button>
+                        <a href="{% url 'students_app:book_list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Books
+                        </a>
+                    </div>
+                    
+                    <!-- Print Options Modal -->
+                    <div class="modal fade" id="printOptionsModal" tabindex="-1" aria-labelledby="printOptionsModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="printOptionsModalLabel">Print Options</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p class="mb-3">What would you like to print?</p>
+                                    <div class="d-grid gap-2">
+                                        <button type="button" onclick="printSingleBook()" class="btn btn-primary btn-lg">
+                                            <i class="fas fa-print me-2"></i> Print This Book's QR Code Only
+                                        </button>
+                                        <button type="button" onclick="printAllBooks()" class="btn btn-success btn-lg">
+                                            <i class="fas fa-print me-2"></i> Print All Books QR Codes
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Usage Instructions -->
+                    <div class="mt-4 text-start">
+                        <h6>How to Use:</h6>
+                        <ul class="text-muted small">
+                            <li>This QR code contains the book's unique ISBN and details</li>
+                            <li>Scan with any QR code reader app to view book information</li>
+                            <li>Can be printed and attached to the book for easy identification</li>
+                            <li>Useful for library inventory management and book tracking</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @media print {
+        body {
+            background: white !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .btn, .card-header, .alert, .no-print, .modal {
+            display: none !important;
+        }
+        .card {
+            border: none !important;
+            box-shadow: none !important;
+            background: white !important;
+        }
+        .card-body {
+            padding: 20px !important;
+        }
+        .qr-code-print {
+            page-break-inside: avoid;
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #000 !important;
+            text-align: center;
+            background: white !important;
+        }
+        .qr-code-print .book-info {
+            margin-bottom: 15px;
+        }
+        .qr-code-print .book-info h6 {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .qr-code-print img {
+            width: 150px !important;
+            height: 150px !important;
+            display: block !important;
+            margin: 10px auto !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .qr-code-print .d-inline-block {
+            display: block !important;
+            margin: 0 auto;
+            background: white !important;
+        }
+        /* Ensure images are visible in print */
+        img {
+            max-width: 100% !important;
+            height: auto !important;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        
+        /* Force QR code to be visible */
+        #qr-code-image,
+        .qr-code-print img {
+            width: 150px !important;
+            height: 150px !important;
+            max-width: 150px !important;
+            max-height: 150px !important;
+            display: block !important;
+            margin: 10px auto !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            image-rendering: -webkit-optimize-contrast !important;
+            image-rendering: crisp-edges !important;
+        }
+        
+        /* Ensure QR code container is visible */
+        .qr-code-print .d-inline-block {
+            display: block !important;
+            margin: 0 auto !important;
+            background: white !important;
+            border: 1px solid #000 !important;
+            padding: 10px !important;
+        }
+    }
+    
+    .qr-code-print {
+        text-align: center;
+        padding: 20px;
+        border: 1px dashed #ddd;
+        margin: 10px 0;
+    }
+</style>
+
+<script>
+    // Wait for DOM to be ready
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if Bootstrap is available
+        if (typeof bootstrap === 'undefined') {
+            console.error('Bootstrap is not loaded. Print modal may not work.');
+        }
+        
+        // Verify modal element exists
+        var modalElement = document.getElementById('printOptionsModal');
+        if (!modalElement) {
+            console.error('Print options modal element not found in DOM');
+        }
+    });
+    
+    function showPrintOptions() {
+        try {
+            var modalElement = document.getElementById('printOptionsModal');
+            if (modalElement) {
+                // Check if Bootstrap is available
+                if (typeof bootstrap !== 'undefined') {
+                    var modal = new bootstrap.Modal(modalElement, {
+                        backdrop: true,
+                        keyboard: true
+                    });
+                    modal.show();
+                } else {
+                    console.error('Bootstrap is not loaded');
+                    // Fallback: directly print
+                    alert('Print options: Click OK to print this book\'s QR code');
+                    window.print();
+                }
+            } else {
+                console.error('Print options modal not found');
+                // Fallback: directly print
+                alert('Print options: Click OK to print this book\'s QR code');
+                window.print();
+            }
+        } catch (error) {
+            console.error('Error showing print options:', error);
+            // Fallback: directly print
+            window.print();
+        }
+    }
+    
+    function printSingleBook() {
+        try {
+            // Close modal
+            var modalElement = document.getElementById('printOptionsModal');
+            if (modalElement && typeof bootstrap !== 'undefined') {
+                var modal = bootstrap.Modal.getInstance(modalElement);
+                if (modal) {
+                    modal.hide();
+                }
+            }
+            
+            // Print current page after modal closes
+            setTimeout(function() {
+                window.print();
+            }, 500);
+        } catch (error) {
+            console.error('Error printing single book:', error);
+            window.print();
+        }
+    }
+    
+    function printAllBooks() {
+        try {
+            // Close modal
+            var modalElement = document.getElementById('printOptionsModal');
+            if (modalElement && typeof bootstrap !== 'undefined') {
+                var modal = bootstrap.Modal.getInstance(modalElement);
+                if (modal) {
+                    modal.hide();
+                }
+            }
+            
+            // Redirect to bulk QR codes page after modal closes
+            setTimeout(function() {
+                window.location.href = "{% url 'students_app:bulk_qr_codes' %}?print=all";
+            }, 300);
+        } catch (error) {
+            console.error('Error redirecting to bulk print:', error);
+            window.location.href = "{% url 'students_app:bulk_qr_codes' %}?print=all";
+        }
+    }
+</script>
+{% endblock %}
+

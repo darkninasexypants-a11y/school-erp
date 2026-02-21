@@ -1,0 +1,241 @@
+<!-- Add/Edit Fee Structure Modal -->
+<div class="modal fade" id="feeStructureModal" tabindex="-1"
+     aria-labelledby="feeStructureModalLabel" aria-hidden="true">
+
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <!-- Header -->
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title" id="feeStructureModalLabel">
+                    <i class="fas fa-cog me-2"></i>
+                    <span id="modalTitle">Add New Fee Structure</span>
+                </h5>
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+
+            <!-- Form -->
+            <form method="post" id="feeStructureForm">
+                {% csrf_token %}
+                <input type="hidden" name="structure_id" id="structure_id">
+
+                <div class="modal-body">
+
+                    <!-- Class + Academic Year -->
+                    <div class="row mb-3">
+
+                        <!-- Class -->
+                        <div class="col-md-6">
+                            <label for="id_class_assigned" class="form-label">
+                                Class <span class="text-danger">*</span>
+                            </label>
+
+                            <select name="class_assigned"
+                                    id="id_class_assigned"
+                                    class="form-select"
+                                    required
+                                    onchange="checkClassForStream()">
+
+                                <option value="">Select Class</option>
+
+                                {% for class in classes %}
+       s                             <option value="{{ class.id }}"
+                                            data-numeric="{{ class.numeric_value }}">
+                                        {{ class.name }}
+                                    </option>
+                                {% endfor %}
+
+                            </select>
+                        </div>
+
+                        <!-- Academic Year -->
+                        <div class="col-md-6">
+                                                        <label for="id_academic_year" class="form-label">
+                                                                Academic Year <span class="text-danger">*</span>
+                                                                <button type="button" class="btn btn-sm btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#addAcademicYearModal">
+                                                                        Add New Year
+                                                                </button>
+                                                        </label>
+
+                                                        <select name="academic_year"
+                                                                        id="id_academic_year"
+                                                                        class="form-select"
+                                                                        required>
+                                                                <option value="">Select Academic Year</option>
+                                                                {% for year in academic_years %}
+                                                                        <option value="{{ year.id }}"
+                                                                                {% if year.id == selected_year %}selected{% endif %}
+                                                                        >
+                                                                                {{ year.year }}
+                                                                        </option>
+                                                                {% endfor %}
+                                                        </select>
+
+                                                        <!-- Add Academic Year Modal -->
+                                                        <div class="modal fade" id="addAcademicYearModal" tabindex="-1" aria-labelledby="addAcademicYearModalLabel" aria-hidden="true">
+                                                            <div class="modal-dialog">
+                                                                <div class="modal-content">
+                                                                    <div class="modal-header">
+                                                                        <h5 class="modal-title" id="addAcademicYearModalLabel">Add New Academic Year</h5>
+                                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                    </div>
+                                                                    <form method="post" action="{% url 'students_app:add_academic_year' %}" id="addAcademicYearForm">
+                                                                        {% csrf_token %}
+                                                                        <div class="modal-body">
+                                                                            <div class="mb-3">
+                                                                                <label for="new_year" class="form-label">Academic Year (e.g., 2025-2026)</label>
+                                                                                <input type="text" class="form-control" id="new_year" name="year" required>
+                                                                            </div>
+                                                                            <div class="mb-3">
+                                                                                <label for="start_date" class="form-label">Start Date</label>
+                                                                                <input type="date" class="form-control" id="start_date" name="start_date" required>
+                                                                            </div>
+                                                                            <div class="mb-3">
+                                                                                <label for="end_date" class="form-label">End Date</label>
+                                                                                <input type="date" class="form-control" id="end_date" name="end_date" required>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="modal-footer">
+                                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                            <button type="submit" class="btn btn-primary">Add Year</button>
+                                                                        </div>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Stream Section -->
+                    <div class="row mb-3" id="streamSection" style="display:none;">
+                        <div class="col-md-6">
+                            <label for="id_stream" class="form-label">
+                                Stream / Subject Group
+                            </label>
+
+                            <select name="stream" id="id_stream" class="form-select">
+                                <option value="general">General</option>
+                                <option value="science">Science</option>
+                                <option value="commerce">Commerce</option>
+                                <option value="arts">Arts</option>
+                                <option value="math_science">Math-Science</option>
+                                <option value="biology_science">Biology-Science</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="id_subjects" class="form-label">
+                                Specific Subjects (Optional)
+                            </label>
+
+                            <select name="subjects"
+                                    id="id_subjects"
+                                    class="form-select"
+                                    multiple size="3">
+
+                                {% for subject in subjects %}
+                                    <option value="{{ subject.id }}">
+                                        {{ subject.name }} ({{ subject.code }})
+                                    </option>
+                                {% endfor %}
+
+                            </select>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Fee Inputs -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Tuition Fee *</label>
+                            <input type="number" name="tuition_fee"
+                                   id="id_tuition_fee"
+                                   class="form-control" min="0" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Transport Fee</label>
+                            <input type="number" name="transport_fee"
+                                   id="id_transport_fee"
+                                   class="form-control" min="0" value="0">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Library Fee</label>
+                            <input type="number" name="library_fee"
+                                   id="id_library_fee"
+                                   class="form-control" min="0" value="0">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Lab Fee</label>
+                            <input type="number" name="lab_fee"
+                                   id="id_lab_fee"
+                                   class="form-control" min="0" value="0">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Sports Fee</label>
+                            <input type="number" name="sports_fee"
+                                   id="id_sports_fee"
+                                   class="form-control" min="0" value="0">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Exam Fee</label>
+                            <input type="number" name="exam_fee"
+                                   id="id_exam_fee"
+                                   class="form-control" min="0" value="0">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Computer Fee</label>
+                            <input type="number" name="computer_fee"
+                                   id="id_computer_fee"
+                                   class="form-control" min="0" value="0">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Other Fee</label>
+                            <input type="number" name="other_fee"
+                                   id="id_other_fee"
+                                   class="form-control" min="0" value="0">
+                        </div>
+                    </div>
+
+                    <!-- Total -->
+                    <div class="alert alert-info">
+                        <strong>Total Fee:</strong>
+                        <span id="totalFeeDisplay">₹0</span>
+                    </div>
+
+                </div>
+
+                <!-- Footer -->
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                            class="btn btn-warning">
+                        Save Structure
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>

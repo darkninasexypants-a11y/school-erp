@@ -1,0 +1,50 @@
+{% extends 'students/base.html' %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h3 mb-0 text-gray-800">Time Slots (Periods)</h2>
+        <a href="{% url 'students_app:time_slot_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Add Time Slot
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            {% if slots %}
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Slot Name</th>
+                            <th>Time</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for slot in slots %}
+                        <tr>
+                            <td><strong>{{ slot.slot_name }}</strong></td>
+                            <td>{{ slot.start_time }} - {{ slot.end_time }}</td>
+                            <td>
+                                {% if slot.is_break %}
+                                <span class="badge bg-warning text-dark">Break/Recess</span>
+                                {% else %}
+                                <span class="badge bg-info text-dark">Class Period</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <p class="text-muted">No time slots defined.</p>
+                <a href="{% url 'students_app:time_slot_create' %}" class="btn btn-primary">Add First Period</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

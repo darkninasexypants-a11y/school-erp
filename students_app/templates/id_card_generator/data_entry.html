@@ -1,0 +1,236 @@
+{% extends "students/base_modern.html" %}
+{% block title %}ID Card Data Entry{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-edit me-2 text-primary"></i>ID Card Data Entry</h2>
+            <p class="text-muted">{{ generator.school_name }} - {{ generator.get_card_type_display }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'students_app:generate_id_cards_pdf' generator.id %}" class="btn btn-success">
+                <i class="fas fa-file-pdf"></i> Generate PDF
+            </a>
+            <a href="{% url 'students_app:id_card_generator_dashboard' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Data Entry Form -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-plus me-2"></i>Add New Card Data</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <!-- Student Information -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">Student Information</h6>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.name.id_for_label }}" class="form-label">Student Name *</label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                    <div class="text-danger">{{ form.name.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.admission_no.id_for_label }}" class="form-label">Admission No *</label>
+                                {{ form.admission_no }}
+                                {% if form.admission_no.errors %}
+                                    <div class="text-danger">{{ form.admission_no.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.father_name.id_for_label }}" class="form-label">Father's Name *</label>
+                                {{ form.father_name }}
+                                {% if form.father_name.errors %}
+                                    <div class="text-danger">{{ form.father_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.mother_name.id_for_label }}" class="form-label">Mother's Name</label>
+                                {{ form.mother_name }}
+                                {% if form.mother_name.errors %}
+                                    <div class="text-danger">{{ form.mother_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.date_of_birth.id_for_label }}" class="form-label">Date of Birth *</label>
+                                {{ form.date_of_birth }}
+                                {% if form.date_of_birth.errors %}
+                                    <div class="text-danger">{{ form.date_of_birth.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.blood_group.id_for_label }}" class="form-label">Blood Group</label>
+                                {{ form.blood_group }}
+                                {% if form.blood_group.errors %}
+                                    <div class="text-danger">{{ form.blood_group.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Academic Details -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">Academic Details</h6>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.class_name.id_for_label }}" class="form-label">Class *</label>
+                                {{ form.class_name }}
+                                {% if form.class_name.errors %}
+                                    <div class="text-danger">{{ form.class_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.section.id_for_label }}" class="form-label">Section</label>
+                                {{ form.section }}
+                                {% if form.section.errors %}
+                                    <div class="text-danger">{{ form.section.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.roll_number.id_for_label }}" class="form-label">Roll Number</label>
+                                {{ form.roll_number }}
+                                {% if form.roll_number.errors %}
+                                    <div class="text-danger">{{ form.roll_number.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Contact Information -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">Contact Information</h6>
+                            </div>
+                            <div class="col-12">
+                                <label for="{{ form.address.id_for_label }}" class="form-label">Address *</label>
+                                {{ form.address }}
+                                {% if form.address.errors %}
+                                    <div class="text-danger">{{ form.address.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mt-3">
+                                <label for="{{ form.mobile.id_for_label }}" class="form-label">Mobile *</label>
+                                {{ form.mobile }}
+                                {% if form.mobile.errors %}
+                                    <div class="text-danger">{{ form.mobile.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mt-3">
+                                <label for="{{ form.emergency_contact.id_for_label }}" class="form-label">Emergency Contact</label>
+                                {{ form.emergency_contact }}
+                                {% if form.emergency_contact.errors %}
+                                    <div class="text-danger">{{ form.emergency_contact.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Photo and Validity -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">Additional Information</h6>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.photo.id_for_label }}" class="form-label">Student Photo</label>
+                                {{ form.photo }}
+                                {% if form.photo.errors %}
+                                    <div class="text-danger">{{ form.photo.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.valid_until.id_for_label }}" class="form-label">Valid Until</label>
+                                {{ form.valid_until }}
+                                {% if form.valid_until.errors %}
+                                    <div class="text-danger">{{ form.valid_until.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <button type="reset" class="btn btn-warning">
+                                <i class="fas fa-undo"></i> Reset Form
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Add Card Data
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Existing Cards List -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-list me-2"></i>Existing Cards ({{ card_data.count }})</h5>
+                    <span class="badge bg-info">{{ generator.get_cards_per_page }} cards per page</span>
+                </div>
+                <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                    {% if card_data %}
+                        {% for card in card_data %}
+                        <div class="d-flex align-items-center mb-3 p-3 border rounded">
+                            <div class="flex-shrink-0">
+                                {% if card.photo %}
+                                    <img src="{{ card.photo.url }}" alt="{{ card.name }}" class="rounded-circle" width="50" height="50">
+                                {% else %}
+                                    <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                        <i class="fas fa-user text-white"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="mb-1">{{ card.name }}</h6>
+                                <p class="mb-1 text-muted small">
+                                    <strong>Admission:</strong> {{ card.admission_no }} | 
+                                    <strong>Class:</strong> {{ card.class_name }}{% if card.section %} - {{ card.section }}{% endif %}
+                                </p>
+                                <p class="mb-1 text-muted small">
+                                    <strong>Father:</strong> {{ card.father_name }} | 
+                                    <strong>Mobile:</strong> {{ card.mobile }}
+                                </p>
+                                <div class="d-flex align-items-center">
+                                    {% if card.is_generated %}
+                                        <span class="badge bg-success me-2">Generated</span>
+                                    {% else %}
+                                        <span class="badge bg-warning me-2">Pending</span>
+                                    {% endif %}
+                                    <small class="text-muted">{{ card.created_at|date:"M d, Y" }}</small>
+                                </div>
+                            </div>
+                            <div class="flex-shrink-0">
+                                <a href="{% url 'students_app:edit_id_card_data' card.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-id-card fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Cards Added Yet</h5>
+                            <p class="text-muted">Add student data using the form on the left.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

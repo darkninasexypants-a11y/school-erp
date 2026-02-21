@@ -1,0 +1,86 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Print All QR Codes{% endblock %}
+
+{% block extra_css %}
+<style>
+    @media print {
+        body {
+            background: white !important;
+        }
+        .no-print {
+            display: none !important;
+        }
+        .qr-code-item {
+            page-break-inside: avoid;
+            margin-bottom: 30px;
+        }
+    }
+    
+    .qr-code-item {
+        display: inline-block;
+        width: 48%;
+        margin: 1%;
+        padding: 15px;
+        border: 1px solid #ddd;
+        text-align: center;
+        vertical-align: top;
+    }
+    
+    .qr-code-item img {
+        width: 150px;
+        height: 150px;
+        display: block;
+        margin: 10px auto;
+    }
+    
+    .book-info {
+        margin-bottom: 10px;
+    }
+    
+    .book-info h6 {
+        font-size: 14px;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    
+    .book-info small {
+        font-size: 11px;
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="no-print mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-qrcode me-2"></i>Print All QR Codes</h2>
+            <div>
+                <button onclick="window.print()" class="btn btn-primary">
+                    <i class="fas fa-print"></i> Print All
+                </button>
+                <a href="{% url 'students_app:book_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+            </div>
+        </div>
+        <p class="text-muted">Total: {{ qr_codes_data|length }} QR codes ready to print</p>
+    </div>
+    
+    <div class="row">
+        {% for item in qr_codes_data %}
+        <div class="col-md-6 qr-code-item">
+            <div class="book-info">
+                <h6>{{ item.book.title }}</h6>
+                <small>ISBN: <code>{{ item.book.isbn }}</code></small>
+                <small>Author: {{ item.book.author }}</small>
+            </div>
+            <div>
+                <img src="{{ item.qr_code_image }}" alt="QR Code for {{ item.book.title }}">
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+

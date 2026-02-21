@@ -1,0 +1,177 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Import Timetable{% endblock %}
+
+{% block sidebar %}
+{% include 'includes/admin_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="top-bar">
+    <div class="page-title">
+        <h1><i class="bi bi-upload me-2"></i>Import Timetable</h1>
+        <p>Upload timetable data from Excel file</p>
+    </div>
+    <div class="top-bar-actions">
+        <a href="{% url 'students_app:manage_timetables' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Management
+        </a>
+    </div>
+</div>
+
+<!-- Academic Year Info -->
+{% if current_year %}
+<div class="alert alert-info mb-4">
+    <i class="bi bi-info-circle me-2"></i>
+    <strong>Current Academic Year:</strong> {{ current_year.name }}
+</div>
+{% else %}
+<div class="alert alert-warning mb-4">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    <strong>Warning:</strong> No active academic year found. Please set an academic year first.
+</div>
+{% endif %}
+
+<!-- Upload Form -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-file-earmark-excel me-2"></i>Upload Excel File</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="mb-4">
+                <label for="excel_file" class="form-label fw-semibold">
+                    <i class="bi bi-file-earmark-excel me-2"></i>Select Excel File
+                </label>
+                <input type="file" class="form-control" id="excel_file" name="excel_file" 
+                       accept=".xlsx,.xls" required>
+                <small class="form-text text-muted">
+                    Supported formats: .xlsx, .xls
+                </small>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-upload me-2"></i>Import Timetable
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Instructions -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Excel File Format</h5>
+    </div>
+    <div class="card-body">
+        <h6>Required Columns:</h6>
+        <ul>
+            <li><strong>Section</strong> - Format: "Class Name - Section Name" (e.g., "UKG - A", "Class 1 - B", "Class 10 - A")
+                <br><small class="text-muted">Note: Use exact class and section names as they appear in your system</small></li>
+            <li><strong>Day</strong> - Day of week (Monday, Tuesday, Wednesday, Thursday, Friday, Saturday)</li>
+            <li><strong>Subject</strong> - Subject name (will be created automatically if it doesn't exist)</li>
+        </ul>
+        
+        <h6 class="mt-3">Optional Columns:</h6>
+        <ul>
+            <li><strong>Time Slot</strong> - Time slot name (must match existing time slots)</li>
+            <li><strong>Teacher</strong> - Teacher name (will match by first name)</li>
+            <li><strong>Room</strong> - Room number</li>
+        </ul>
+        
+        <h6 class="mt-3">Example Excel Format:</h6>
+        <div class="table-responsive">
+            <table class="table table-bordered table-sm">
+                <thead>
+                    <tr>
+                        <th>Section</th>
+                        <th>Day</th>
+                        <th>Time Slot</th>
+                        <th>Subject</th>
+                        <th>Teacher</th>
+                        <th>Room</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>UKG - A</td>
+                        <td>Monday</td>
+                        <td>Period 1</td>
+                        <td>Mathematics</td>
+                        <td>John Doe</td>
+                        <td>101</td>
+                    </tr>
+                    <tr>
+                        <td>UKG - A</td>
+                        <td>Monday</td>
+                        <td>Period 2</td>
+                        <td>English</td>
+                        <td>Jane Smith</td>
+                        <td>102</td>
+                    </tr>
+                    <tr>
+                        <td>Class 1 - A</td>
+                        <td>Tuesday</td>
+                        <td>Period 1</td>
+                        <td>Science</td>
+                        <td>Robert Johnson</td>
+                        <td>103</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="alert alert-info mt-3">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>Section Format:</strong> Use "Class Name - Section Name" (e.g., "UKG - A", "Class 1 - B", "Class 10 - A"). 
+            Make sure the class and section names match exactly with your system.
+        </div>
+        
+        <div class="alert alert-warning mt-3">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <strong>Note:</strong>
+            <ul class="mb-0 mt-2">
+                <li>Sections must already exist in the system</li>
+                <li>Subjects will be created automatically if they don't exist</li>
+                <li>Time slots must match existing time slots in the system</li>
+                <li>Teachers will be matched by first name if found</li>
+                <li>Existing entries will be updated if they match (same section, day, time slot)</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Download Template -->
+<div class="card mt-4">
+    <div class="card-body text-center">
+        <h6 class="mb-3">Need a Template?</h6>
+        <p class="text-muted">Download a sample Excel template to get started.</p>
+        <button class="btn btn-outline-primary" onclick="downloadTemplate()">
+            <i class="bi bi-download me-2"></i>Download Template
+        </button>
+    </div>
+</div>
+
+<script>
+function downloadTemplate() {
+    // Create a simple CSV template with correct format
+    const csvContent = "Section,Day,Time Slot,Subject,Teacher,Room\n" +
+                      "UKG - A,Monday,Period 1,Mathematics,John Doe,101\n" +
+                      "UKG - A,Monday,Period 2,English,Jane Smith,102\n" +
+                      "UKG - A,Tuesday,Period 1,Science,Robert Johnson,103\n" +
+                      "Class 1 - A,Monday,Period 1,Hindi,Smith Kumar,201\n" +
+                      "Class 1 - A,Monday,Period 2,Mathematics,John Doe,201";
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", "timetable_template.csv");
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+</script>
+{% endblock %}
+

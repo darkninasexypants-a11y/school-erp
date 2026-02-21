@@ -1,0 +1,52 @@
+{% extends 'students/base.html' %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h3 mb-0 text-gray-800">Academic Years</h2>
+        <a href="{% url 'students_app:academic_year_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Add Academic Year
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            {% if years %}
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Year</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for year in years %}
+                        <tr>
+                            <td><strong>{{ year.year }}</strong></td>
+                            <td>{{ year.start_date }}</td>
+                            <td>{{ year.end_date }}</td>
+                            <td>
+                                {% if year.is_current %}
+                                <span class="badge bg-success">Current Active Year</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Archived</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <p class="text-muted">No academic years defined.</p>
+                <a href="{% url 'students_app:academic_year_create' %}" class="btn btn-primary">Create Current Year</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

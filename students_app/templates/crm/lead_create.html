@@ -1,0 +1,101 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Create Lead - CRM{% endblock %}
+
+{% block sidebar %}
+{% with role_name=request.user.school_profile.role.name|default_if_none:''|lower %}
+    {% if request.user.is_superuser or role_name == 'super_admin' %}
+        {% include 'includes/super_admin_sidebar.html' %}
+    {% elif role_name == 'school admin' or role_name == 'school_admin' or role_name == 'admin' %}
+        {% include 'includes/admin_sidebar.html' %}
+    {% else %}
+        {% include 'includes/school_sidebar.html' %}
+    {% endif %}
+{% endwith %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-user-plus me-2 text-primary"></i>Create New Lead</h2>
+            <p class="text-muted">Add a new student enquiry/lead</p>
+        </div>
+        <a href="{% url 'students_app:lead_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Leads
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">First Name *</label>
+                                <input type="text" name="first_name" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Last Name *</label>
+                                <input type="text" name="last_name" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email *</label>
+                                <input type="email" name="email" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Phone *</label>
+                                <input type="text" name="phone" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Lead Source</label>
+                                <select name="source" class="form-select">
+                                    <option value="">Select Source</option>
+                                    {% for source in sources %}
+                                    <option value="{{ source.id }}">{{ source.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Interested Class</label>
+                                <select name="interested_class" class="form-select">
+                                    <option value="">Select Class</option>
+                                    {% for class in classes %}
+                                    <option value="{{ class.id }}">{{ class.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Parent Name</label>
+                                <input type="text" name="parent_name" class="form-control">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Parent Phone</label>
+                                <input type="text" name="parent_phone" class="form-control">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Address</label>
+                                <textarea name="address" class="form-control" rows="2"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Notes</label>
+                                <textarea name="notes" class="form-control" rows="3"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Create Lead
+                                </button>
+                                <a href="{% url 'students_app:lead_list' %}" class="btn btn-outline-secondary">
+                                    Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

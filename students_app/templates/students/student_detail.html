@@ -1,0 +1,444 @@
+{% extends 'students/base_modern.html' %}
+{% load static %}
+
+{% block title %}{{ student.get_full_name }} Details{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="top-bar">
+    <div class="page-title">
+        <h1><i class="bi bi-person-circle me-2"></i>Student Details</h1>
+        <p>{{ student.get_full_name }} | Admission: {{ student.admission_number }}</p>
+    </div>
+    <div class="top-bar-actions">
+        <span
+            class="badge {% if student.status == 'active' %}bg-success{% else %}bg-danger{% endif %} bg-opacity-10 text-{% if student.status == 'active' %}success{% else %}danger{% endif %}"
+            style="padding: 10px 15px; font-size: 0.9rem;">
+            <i class="bi bi-{% if student.status == 'active' %}check-circle{% else %}x-circle{% endif %} me-1"></i>{{
+            student.get_status_display }}
+        </span>
+        <a href="{% url 'students_app:student_update' admission_number=student.admission_number %}"
+            class="btn btn-primary">
+            <i class="bi bi-pencil me-2"></i>Edit Student
+        </a>
+        <a href="{% url 'students_app:student_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to List
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <!-- Student Profile Card -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-auto position-relative">
+                        {% if student.photo %}
+                        <img src="{{ student.photo.url }}" alt="{{ student.get_full_name }}"
+                            class="student-avatar-large" style="object-fit: cover; border: 3px solid #6366f1;">
+                        {% else %}
+                        <div class="student-avatar-large">
+                            {{ student.first_name.0|default:"S" }}{{ student.last_name.0|default:"" }}
+                        </div>
+                        {% endif %}
+                        {% if can_change_photo %}
+                        <a href="{% url 'students_app:student_change_photo' admission_number=student.admission_number %}"
+                            class="btn btn-sm btn-primary position-absolute bottom-0 end-0 rounded-circle"
+                            style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.2);"
+                            title="Change Photo">
+                            <i class="bi bi-camera" style="font-size: 0.9rem;"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                    <div class="col">
+                        <h3 class="mb-1">{{ student.get_full_name }}</h3>
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-6">
+                                <p class="mb-1"><i class="bi bi-badge-id me-2 text-primary"></i><strong>Admission
+                                        No:</strong> {{ student.admission_number }}</p>
+                                <p class="mb-1"><i class="bi bi-calendar-event me-2 text-primary"></i><strong>Admission
+                                        Date:</strong> {{ student.admission_date|date:"M d, Y" }}</p>
+                                <p class="mb-1"><i
+                                        class="bi bi-mortarboard me-2 text-primary"></i><strong>Class:</strong> {{
+                                    student.current_class|default:"N/A" }}</p>
+                                <p class="mb-1"><i
+                                        class="bi bi-collection me-2 text-primary"></i><strong>Section:</strong> {% if
+                                    student.section %}{{ student.section.name }}{% else %}N/A{% endif %}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-1"><i class="bi bi-hash me-2 text-primary"></i><strong>Roll
+                                        Number:</strong> {{ student.roll_number|default:"—" }}</p>
+                                <p class="mb-1"><i
+                                        class="bi bi-gender-ambiguous me-2 text-primary"></i><strong>Gender:</strong> {{
+                                    student.get_gender_display }}</p>
+                                <p class="mb-1"><i class="bi bi-calendar me-2 text-primary"></i><strong>Date of
+                                        Birth:</strong> {{ student.date_of_birth|date:"M d, Y" }}</p>
+                                {% if student.blood_group %}
+                                <p class="mb-0"><i class="bi bi-heart-pulse me-2 text-primary"></i><strong>Blood
+                                        Group:</strong> {{ student.blood_group }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Personal Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-person-vcard me-2"></i>Personal Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <i class="bi bi-person-badge me-2 text-primary"></i>
+                            <div>
+                                <strong>Father's Name</strong>
+                                <p class="mb-0 text-muted">{{ student.father_name|default:"—" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <i class="bi bi-telephone me-2 text-primary"></i>
+                            <div>
+                                <strong>Father's Phone</strong>
+                                <p class="mb-0 text-muted">{{ student.father_phone|default:"—" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <i class="bi bi-person me-2 text-primary"></i>
+                            <div>
+                                <strong>Mother's Name</strong>
+                                <p class="mb-0 text-muted">{{ student.mother_name|default:"—" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% if student.mother_phone %}
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <i class="bi bi-telephone me-2 text-primary"></i>
+                            <div>
+                                <strong>Mother's Phone</strong>
+                                <p class="mb-0 text-muted">{{ student.mother_phone }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <i class="bi bi-credit-card me-2 text-primary"></i>
+                            <div>
+                                <strong>Aadhaar Card</strong>
+                                <p class="mb-0 text-muted">{{ student.aadhaar_card|default:"—" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <i class="bi bi-person-badge-fill me-2 text-primary"></i>
+                            <div>
+                                <strong>Samagra ID</strong>
+                                <p class="mb-0 text-muted">{{ student.samagra_id|default:"—" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="info-item">
+                            <i class="bi bi-geo-alt me-2 text-primary"></i>
+                            <div>
+                                <strong>Address</strong>
+                                <p class="mb-0 text-muted">{{ student.address|default:"—" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% if student.medical_conditions %}
+                    <div class="col-md-12">
+                        <div class="info-item">
+                            <i class="bi bi-heart-pulse me-2 text-primary"></i>
+                            <div>
+                                <strong>Medical Conditions</strong>
+                                <p class="mb-0 text-muted">{{ student.medical_conditions }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance Summary -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-calendar-check me-2"></i>Attendance Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="stat-card-modern">
+                            <div class="stat-icon-modern bg-primary">
+                                <i class="bi bi-calendar3"></i>
+                            </div>
+                            <div class="stat-value">{{ total_attendance|default:0 }}</div>
+                            <div class="stat-label">Total Days</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card-modern">
+                            <div class="stat-icon-modern bg-success">
+                                <i class="bi bi-check-circle"></i>
+                            </div>
+                            <div class="stat-value">{{ present_count|default:0 }}</div>
+                            <div class="stat-label">Present Days</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card-modern">
+                            <div class="stat-icon-modern bg-info">
+                                <i class="bi bi-percent"></i>
+                            </div>
+                            <div class="stat-value">{{ attendance_percentage|default:0 }}%</div>
+                            <div class="stat-label">Attendance Rate</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fee Payments -->
+        {% if fee_payments %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-currency-rupee me-2"></i>Recent Fee Payments</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in fee_payments %}
+                            <tr>
+                                <td>{{ payment.payment_date|date:"M d, Y" }}</td>
+                                <td><strong>₹{{ payment.amount_paid|floatformat:2 }}</strong></td>
+                                <td>
+                                    {% if payment.payment_status == 'completed' %}
+                                    <span class="badge bg-success">Completed</span>
+                                    {% else %}
+                                    <span class="badge bg-warning">Pending</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ID Card History -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-id-card me-2"></i>ID Card History</h5>
+            </div>
+            <div class="card-body">
+                {% with cards=student.studentidcard_set.all|dictsort:"-created_at" %}
+                {% if cards %}
+                <div class="list-group list-group-flush">
+                    {% for card in cards %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Card #{{ card.card_number|default:card.id }}</strong>
+                                <br><small class="text-muted">{{ card.template.name|default:'Default Template'
+                                    }}</small>
+                                <br><small class="text-muted">{{ card.issue_date|date:"M d, Y"|default:"N/A" }}</small>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'students_app:id_card_detail' card_id=card.id %}"
+                                    class="btn btn-sm btn-outline-primary" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'students_app:download_id_card' card_id=card.id %}"
+                                    class="btn btn-sm btn-outline-success" title="Download">
+                                    <i class="bi bi-download"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-id-card text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-2">No ID cards generated yet</p>
+                </div>
+                {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Quick Actions -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-lightning-charge me-2"></i>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                {% if has_id_card_template %}
+                <a href="{% url 'students_app:generate_id_card' student_id=student.id %}"
+                    class="btn btn-primary w-100 mb-2">
+                    <i class="bi bi-id-card me-2"></i>Generate ID Card
+                </a>
+                {% else %}
+                <button class="btn btn-secondary w-100 mb-2" disabled title="No active ID card template available">
+                    <i class="bi bi-id-card me-2"></i>Generate ID Card
+                </button>
+                <small class="text-muted d-block text-center">Template not available. Contact administrator.</small>
+                {% endif %}
+                <a href="{% url 'students_app:student_update' admission_number=student.admission_number %}"
+                    class="btn btn-outline-primary w-100 mb-2">
+                    <i class="bi bi-pencil me-2"></i>Edit Profile
+                </a>
+                {% if student.father_phone %}
+                <a href="https://wa.me/{{ student.father_phone|slice:'1:'|default:student.father_phone }}?text=Hello"
+                    target="_blank" class="btn btn-success w-100 mb-2">
+                    <i class="bi bi-whatsapp me-2"></i>Contact Parent
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Library Books -->
+        {% if issued_books %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-book me-2"></i>Issued Books</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% for issue in issued_books %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>{{ issue.book.title }}</strong>
+                                <br><small class="text-muted">Issued: {{ issue.issue_date|date:"M d, Y" }}</small>
+                            </div>
+                            <span class="badge bg-info">Active</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+
+<style>
+    .student-avatar-large {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2.5rem;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    img.student-avatar-large {
+        object-fit: cover;
+        display: block;
+        background: none;
+        border: 3px solid #6366f1 !important;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 12px;
+        background: var(--gray-50);
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .info-item:hover {
+        background: var(--gray-100);
+        transform: translateX(4px);
+    }
+
+    .info-item i {
+        font-size: 1.2rem;
+        margin-top: 2px;
+    }
+
+    .stat-card-modern {
+        text-align: center;
+        padding: 20px;
+        background: var(--gray-50);
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card-modern:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-icon-modern {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 12px;
+        font-size: 1.5rem;
+        color: white;
+    }
+
+    .stat-icon-modern.bg-primary {
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    }
+
+    .stat-icon-modern.bg-success {
+        background: linear-gradient(135deg, var(--success), #059669);
+    }
+
+    .stat-icon-modern.bg-info {
+        background: linear-gradient(135deg, var(--secondary), #0284c7);
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin-bottom: 4px;
+    }
+
+    .stat-label {
+        color: var(--gray-500);
+        font-size: 0.85rem;
+    }
+</style>
+
+{% endblock content %}

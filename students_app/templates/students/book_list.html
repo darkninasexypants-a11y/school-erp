@@ -1,0 +1,128 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Book List{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-book me-2"></i>All Books</h2>
+        <div class="d-flex gap-2">
+            <a href="{% url 'students_app:bulk_qr_codes' %}" class="btn btn-warning">
+                <i class="fas fa-qrcode"></i> Bulk QR Codes
+            </a>
+            <a href="{% url 'students_app:add_book' %}" class="btn btn-success">
+                <i class="fas fa-plus"></i> Add New Book
+            </a>
+        </div>
+    </div>
+
+    <!-- Search -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-10">
+                    <input type="text" name="search" class="form-control" 
+                           placeholder="Search by title, author, ISBN, or publisher..." 
+                           value="{{ search }}">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Books List -->
+    <div class="card">
+        <div class="card-body">
+            {% if books %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Book ID</th>
+                            <th>Cover</th>
+                            <th>Title</th>
+                            <th>Author</th>
+                            <th>ISBN</th>
+                            <th>Category</th>
+                            <th>Copies</th>
+                            <th>Available</th>
+                            <th>Price</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for book in books %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-secondary">#{{ book.id }}</span>
+                            </td>
+                            <td>
+                                {% if book.cover_image %}
+                                    <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" 
+                                         class="rounded" style="width: 50px; height: 70px; object-fit: cover;">
+                                {% else %}
+                                    <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                         style="width: 50px; height: 70px;">
+                                        <i class="fas fa-book text-muted"></i>
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong>{{ book.title }}</strong>
+                                {% if book.edition %}
+                                    <br><small class="text-muted">Edition: {{ book.edition }}</small>
+                                {% endif %}
+                            </td>
+                            <td>{{ book.author }}</td>
+                            <td><code>{{ book.isbn }}</code></td>
+                            <td>
+                                {% if book.category %}
+                                    <span class="badge bg-info">{{ book.category.name }}</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">{{ book.total_copies }}</span>
+                            </td>
+                            <td>
+                                {% if book.available_copies > 0 %}
+                                    <span class="badge bg-success">{{ book.available_copies }}</span>
+                                {% else %}
+                                    <span class="badge bg-danger">0</span>
+                                {% endif %}
+                            </td>
+                            <td>₹{{ book.price }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'students_app:edit_book' book.id %}" class="btn btn-outline-primary">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                    <a href="{% url 'students_app:book_qr_code_view' book.id %}" class="btn btn-outline-info" title="View QR Code">
+                                        <i class="fas fa-qrcode"></i> QR
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info text-center">
+                <i class="fas fa-book fa-3x mb-3 text-muted"></i>
+                <h5>No books found</h5>
+                <p>Start by adding your first book to the library.</p>
+                <a href="{% url 'students_app:add_book' %}" class="btn btn-success">
+                    <i class="fas fa-plus"></i> Add First Book
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+

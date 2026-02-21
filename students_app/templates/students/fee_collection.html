@@ -1,0 +1,324 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Fee Collection{% endblock %}
+
+{% block extra_css %}
+<style>
+    .fee-summary {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: #fff;
+        border-radius: 12px;
+        padding: 20px;
+    }
+    .fee-summary h3 {
+        font-size: 2rem;
+        font-weight: 700;
+    }
+    .search-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border: 1px solid var(--gray-200);
+        border-radius: 10px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        z-index: 100;
+        max-height: 300px;
+        overflow-y: auto;
+        display: none;
+    }
+    .search-dropdown.show { display: block; }
+    .search-item {
+        padding: 12px 15px;
+        cursor: pointer;
+        border-bottom: 1px solid var(--gray-100);
+    }
+    .search-item:hover { background: var(--gray-50); }
+    .search-item:last-child { border-bottom: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="top-bar">
+    <div class="page-title">
+        <h1>Fee Collection</h1>
+        <p>Record fee payments from students</p>
+        </div>
+    <div class="top-bar-actions">
+        <a href="{% url 'students_app:receipts_list' %}" class="btn btn-light">
+            <i class="bi bi-receipt me-2"></i>View Receipts
+            </a>
+        <a href="{% url 'students_app:fee_analytics' %}" class="btn btn-primary">
+            <i class="bi bi-graph-up me-2"></i>Analytics
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+    <!-- Main Form -->
+        <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-currency-rupee me-2"></i>Fee Payment Form</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="feeCollectionForm">
+                        {% csrf_token %}
+                        
+                    <!-- Student Search -->
+                    <div class="row mb-4">
+                            <div class="col-md-6">
+                            <label class="form-label">Student <span class="text-danger">*</span></label>
+                                <div class="position-relative">
+                                <input type="text" id="studentSearch" class="form-control" 
+                                    placeholder="Search by name or admission no..." autocomplete="off">
+                                <div id="studentSearchResults" class="search-dropdown"></div>
+                            </div>
+                            {{ form.student }}
+                            <small class="text-muted">Type to search students</small>
+                            <style>#{{ form.student.id_for_label }} { display: none; }</style>
+                        </div>
+                            <div class="col-md-6">
+                            <label class="form-label">Academic Year <span class="text-danger">*</span></label>
+                            {{ form.academic_year }}
+                            </div>
+                        </div>
+
+                    <!-- Fee Info -->
+                    <div id="feeInfo" class="alert alert-info mb-4" style="display: none;">
+                        <i class="bi bi-info-circle me-2"></i>
+                            <span id="feeInfoText">Select a student to see fee structure</span>
+                        </div>
+
+                    <!-- Payment Details -->
+                    <div class="row mb-4">
+                            <div class="col-md-4">
+                            <label class="form-label">Amount (₹) <span class="text-danger">*</span></label>
+                                {{ form.amount_paid }}
+                            </div>
+                            <div class="col-md-4">
+                            <label class="form-label">Discount (₹)</label>
+                                {{ form.discount }}
+                            </div>
+                            <div class="col-md-4">
+                            <label class="form-label">Late Fee (₹)</label>
+                                {{ form.late_fee }}
+                        </div>
+                            </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label">Payment Date <span class="text-danger">*</span></label>
+                            {{ form.payment_date }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Payment Method <span class="text-danger">*</span></label>
+                                {{ form.payment_method }}
+                            </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Receipt No <span class="text-danger">*</span></label>
+                            {{ form.receipt_number }}
+                            </div>
+                        </div>
+
+                    <!-- Transaction Fields (shown conditionally) -->
+                    <div class="row mb-4" id="transactionFields" style="display: none;">
+                            <div class="col-md-4">
+                            <label class="form-label">Transaction ID</label>
+                                {{ form.transaction_id }}
+                            </div>
+                            <div class="col-md-4">
+                            <label class="form-label">Cheque Number</label>
+                                {{ form.cheque_number }}
+                            </div>
+                            <div class="col-md-4">
+                            <label class="form-label">Bank Name</label>
+                                {{ form.bank_name }}
+                            </div>
+                        </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Remarks</label>
+                            {{ form.remarks }}
+                        </div>
+
+                    <!-- Net Amount -->
+                    <div class="fee-summary mb-4">
+                                <div class="d-flex justify-content-between align-items-center">
+                            <span>Net Amount Payable</span>
+                            <h3 id="netAmount" class="mb-0">₹0.00</h3>
+                            </div>
+                        </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{% url 'students_app:receipts_list' %}" class="btn btn-light">Cancel</a>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-circle me-2"></i>Collect Fee & Generate Receipt
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    <!-- Sidebar -->
+        <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-lightning-charge me-2"></i>Quick Links</h6>
+                </div>
+                <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'students_app:fee_analytics' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-graph-up me-2"></i>Fee Analytics
+                    </a>
+                    <a href="{% url 'students_app:fee_notifications' %}" class="btn btn-outline-warning">
+                        <i class="bi bi-bell me-2"></i>Send Notifications
+                    </a>
+                    <a href="{% url 'students_app:fee_report' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-file-text me-2"></i>Fee Reports
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Tips</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0 small">
+                    <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Select student to auto-fill fee</li>
+                    <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Discounts are applied automatically</li>
+                    <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Receipt number is auto-generated</li>
+                    <li><i class="bi bi-check text-success me-2"></i>E-receipt can be sent via email</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const amountPaid = document.getElementById('{{ form.amount_paid.id_for_label }}');
+    const discount = document.getElementById('{{ form.discount.id_for_label }}');
+    const lateFee = document.getElementById('{{ form.late_fee.id_for_label }}');
+    const netAmount = document.getElementById('netAmount');
+    const paymentMethod = document.getElementById('{{ form.payment_method.id_for_label }}');
+    const transactionFields = document.getElementById('transactionFields');
+    const studentSelect = document.getElementById('{{ form.student.id_for_label }}');
+    const feeInfo = document.getElementById('feeInfo');
+    const feeInfoText = document.getElementById('feeInfoText');
+    const studentSearch = document.getElementById('studentSearch');
+    const studentSearchResults = document.getElementById('studentSearchResults');
+
+    // Calculate net amount
+    function calculateNetAmount() {
+        const amount = parseFloat(amountPaid.value) || 0;
+        const disc = parseFloat(discount.value) || 0;
+        const late = parseFloat(lateFee.value) || 0;
+        const net = amount - disc + late;
+        netAmount.textContent = '₹' + net.toLocaleString('en-IN', {minimumFractionDigits: 2});
+    }
+
+    amountPaid.addEventListener('input', calculateNetAmount);
+    discount.addEventListener('input', calculateNetAmount);
+    lateFee.addEventListener('input', calculateNetAmount);
+
+    // Show/hide transaction fields
+    paymentMethod.addEventListener('change', function() {
+        const method = this.value;
+        transactionFields.style.display = ['netbanking', 'card', 'upi', 'cheque', 'dd'].includes(method) ? 'flex' : 'none';
+    });
+
+    // Student search
+    let searchTimeout;
+    studentSearch.addEventListener('input', function() {
+        const query = this.value.trim();
+        clearTimeout(searchTimeout);
+        
+        if (query.length < 2) {
+            studentSearchResults.classList.remove('show');
+            return;
+        }
+        
+        searchTimeout = setTimeout(() => {
+            fetch(`/api/students/?search=${encodeURIComponent(query)}&page_size=10`)
+                .then(response => response.json())
+                .then(data => {
+                    const students = data.results || data;
+                    studentSearchResults.innerHTML = '';
+                    
+                    if (students.length === 0) {
+                        studentSearchResults.innerHTML = '<div class="search-item text-muted">No students found</div>';
+                    } else {
+                    students.forEach(student => {
+                            const item = document.createElement('div');
+                            item.className = 'search-item';
+                        item.innerHTML = `
+                                <strong>${student.first_name} ${student.last_name}</strong>
+                                <small class="d-block text-muted">${student.admission_number} • ${student.current_class?.name || 'N/A'}</small>
+                        `;
+                            item.addEventListener('click', function() {
+                            studentSelect.value = student.id;
+                                studentSearch.value = `${student.first_name} ${student.last_name} (${student.admission_number})`;
+                                studentSearchResults.classList.remove('show');
+                            studentSelect.dispatchEvent(new Event('change'));
+                        });
+                        studentSearchResults.appendChild(item);
+                    });
+                    }
+                    studentSearchResults.classList.add('show');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }, 300);
+    });
+    
+    document.addEventListener('click', function(e) {
+        if (!studentSearch.contains(e.target) && !studentSearchResults.contains(e.target)) {
+            studentSearchResults.classList.remove('show');
+        }
+    });
+
+    // Load fee structure
+    studentSelect.addEventListener('change', function() {
+        const studentId = this.value;
+        if (studentId) {
+            feeInfo.style.display = 'block';
+            feeInfoText.textContent = 'Loading fee structure...';
+            feeInfo.className = 'alert alert-info';
+            
+            fetch(`{% url 'students_app:get_student_fee_structure' %}?student_id=${studentId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.fee_structure) {
+                        const fs = data.fee_structure;
+                        feeInfo.className = 'alert alert-success';
+                        feeInfoText.innerHTML = `<strong>Total Fee: ₹${fs.total_fee.toLocaleString('en-IN')}</strong> (${fs.class_name})`;
+                        if (amountPaid && !amountPaid.value) {
+                            amountPaid.value = fs.total_fee;
+                            calculateNetAmount();
+                        }
+                    } else {
+                        feeInfo.className = 'alert alert-warning';
+                        feeInfoText.textContent = data.message || 'No fee structure found';
+                    }
+                })
+                .catch(error => {
+                    feeInfo.className = 'alert alert-danger';
+                    feeInfoText.textContent = 'Error loading fee structure';
+                });
+        } else {
+            feeInfo.style.display = 'none';
+        }
+    });
+
+    calculateNetAmount();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,490 @@
+{% extends "students/base_modern.html" %}
+{% block title %}QR Code Attendance Scanner{% endblock %}
+
+{% block sidebar %}
+{% include 'includes/admin_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="top-bar">
+    <div class="page-title">
+        <h1><i class="bi bi-qr-code-scan me-2"></i>QR Code Attendance Scanner</h1>
+        <p>Scan staff ID card QR codes to mark attendance</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-camera me-2"></i>Camera Scanner</h5>
+            </div>
+            <div class="card-body">
+                <div id="scanner-container" class="text-center position-relative">
+                    <video id="video" width="100%" height="400" style="background: #000; border-radius: 8px;"></video>
+                    <canvas id="canvas" style="display: none;"></canvas>
+                    <div id="scanStatus" class="position-absolute top-0 start-0 w-100 p-2" style="display: none;">
+                        <div class="alert alert-info mb-0 text-center">
+                            <i class="bi bi-qr-code me-2"></i><span id="statusText">Scanning QR Code...</span>
+                        </div>
+                    </div>
+                    <div id="faceCaptureOverlay" class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="display: none; background: rgba(0,0,0,0.7); border-radius: 8px;">
+                        <div class="text-center text-white">
+                            <i class="bi bi-person-circle" style="font-size: 4rem;"></i>
+                            <h4 class="mt-3">Position Face in Camera</h4>
+                            <p>Look directly at the camera</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3 text-center">
+                    <button id="startScan" class="btn btn-primary btn-lg">
+                        <i class="bi bi-play-circle me-2"></i>Start Camera
+                    </button>
+                    <button id="stopScan" class="btn btn-danger btn-lg" style="display: none;">
+                        <i class="bi bi-stop-circle me-2"></i>Stop Camera
+                    </button>
+                    <button id="captureFaceBtnManual" class="btn btn-success btn-lg" style="display: none;">
+                        <i class="bi bi-camera me-2"></i>Capture Face Now
+                    </button>
+                    <div class="form-check form-switch mt-2">
+                        <input class="form-check-input" type="checkbox" id="autoCaptureToggle" checked>
+                        <label class="form-check-label small" for="autoCaptureToggle">
+                            Auto-capture face (2 sec delay)
+                        </label>
+                    </div>
+                    <div class="form-check form-switch mt-2">
+                        <input class="form-check-input" type="checkbox" id="continuousModeToggle">
+                        <label class="form-check-label small" for="continuousModeToggle">
+                            Continuous Mode (Auto-restart after scan)
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>How It Works</h5>
+            </div>
+            <div class="card-body">
+                <ol class="mb-3 small">
+                    <li class="mb-2">Click "Start Camera" to activate webcam</li>
+                    <li class="mb-2">Hold staff ID card in front of camera to scan QR code</li>
+                    <li class="mb-2">Position staff member's face in camera for verification</li>
+                    <li class="mb-2">Face auto-captures after 2 seconds (or click "Capture Face")</li>
+                    <li>Attendance is marked only once per day per staff member</li>
+                </ol>
+                <div class="alert alert-success small mb-0">
+                    <strong><i class="bi bi-lightbulb me-1"></i>Tip:</strong> Enable "Continuous Mode" for unattended operation. 
+                    System will auto-restart after each scan. Add <code>?autostart=true</code> to URL for auto-start on page load.
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-keyboard me-2"></i>Manual Entry</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small">If QR scanning fails, paste QR code data here:</p>
+                <textarea id="manualQrInput" class="form-control" rows="5" placeholder="Paste QR code JSON data here..."></textarea>
+                <button id="processManual" class="btn btn-primary w-100 mt-3">
+                    <i class="bi bi-check-circle me-2"></i>Process Attendance
+                </button>
+                <small class="text-muted d-block mt-2">Note: Face verification will still be required</small>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Recent Scans</h5>
+            </div>
+            <div class="card-body">
+                <div id="scanHistory" class="list-group list-group-flush">
+                    <div class="text-muted text-center small">No scans yet</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Result Modal -->
+<div class="modal fade" id="resultModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="resultTitle">Attendance Result</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="resultBody">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script>
+let video = null;
+let canvas = null;
+let context = null;
+let scanning = false;
+let scanInterval = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    video = document.getElementById('video');
+    canvas = document.getElementById('canvas');
+    context = canvas.getContext('2d');
+    
+    const startBtn = document.getElementById('startScan');
+    const stopBtn = document.getElementById('stopScan');
+    const processManualBtn = document.getElementById('processManual');
+    const manualInput = document.getElementById('manualQrInput');
+    
+    startBtn.addEventListener('click', startScanning);
+    stopBtn.addEventListener('click', stopScanning);
+    processManualBtn.addEventListener('click', processManualQR);
+    
+    // Auto-capture toggle
+    document.getElementById('autoCaptureToggle').addEventListener('change', function(e) {
+        autoCaptureEnabled = e.target.checked;
+        if (!autoCaptureEnabled) {
+            clearTimeout(autoCaptureTimer);
+        }
+    });
+    
+    // Continuous mode toggle
+    document.getElementById('continuousModeToggle').addEventListener('change', function(e) {
+        continuousMode = e.target.checked;
+        if (continuousMode && !scanning) {
+            startScanning();
+        }
+    });
+    
+    function startScanning() {
+        // Try back camera first, fallback to any camera
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+            .catch(() => navigator.mediaDevices.getUserMedia({ video: true }))
+            .then(function(stream) {
+                video.srcObject = stream;
+                video.setAttribute('playsinline', true);
+                video.play();
+                startBtn.style.display = 'none';
+                stopBtn.style.display = 'inline-block';
+                scanning = true;
+                scanInterval = setInterval(scanQR, 50); // Faster scanning (50ms instead of 100ms)
+                
+                // Show scanning status
+                document.getElementById('scanStatus').style.display = 'block';
+                document.getElementById('statusText').innerHTML = '<i class="bi bi-qr-code me-2"></i>Scanning QR Code...';
+                document.getElementById('scanStatus').querySelector('.alert').className = 'alert alert-info mb-0 text-center';
+            })
+            .catch(function(err) {
+                alert('Error accessing camera: ' + err.message);
+            });
+    }
+    
+    function stopScanning() {
+        if (video.srcObject) {
+            video.srcObject.getTracks().forEach(track => track.stop());
+        }
+        video.srcObject = null;
+        startBtn.style.display = 'inline-block';
+        stopBtn.style.display = 'none';
+        document.getElementById('captureFaceBtnManual').style.display = 'none';
+        scanning = false;
+        if (scanInterval) {
+            clearInterval(scanInterval);
+        }
+        document.getElementById('scanStatus').style.display = 'none';
+        document.getElementById('faceCaptureOverlay').style.display = 'none';
+        window.pendingQrData = null;
+    }
+    
+    function scanQR() {
+        if (!scanning || video.readyState !== video.HAVE_ENOUGH_DATA) return;
+        
+        // Don't scan if we're waiting for face capture
+        if (window.pendingQrData) return;
+        
+        canvas.height = video.videoHeight;
+        canvas.width = video.videoWidth;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+        
+        if (code) {
+            processQRCode(code.data);
+        }
+    }
+    
+    // Auto-capture face after QR scan (optional - can be enabled)
+    let autoCaptureEnabled = true;
+    let autoCaptureTimer = null;
+    let continuousMode = false; // Continuous scanning mode
+    
+    // Auto-start camera on page load (for unattended operation)
+    const urlParams = new URLSearchParams(window.location.search);
+    const autoStart = urlParams.get('autostart') === 'true' || urlParams.get('autostart') === '1';
+    
+    if (autoStart) {
+        // Wait for page to fully load, then start camera
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                startScanning();
+                continuousMode = true;
+            }, 1000);
+        });
+    }
+    
+    function processManualQR() {
+        const qrData = manualInput.value.trim();
+        if (!qrData) {
+            alert('Please enter QR code data');
+            return;
+        }
+        
+        // For manual entry, also request face capture
+        if (scanning) {
+            processQRCode(qrData);
+        } else {
+            // Start camera first for face capture
+            startScanning();
+            setTimeout(() => {
+                processQRCode(qrData);
+            }, 1000);
+        }
+    }
+    
+    function processQRCode(qrData) {
+        // Don't stop scanning - keep camera on for face capture
+        // Show QR scan success and request face capture
+        document.getElementById('scanStatus').style.display = 'block';
+        document.getElementById('statusText').innerHTML = '<i class="bi bi-check-circle me-2"></i>QR Code Scanned! Capturing face in 2 seconds...';
+        document.getElementById('scanStatus').querySelector('.alert').className = 'alert alert-success mb-0 text-center';
+        
+        // Show face capture overlay
+        document.getElementById('faceCaptureOverlay').style.display = 'flex';
+        document.getElementById('captureFaceBtnManual').style.display = 'inline-block';
+        
+        // Store QR data for later use
+        window.pendingQrData = qrData;
+        
+        // Auto-capture after 2 seconds (if enabled)
+        if (autoCaptureEnabled) {
+            clearTimeout(autoCaptureTimer);
+            autoCaptureTimer = setTimeout(() => {
+                if (window.pendingQrData && video && video.readyState === video.HAVE_ENOUGH_DATA) {
+                    captureFaceForVerification();
+                }
+            }, 2000); // 2 second delay for user to position face
+        }
+    }
+    
+    function captureFaceForVerification() {
+        if (!video || video.readyState !== video.HAVE_ENOUGH_DATA) {
+            alert('Camera not ready. Please wait...');
+            return;
+        }
+        
+        if (!window.pendingQrData) {
+            alert('No QR code data found. Please scan QR code first.');
+            return;
+        }
+        
+        // Hide overlay
+        document.getElementById('faceCaptureOverlay').style.display = 'none';
+        document.getElementById('captureFaceBtnManual').style.display = 'none';
+        
+        // Update status
+        document.getElementById('statusText').innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Capturing face image...';
+        document.getElementById('scanStatus').querySelector('.alert').className = 'alert alert-warning mb-0 text-center';
+        
+        // Capture face image from video (optimize size for faster processing)
+        const faceCanvas = document.createElement('canvas');
+        // Resize to max 640px for faster face verification (maintains quality, reduces processing time)
+        const maxSize = 640;
+        let width = video.videoWidth;
+        let height = video.videoHeight;
+        
+        if (width > maxSize || height > maxSize) {
+            const ratio = Math.min(maxSize / width, maxSize / height);
+            width = Math.floor(width * ratio);
+            height = Math.floor(height * ratio);
+        }
+        
+        faceCanvas.width = width;
+        faceCanvas.height = height;
+        const faceContext = faceCanvas.getContext('2d');
+        faceContext.drawImage(video, 0, 0, width, height);
+        
+        // Convert to blob with optimized quality (85% quality, faster upload/processing)
+        faceCanvas.toBlob(function(blob) {
+            if (!blob) {
+                alert('Failed to capture face image');
+                document.getElementById('scanStatus').style.display = 'none';
+                return;
+            }
+            
+            // Update status
+            document.getElementById('statusText').innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Verifying face and processing...';
+            
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('qr_data', window.pendingQrData);
+            formData.append('face_image', blob, 'face_verification.jpg');
+            
+            // Send to server
+            fetch('{% url "students_app:qr_attendance_process" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide status
+                document.getElementById('scanStatus').style.display = 'none';
+                
+                if (data.success) {
+                    showResult('Success!', `
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle me-2"></i>
+                            <strong>${data.message}</strong>
+                            <hr>
+                            <p class="mb-1"><strong>Staff:</strong> ${data.staff_name}</p>
+                            <p class="mb-1"><strong>Time:</strong> ${data.time}</p>
+                            <p class="mb-1"><strong>Date:</strong> ${data.date}</p>
+                            ${data.face_verified === true ? '<p class="mb-0 text-success"><i class="bi bi-shield-check me-1"></i>Face verification: <strong>Verified ✓</strong></p>' : ''}
+                            ${data.face_verified === false ? '<p class="mb-0 text-warning"><i class="bi bi-exclamation-triangle me-1"></i>Face verification: <strong>Failed</strong> (attendance marked with QR only)</p>' : ''}
+                        </div>
+                    `, 'success');
+                    addToHistory(data.staff_name, data.time, true, data.face_verified);
+                    manualInput.value = '';
+                    window.pendingQrData = null;
+                    
+                    // Auto-restart scanning after 3 seconds (for continuous mode)
+                    if (continuousMode || autoStart) {
+                        setTimeout(() => {
+                            if (!scanning) {
+                                startScanning();
+                            } else {
+                                // Reset for next scan
+                                window.pendingQrData = null;
+                                document.getElementById('scanStatus').style.display = 'block';
+                                document.getElementById('statusText').innerHTML = '<i class="bi bi-qr-code me-2"></i>Ready for next scan...';
+                                document.getElementById('scanStatus').querySelector('.alert').className = 'alert alert-info mb-0 text-center';
+                            }
+                        }, 3000);
+                    }
+                } else {
+                    showResult('Error', `
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <strong>${data.error}</strong>
+                            ${data.existing_time ? `<hr><p class="mb-1"><strong>Already marked at:</strong> ${data.existing_time}</p>` : ''}
+                            ${data.status ? `<p class="mb-0"><strong>Status:</strong> ${data.status}</p>` : ''}
+                        </div>
+                    `, 'danger');
+                    if (data.staff_name) {
+                        addToHistory(data.staff_name, data.existing_time || 'N/A', false);
+                    }
+                    window.pendingQrData = null;
+                    
+                    // Restart scanning (if in continuous mode)
+                    if (continuousMode || autoStart) {
+                        setTimeout(() => {
+                            if (!scanning) {
+                                startScanning();
+                            } else {
+                                window.pendingQrData = null;
+                                document.getElementById('scanStatus').style.display = 'block';
+                                document.getElementById('statusText').innerHTML = '<i class="bi bi-qr-code me-2"></i>Ready for next scan...';
+                                document.getElementById('scanStatus').querySelector('.alert').className = 'alert alert-info mb-0 text-center';
+                            }
+                        }, 2000);
+                    }
+                }
+            })
+            .catch(error => {
+                document.getElementById('scanStatus').style.display = 'none';
+                showResult('Error', `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Error processing attendance:</strong> ${error.message}
+                    </div>
+                `, 'danger');
+                window.pendingQrData = null;
+            });
+        }, 'image/jpeg', 0.85); // 85% quality - good balance between quality and speed
+    }
+    
+    // Add event listener for face capture button
+    document.addEventListener('click', function(e) {
+        if (e.target && (e.target.id === 'captureFaceBtn' || e.target.id === 'captureFaceBtnManual')) {
+            captureFaceForVerification();
+        }
+    });
+    
+    function showResult(title, body, type) {
+        document.getElementById('resultTitle').textContent = title;
+        document.getElementById('resultBody').innerHTML = body;
+        const modal = new bootstrap.Modal(document.getElementById('resultModal'));
+        modal.show();
+        
+        // Auto-restart scanning after 3 seconds if it was running
+        if (type === 'success' && !scanning) {
+            setTimeout(() => {
+                if (!scanning) {
+                    startScanning();
+                }
+            }, 3000);
+        }
+    }
+    
+    function addToHistory(name, time, success, faceVerified) {
+        const history = document.getElementById('scanHistory');
+        if (history.querySelector('.text-muted')) {
+            history.innerHTML = '';
+        }
+        
+        const item = document.createElement('div');
+        item.className = `list-group-item ${success ? 'list-group-item-success' : 'list-group-item-danger'}`;
+        
+        let faceIcon = '';
+        if (faceVerified === true) {
+            faceIcon = '<i class="bi bi-shield-check text-success me-1" title="Face Verified"></i>';
+        } else if (faceVerified === false) {
+            faceIcon = '<i class="bi bi-shield-exclamation text-warning me-1" title="Face Verification Failed"></i>';
+        }
+        
+        item.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>${faceIcon}${name}</strong>
+                    <br>
+                    <small class="text-muted">${time}</small>
+                </div>
+                <i class="bi ${success ? 'bi-check-circle text-success' : 'bi-x-circle text-danger'}" style="font-size: 1.5rem;"></i>
+            </div>
+        `;
+        history.insertBefore(item, history.firstChild);
+        
+        // Keep only last 10 items
+        while (history.children.length > 10) {
+            history.removeChild(history.lastChild);
+        }
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}
+

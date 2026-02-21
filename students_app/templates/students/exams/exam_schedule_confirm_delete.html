@@ -1,0 +1,82 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Delete Exam Schedule{% endblock %}
+
+{% block sidebar %}
+{% include 'includes/admin_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="top-bar">
+    <div class="page-title">
+        <h1><i class="bi bi-exclamation-triangle me-2 text-warning"></i>Delete Exam Schedule</h1>
+        <p>Confirm deletion of exam schedule</p>
+    </div>
+    <div class="top-bar-actions">
+        <a href="{% url 'students_app:exam_schedule_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Schedules
+        </a>
+    </div>
+</div>
+
+<!-- Confirmation Card -->
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card border-warning shadow-sm">
+            <div class="card-header bg-warning bg-opacity-10">
+                <h5 class="mb-0 text-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Confirm Deletion
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>Warning:</strong> This action cannot be undone. All marks associated with this schedule will also be deleted.
+                </div>
+
+                <div class="card bg-light mb-3">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-3">Schedule Details:</h6>
+                        <table class="table table-borderless mb-0">
+                            <tr>
+                                <td class="fw-bold" width="40%">Exam:</td>
+                                <td>{{ schedule.exam.name }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Class:</td>
+                                <td>{{ schedule.class_assigned.name }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Subject:</td>
+                                <td>{{ schedule.subject.name }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Exam Date:</td>
+                                <td>{{ schedule.exam_date|date:"d M Y" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Max Marks:</td>
+                                <td>{{ schedule.max_marks }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-danger btn-lg">
+                            <i class="bi bi-trash me-2"></i>Yes, Delete This Schedule
+                        </button>
+                        <a href="{% url 'students_app:exam_schedule_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle me-2"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+

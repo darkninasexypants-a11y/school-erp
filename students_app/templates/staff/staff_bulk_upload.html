@@ -1,0 +1,251 @@
+{% extends "students/base_modern.html" %}
+{% load static %}
+
+{% block title %}Bulk Staff Entry{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-users-cog me-2 text-primary"></i>Bulk Staff Entry</h2>
+            <p class="text-muted">Upload an Excel file to add multiple staff members at once.</p>
+        </div>
+        <div>
+            <a href="{% url 'students_app:staff_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+            <a href="#" onclick="downloadSample()" class="btn btn-outline-primary ms-2">
+                <i class="fas fa-download"></i> Download Sample Excel
+            </a>
+        </div>
+    </div>
+
+    <!-- Upload Step -->
+    {% if not staff_data %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-body text-center py-5">
+            <div class="mb-4">
+                <i class="fas fa-file-excel fa-4x text-success"></i>
+            </div>
+            <h4 class="mb-3">Upload Excel File</h4>
+            <p class="text-muted mb-4">
+                Please upload an Excel file (.xlsx, .xls) containing staff details.<br>
+                The file should have columns: First Name, Last Name, Employee ID, Email, Phone, DOB, Gender, Address,
+                Designation, Department, Joining Date, Salary.<br>
+                <strong>Optional:</strong> Add an "Image Filename" or "Photo" column (e.g. STF1001.jpg) and upload a ZIP
+                of photos to attach.
+            </p>
+
+            <form method="post" enctype="multipart/form-data" class="d-inline-block" id="uploadForm" onsubmit="return validateUploadForm()">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label"><strong>Excel File <span class="text-danger">*</span></strong></label>
+                    <input type="file" name="excel_file" class="form-control" accept=".xlsx,.xls" required id="excelFile" onchange="validateFile()">
+                    <div class="form-text" id="fileInfo"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label"><strong>Photos ZIP (optional)</strong></label>
+                    <input type="file" name="images_zip" class="form-control" accept=".zip">
+                    <small class="text-muted">ZIP with images matching filenames in Excel (e.g. STF1001.jpg)</small>
+                </div>
+                <button class="btn btn-primary" type="submit">
+                    <i class="fas fa-upload"></i> Upload & Preview
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Preview & Edit Step -->
+    {% if staff_data %}
+    <form method="post" id="bulkUploadForm">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="save_bulk">
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-list-check me-2"></i>Preview Data
+                    <span class="badge bg-info ms-2">{{ staff_data|length }} Records found</span>
+                </h5>
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save"></i> Save All Staff
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped mb-0" id="previewTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="min-width: 120px;">First Name</th>
+                                <th style="min-width: 120px;">Last Name</th>
+                                <th style="min-width: 100px;">Emp ID</th>
+                                <th style="min-width: 150px;">Email</th>
+                                <th style="min-width: 120px;">Phone</th>
+                                <th style="min-width: 150px;">DOB (YYYY-MM-DD)</th>
+                                <th style="min-width: 100px;">Gender</th>
+                                <th style="min-width: 150px;">Designation</th>
+                                <th style="min-width: 150px;">Department</th>
+                                <th style="min-width: 100px;">Salary</th>
+                                <th style="min-width: 80px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for staff in staff_data %}
+                            <tr id="row-{{ forloop.counter }}">
+                                <td>
+                                    <input type="text" name="first_name[]" class="form-control form-control-sm"
+                                        value="{{ staff.first_name }}" required>
+                                </td>
+                                <td>
+                                    <input type="text" name="last_name[]" class="form-control form-control-sm"
+                                        value="{{ staff.last_name }}" required>
+                                </td>
+                                <td>
+                                    <input type="text" name="employee_id[]" class="form-control form-control-sm"
+                                        value="{{ staff.employee_id }}" required>
+                                </td>
+                                <td>
+                                    <input type="email" name="email[]" class="form-control form-control-sm"
+                                        value="{{ staff.email }}" required>
+                                </td>
+                                <td>
+                                    <input type="text" name="phone[]" class="form-control form-control-sm"
+                                        value="{{ staff.phone }}" required>
+                                </td>
+                                <td>
+                                    <input type="date" name="dob[]" class="form-control form-control-sm"
+                                        value="{{ staff.dob }}" required>
+                                </td>
+                                <td>
+                                    <select name="gender[]" class="form-select form-select-sm">
+                                        <option value="M" {% if staff.gender == "M" %}selected{% endif %}>Male</option>
+                                        <option value="F" {% if staff.gender == "F" %}selected{% endif %}>Female</option>
+                                        <option value="O" {% if staff.gender == "O" %}selected{% endif %}>Other</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="text" name="designation[]" class="form-control form-control-sm"
+                                        value="{{ staff.designation }}">
+                                </td>
+                                <td>
+                                    <input type="text" name="department[]" class="form-control form-control-sm"
+                                        value="{{ staff.department }}">
+                                </td>
+                                <td>
+                                    <input type="number" name="salary[]" class="form-control form-control-sm"
+                                        value="{{ staff.salary }}">
+                                    <!-- Hidden fields for other data -->
+                                    <input type="hidden" name="address[]" value="{{ staff.address }}">
+                                    <input type="hidden" name="city[]" value="{{ staff.city|default:'' }}">
+                                    <input type="hidden" name="state[]" value="{{ staff.state|default:'' }}">
+                                    <input type="hidden" name="pincode[]" value="{{ staff.pincode|default:'' }}">
+                                    <input type="hidden" name="joining_date[]" value="{{ staff.joining_date }}">
+                                    <input type="hidden" name="image_filename[]"
+                                        value="{{ staff.image_filename|default:'' }}">
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-danger"
+                                        onclick="removeRow('row-{{ forloop.counter }}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer bg-white">
+                <div class="alert alert-warning mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Review the data carefully before saving. Incorrect data might cause errors or duplicate entries.
+                </div>
+            </div>
+        </div>
+    </form>
+    {% endif %}
+</div>
+
+<script>
+    function validateFile() {
+        const fileInput = document.getElementById('excelFile');
+        const fileInfo = document.getElementById('fileInfo');
+        const file = fileInput.files[0];
+        
+        if (file) {
+            // Check file size (10MB limit)
+            const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+            if (file.size > maxSize) {
+                fileInfo.innerHTML = `<span class="text-danger">File too large (${(file.size / 1024 / 1024).toFixed(2)}MB). Maximum size is 10MB.</span>`;
+                fileInput.value = '';
+                return false;
+            }
+            
+            // Check file extension
+            const allowedExtensions = ['.xlsx', '.xls'];
+            const fileName = file.name.toLowerCase();
+            const isValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext));
+            
+            if (!isValidExtension) {
+                fileInfo.innerHTML = '<span class="text-danger">Invalid file format. Please upload .xlsx or .xls file.</span>';
+                fileInput.value = '';
+                return false;
+            }
+            
+            fileInfo.innerHTML = `<span class="text-success">✓ File selected: ${file.name} (${(file.size / 1024).toFixed(2)}KB)</span>`;
+            return true;
+        }
+        
+        fileInfo.innerHTML = '';
+        return false;
+    }
+    
+    function validateUploadForm() {
+        const fileInput = document.getElementById('excelFile');
+        const file = fileInput.files[0];
+        
+        if (!file) {
+            alert('Please select an Excel file to upload.');
+            return false;
+        }
+        
+        return validateFile();
+    }
+    
+    function removeRow(rowId) {
+        if (confirm('Are you sure you want to remove this entry?')) {
+            const row = document.getElementById(rowId);
+            // Disable all form inputs in this row to prevent submission
+            const inputs = row.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                input.disabled = true;
+                input.name = ''; // Remove name to exclude from form submission
+            });
+            // Hide the row visually
+            row.style.display = 'none';
+            // Add a class to mark as deleted
+            row.classList.add('row-deleted');
+        }
+    }
+
+    function downloadSample() {
+        // Simple CSV generation for sample
+        const headers = ["First Name", "Last Name", "Employee ID", "Email", "Phone", "Date of Birth (YYYY-MM-DD)", "Gender (M/F/O)", "Address", "Designation", "Department", "Joining Date (YYYY-MM-DD)", "Current Salary", "Image Filename"];
+        const sample = ["Jane", "Smith", "STF1001", "jane@example.com", "9876543210", "1992-05-20", "F", "456 Oak St", "Office Assistant", "Administration", "2023-06-01", "30000", "STF1001.jpg"];
+
+        let csvContent = "data:text/csv;charset=utf-8,"
+            + headers.join(",") + "\n"
+            + sample.join(",");
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "staff_bulk_import_sample.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+</script>
+{% endblock %}

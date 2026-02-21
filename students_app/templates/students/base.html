@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}School ERP System{% endblock %}</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Devanagari support when Hindi is active -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #818cf8;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --dark: #0f172a;
+            --light: #f8fafc;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            max-width: 100vw;
+        }
+
+        /* Use Devanagari-capable font in Hindi */
+        body.lang-hi {
+            font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
+        }
+
+        /* Animated Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3), transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(138, 92, 246, 0.3), transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(59, 130, 246, 0.2), transparent 50%);
+            animation: gradient 15s ease infinite;
+            z-index: -1;
+        }
+
+        @keyframes gradient {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.8;
+            }
+        }
+
+        /* Sidebar Trigger Zone - Invisible strip on left edge */
+        .sidebar-trigger {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 20px;
+            height: 100vh;
+            z-index: 1002;
+            background: transparent;
+        }
+
+        /* Sidebar - Hidden by default, shows on hover */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px 0;
+            z-index: 1000;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            transform: translateX(-100%);
+        }
+
+        /* Show sidebar on hover of trigger OR sidebar itself (Desktop Only) */
+        @media (min-width: 769px) {
+            .sidebar-trigger:hover ~ .sidebar,
+            .sidebar:hover {
+                transform: translateX(0);
+            }
+        }
+
+        /* Main content adjustment - No margin when sidebar is hidden */
+        .container-fluid {
+            margin-left: 0;
+            padding: 30px;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        /* Adjust margin when sidebar is visible (on hover) */
+        @media (min-width: 769px) {
+            .sidebar-trigger:hover ~ .sidebar ~ * .container-fluid,
+            body:has(.sidebar:hover) .container-fluid {
+                margin-left: 240px;
+                width: calc(100vw - 240px);
+                max-width: calc(100vw - 240px);
+            }
+        }
+
+        .sidebar.collapsed~* .container-fluid,
+        body:has(.sidebar.collapsed) .container-fluid {
+            margin-left: 70px;
+            width: calc(100vw - 70px);
+            max-width: calc(100vw - 70px);
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        .logo {
+            padding: 0 25px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .logo h3 {
+            color: white;
+            font-weight: 700;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo h3 i {
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-section {
+            padding: 0 15px;
+            margin-bottom: 25px;
+        }
+
+        .nav-section-title {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0 10px 10px;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.7);
+            padding: 12px 15px;
+            margin: 4px 0;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--primary), var(--secondary));
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: white;
+            background: rgba(99, 102, 241, 0.15);
+            transform: translateX(5px);
+        }
+
+        .nav-link.active::before {
+            transform: scaleY(1);
+        }
+
+        .nav-link i {
+            font-size: 1.2rem;
+            width: 24px;
+        }
+
+        /* Main Content - No margin when sidebar is hidden */
+        .main-content {
+            margin-left: 0;
+            min-height: 100vh;
+            padding: 25px;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        /* Adjust margin when sidebar is visible (on hover) */
+        @media (min-width: 769px) {
+            .sidebar-trigger:hover ~ .sidebar ~ * .main-content,
+            body:has(.sidebar:hover) .main-content {
+                margin-left: 240px;
+                width: calc(100vw - 240px);
+                max-width: calc(100vw - 240px);
+            }
+        }
+
+        /* Main Content without Sidebar */
+        .main-content.no-sidebar {
+            margin-left: 0;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        /* Main Content with Collapsed Sidebar */
+        body:has(.sidebar.collapsed) .main-content {
+            margin-left: 70px;
+            width: calc(100vw - 70px);
+            max-width: calc(100vw - 70px);
+        }
+
+        /* Mobile Styles */
+        @media (max-width: 768px) {
+            .sidebar-trigger {
+                display: none;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.mobile-show {
+                transform: translateX(0);
+            }
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 20px 30px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-box {
+            position: relative;
+            width: 350px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            border: 2px solid rgba(99, 102, 241, 0.1);
+            border-radius: 12px;
+            background: rgba(248, 250, 252, 0.8);
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .notification-btn {
+            position: relative;
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            background: rgba(99, 102, 241, 0.1);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .notification-btn:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 20px;
+            height: 20px;
+            background: var(--danger);
+            color: white;
+            border-radius: 50%;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 15px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .user-profile:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        /* Stats Cards */
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .stat-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(99, 102, 241, 0.3);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .stat-icon::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 15px;
+            background: inherit;
+            filter: blur(20px);
+            opacity: 0.5;
+            z-index: -1;
+        }
+
+        .stat-icon.primary {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
+            color: var(--primary);
+        }
+
+        .stat-icon.success {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2));
+            color: var(--success);
+        }
+
+        .stat-icon.warning {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.2));
+            color: var(--warning);
+        }
+
+        .stat-icon.danger {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+            color: var(--danger);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .stat-trend {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .stat-trend.up {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .stat-trend.down {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        /* Cards */
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            background: transparent;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            padding: 20px 25px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        /* Buttons */
+        .btn-premium {
+            padding: 12px 28px;
+            border-radius: 12px;
+            font-weight: 600;
+            border: none;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-premium::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn-premium:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-primary-premium {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .btn-primary-premium:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
+        }
+
+        /* Badges */
+        .badge-premium {
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        /* Table */
+        .table-premium {
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+
+        .table-premium thead th {
+            background: transparent;
+            border: none;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            padding: 15px 20px;
+        }
+
+        .table-premium tbody tr {
+            background: rgba(248, 250, 252, 0.8);
+            transition: all 0.3s ease;
+        }
+
+        .table-premium tbody tr:hover {
+            background: white;
+            transform: scale(1.01);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .table-premium tbody td {
+            padding: 18px 20px;
+            border: none;
+            vertical-align: middle;
+        }
+
+        .table-premium tbody tr td:first-child {
+            border-radius: 12px 0 0 12px;
+        }
+
+        .table-premium tbody tr td:last-child {
+            border-radius: 0 12px 12px 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .main-content.no-sidebar {
+                margin-left: 0;
+            }
+
+            .search-box {
+                display: none;
+            }
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body class="{% if request.session.language == 'hi' %}lang-hi{% endif %}">
+    <!-- Sidebar Trigger Zone (Invisible strip on the left) -->
+    <div class="sidebar-trigger"></div>
+    
+    <!-- Sidebar -->
+    {% block sidebar %}
+    <div class="sidebar" id="sidebar">
+        <div class="logo">
+            <h3><i class="bi bi-mortarboard-fill"></i> School ERP</h3>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Main Menu</div>
+            <a href="{% url 'students_app:home' %}"
+                class="nav-link {% if request.path == '/' or request.resolver_match.url_name == 'home' %}active{% endif %}">
+                <i class="bi bi-speedometer2"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="{% url 'students_app:student_list' %}"
+                class="nav-link {% if 'student' in request.path %}active{% endif %}">
+                <i class="bi bi-people-fill"></i>
+                <span>Students</span>
+            </a>
+            <a href="{% url 'students_app:attendance_mark' %}"
+                class="nav-link {% if 'attendance' in request.path %}active{% endif %}">
+                <i class="bi bi-calendar-check"></i>
+                <span>Attendance</span>
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Academics</div>
+            <a href="{% url 'students_app:marks_entry' %}"
+                class="nav-link {% if 'marks' in request.path %}active{% endif %}">
+                <i class="bi bi-clipboard-data"></i>
+                <span>Marks Entry</span>
+            </a>
+            <a href="{% url 'students_app:view_timetable' %}"
+                class="nav-link {% if 'timetable' in request.path %}active{% endif %}">
+                <i class="bi bi-table"></i>
+                <span>Timetable</span>
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Management</div>
+            <a href="{% url 'students_app:fee_collection' %}"
+                class="nav-link {% if 'fee' in request.path %}active{% endif %}">
+                <i class="bi bi-currency-rupee"></i>
+                <span>Fee Management</span>
+            </a>
+            <a href="{% url 'students_app:library_dashboard' %}"
+                class="nav-link {% if 'library' in request.path %}active{% endif %}">
+                <i class="bi bi-book"></i>
+                <span>Library</span>
+            </a>
+            <a href="{% url 'students_app:generate_bulk_id_cards' %}"
+                class="nav-link {% if 'id-card' in request.path %}active{% endif %}">
+                <i class="bi bi-card-heading"></i>
+                <span>ID Cards</span>
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Communication</div>
+            <a href="{% url 'students_app:notice_list' %}"
+                class="nav-link {% if 'notice' in request.path %}active{% endif %}">
+                <i class="bi bi-bell"></i>
+                <span>Notices</span>
+            </a>
+            <a href="{% url 'students_app:event_calendar' %}"
+                class="nav-link {% if 'event' in request.path %}active{% endif %}">
+                <i class="bi bi-calendar-event"></i>
+                <span>Events</span>
+            </a>
+        </div>
+
+
+    </div>
+    {% endblock %}
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="top-bar fade-in">
+            <div class="search-box">
+                <i class="bi bi-search"></i>
+                <input type="text" placeholder="Search students, teachers, classes...">
+            </div>
+
+            <div class="user-menu">
+                <button class="notification-btn">
+                    <i class="bi bi-bell"></i>
+                    <span class="notification-badge">3</span>
+                </button>
+
+                <div class="user-profile">
+                    <div class="user-avatar">
+                        {% if user.is_authenticated %}
+                        {{ user.first_name.0|default:"U" }}
+                        {% else %}
+                        G
+                        {% endif %}
+                    </div>
+                    <div>
+                        <div style="font-weight: 600; font-size: 0.9rem;">
+                            {% if user.is_authenticated %}
+                            {{ user.get_full_name|default:user.username }}
+                            {% else %}
+                            Guest
+                            {% endif %}
+                        </div>
+                        <div style="font-size: 0.75rem; color: #64748b;">Administrator</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show animate__animated animate__fadeInDown"
+            role="alert" style="border-radius: 15px; border: none;">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <!-- Page Content -->
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Mobile sidebar toggle
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('show');
+        }
+
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+
+    <!-- Global language helper: translates elements with data-key across all pages -->
+    <script>
+        (function () {
+            const currentLang = '{{ request.session.language|default:"en" }}';
+            const translations = {
+                en: {
+                    // Common
+                    'save_changes': 'Save Changes',
+                    'cancel': 'Cancel',
+                    // Dashboard (super admin)
+                    'sa_title': 'Super Admin Dashboard',
+                    'add_school_btn': 'Add School',
+                    'view_analytics_btn': 'View Analytics',
+                    // Analytics page
+                    'analytics_title': 'Analytics & Reporting',
+                    'system_overview': 'System Overview',
+                    'system_health': 'System Health',
+                    'role_distribution': 'Role Distribution',
+                    'school_performance': 'School Performance',
+                    'crm_metrics': 'CRM Metrics',
+                    'error_monitoring': 'Error Monitoring',
+                    'last_7_days': 'Last 7 days',
+                    'last_30_days': 'Last 30 days',
+                    'last_90_days': 'Last 90 days',
+                    'edit_features': 'Edit Features',
+                },
+                hi: {
+                    // Common
+                    'save_changes': 'परिवर्तन सहेजें',
+                    'cancel': 'रद्द करें',
+                    // Dashboard (super admin)
+                    'sa_title': 'सुपर एडमिन डैशबोर्ड',
+                    'add_school_btn': 'स्कूल जोड़ें',
+                    'view_analytics_btn': 'विश्लेषण देखें',
+                    // Analytics page
+                    'analytics_title': 'विश्लेषण एवं रिपोर्टिंग',
+                    'system_overview': 'सिस्टम अवलोकन',
+                    'system_health': 'सिस्टम स्थिति',
+                    'role_distribution': 'भूमिका वितरण',
+                    'school_performance': 'स्कूल प्रदर्शन',
+                    'crm_metrics': 'सीआरएम मीट्रिक्स',
+                    'error_monitoring': 'त्रुटि निगरानी',
+                    'last_7_days': 'पिछले 7 दिन',
+                    'last_30_days': 'पिछले 30 दिन',
+                    'last_90_days': 'पिछले 90 दिन',
+                    'edit_features': 'फीचर्स संपादित करें',
+                }
+            };
+            function translateAll(lang) {
+                const dict = translations[lang] || translations.en;
+                document.querySelectorAll('[data-key]').forEach(el => {
+                    const key = el.getAttribute('data-key');
+                    if (dict[key]) {
+                        el.textContent = dict[key];
+                    }
+                });
+                document.querySelectorAll('option[data-key]').forEach(opt => {
+                    const key = opt.getAttribute('data-key');
+                    if (dict[key]) {
+                        opt.textContent = dict[key];
+                    }
+                });
+            }
+            // Initial apply
+            translateAll(currentLang);
+            // Expose globally so other components can re-apply after switch
+            window.translateAll = translateAll;
+        })();
+    </script>
+</body>
+
+</html>

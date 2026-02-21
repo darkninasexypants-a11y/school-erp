@@ -1,0 +1,53 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Report Card{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="card">
+        <div class="card-body">
+            <div class="text-center mb-4">
+                <h3>Report Card</h3>
+                <h4>{{ student.get_full_name }}</h4>
+                <p class="text-muted">{{ student.current_class.name }} - {{ student.section.name }}</p>
+            </div>
+            
+            {% if marks %}
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Marks Obtained</th>
+                            <th>Max Marks</th>
+                            <th>Percentage</th>
+                            <th>Grade</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mark in marks %}
+                        <tr>
+                            <td>{{ mark.subject.name }}</td>
+                            <td>{{ mark.marks_obtained }}</td>
+                            <td>{{ mark.max_marks }}</td>
+                            <td>{{ mark.percentage|floatformat:2 }}%</td>
+                            <td>{{ mark.grade }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="text-center mt-4">
+                <button onclick="window.print()" class="btn btn-primary">
+                    <i class="fas fa-print"></i> Print Report Card
+                </button>
+            </div>
+            {% else %}
+            <div class="alert alert-info">No marks found for this exam.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+

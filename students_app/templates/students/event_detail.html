@@ -1,0 +1,148 @@
+{% extends "students/base_modern.html" %}
+{% block title %}{{ event.title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0"><i class="fas fa-calendar-check me-2"></i>{{ event.title }}</h2>
+        <div>
+            {% if user_role in 'admin,super_admin,teacher,school_admin' or request.user.is_superuser %}
+                {% if event.status == 'draft' %}
+                    <form method="post" action="{% url 'students_app:event_toggle_publish' event.id %}" class="d-inline me-2">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check-circle me-2"></i>Publish Event
+                        </button>
+                    </form>
+                {% else %}
+                    <form method="post" action="{% url 'students_app:event_toggle_publish' event.id %}" class="d-inline me-2">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-eye-slash me-2"></i>Unpublish Event
+                        </button>
+                    </form>
+                {% endif %}
+            {% endif %}
+            <a href="{% url 'students_app:event_calendar' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Events
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header 
+                    {% if event.event_type == 'academic' %}bg-info text-white
+                    {% elif event.event_type == 'sports' %}bg-success text-white
+                    {% elif event.event_type == 'cultural' %}bg-purple text-white
+                    {% elif event.event_type == 'parent_meeting' %}bg-warning text-dark
+                    {% elif event.event_type == 'holiday' %}bg-danger text-white
+                    {% else %}bg-secondary text-white{% endif %}">
+                    <h5 class="mb-0">
+                        <span class="badge bg-light text-dark me-2">{{ event.get_event_type_display }}</span>
+                        {% if event.is_holiday %}
+                        <span class="badge bg-warning text-dark">Holiday</span>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h4 class="mb-4">{{ event.title }}</h4>
+                    <div class="mb-3">
+                        <h6><i class="fas fa-info-circle text-primary me-2"></i>Description</h6>
+                        <p class="ms-4">{{ event.description|linebreaks }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0"><i class="fas fa-calendar me-2"></i>Event Details</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong><i class="fas fa-info-circle text-primary me-2"></i>Status:</strong><br>
+                        <span class="ms-4">
+                            <span class="badge bg-{% if event.status == 'published' %}success{% else %}warning{% endif %}">
+                                {{ event.get_status_display }}
+                            </span>
+                        </span>
+                    </div>
+                    <div class="mb-3">
+                        <strong><i class="fas fa-calendar text-primary me-2"></i>Date:</strong><br>
+                        <span class="ms-4">{{ event.event_date|date:"l, d F Y" }}</span>
+                        {% if event.event_date == today %}
+                        <span class="badge bg-warning text-dark ms-2">Today</span>
+                        {% elif event.event_date < today %}
+                        <span class="badge bg-secondary ms-2">Past Event</span>
+                        {% endif %}
+                    </div>
+                    {% if event.start_time and event.end_time %}
+                    <div class="mb-3">
+                        <strong><i class="fas fa-clock text-primary me-2"></i>Time:</strong><br>
+                        <span class="ms-4">{{ event.start_time|time:"g:i A" }} - {{ event.end_time|time:"g:i A" }}</span>
+                    </div>
+                    {% endif %}
+                    {% if event.venue %}
+                    <div class="mb-3">
+                        <strong><i class="fas fa-map-marker-alt text-danger me-2"></i>Venue:</strong><br>
+                        <span class="ms-4">{{ event.venue }}</span>
+                    </div>
+                    {% endif %}
+                    {% if event.organizer %}
+                    <div class="mb-3">
+                        <strong><i class="fas fa-user text-primary me-2"></i>Organizer:</strong><br>
+                        <span class="ms-4">{{ event.organizer.get_full_name|default:event.organizer.username }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if event.participants.all %}
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0"><i class="fas fa-users me-2"></i>Participants</h6>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted mb-2">{{ event.participants.count }} student(s) participating</p>
+                    <ul class="list-unstyled">
+                        {% for student in event.participants.all|slice:":10" %}
+                        <li class="mb-1">
+                            <i class="fas fa-user-graduate text-primary me-2"></i>
+                            {{ student.get_full_name }} ({{ student.current_class.name|default:"N/A" }})
+                        </li>
+                        {% endfor %}
+                        {% if event.participants.count > 10 %}
+                        <li class="text-muted small">... and {{ event.participants.count|add:"-10" }} more</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-purple {
+        background-color: #9b59b6 !important;
+    }
+</style>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

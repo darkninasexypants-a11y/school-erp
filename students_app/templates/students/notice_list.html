@@ -1,0 +1,186 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Notice Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-bullhorn me-2"></i>Notice Management</h2>
+            <p class="text-muted mb-0">Create and manage school notices and announcements</p>
+        </div>
+        {% if user_role in 'admin,super_admin,teacher,school_admin' or request.user.is_superuser %}
+        <a href="{% url 'students_app:notice_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Create Notice
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Search</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" name="search" class="form-control" 
+                               placeholder="Search by title or content..." 
+                               value="{{ search_query }}">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Priority</label>
+                    <select name="priority" class="form-select">
+                        <option value="">All Priorities</option>
+                        <option value="low" {% if priority_filter == 'low' %}selected{% endif %}>Low</option>
+                        <option value="medium" {% if priority_filter == 'medium' %}selected{% endif %}>Medium</option>
+                        <option value="high" {% if priority_filter == 'high' %}selected{% endif %}>High</option>
+                        <option value="urgent" {% if priority_filter == 'urgent' %}selected{% endif %}>Urgent</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Audience</label>
+                    <select name="audience" class="form-select">
+                        <option value="">All Audiences</option>
+                        <option value="all" {% if audience_filter == 'all' %}selected{% endif %}>Everyone</option>
+                        <option value="students" {% if audience_filter == 'students' %}selected{% endif %}>Students</option>
+                        <option value="teachers" {% if audience_filter == 'teachers' %}selected{% endif %}>Teachers</option>
+                        <option value="parents" {% if audience_filter == 'parents' %}selected{% endif %}>Parents</option>
+                    </select>
+                </div>
+                {% if user_role in 'admin,super_admin,school_admin' or request.user.is_superuser %}
+                <div class="col-md-2">
+                    <label class="form-label">Publish Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">All</option>
+                        <option value="published" {% if status_filter == 'published' %}selected{% endif %}>Published</option>
+                        <option value="draft" {% if status_filter == 'draft' %}selected{% endif %}>Draft</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Visibility</label>
+                    <select name="visibility" class="form-select">
+                        <option value="">All</option>
+                        <option value="active" {% if visibility_filter == 'active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if visibility_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+                {% endif %}
+                <div class="col-md-2">
+                    <label class="form-label">Expiry</label>
+                    <select name="expired" class="form-select">
+                        <option value="">All</option>
+                        <option value="no" {% if expired == 'no' %}selected{% endif %}>Active</option>
+                        <option value="yes" {% if expired == 'yes' %}selected{% endif %}>Expired</option>
+                    </select>
+                </div>
+                <div class="col-md-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter me-2"></i>Apply Filters
+                    </button>
+                    <a href="{% url 'students_app:notice_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-2"></i>Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notices List -->
+    <div class="row g-4">
+        {% for notice in notices %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 {% if not notice.is_active %}border-secondary opacity-75{% endif %}">
+                <div class="card-header d-flex justify-content-between align-items-center
+                    {% if notice.priority == 'urgent' %}bg-danger text-white
+                    {% elif notice.priority == 'high' %}bg-warning text-dark
+                    {% elif notice.priority == 'medium' %}bg-info text-white
+                    {% else %}bg-secondary text-white{% endif %}">
+                    <div>
+                        <span class="badge bg-light text-dark me-2">{{ notice.get_target_audience_display }}</span>
+                        <span class="badge bg-dark">{{ notice.get_priority_display }}</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-{% if notice.status == 'published' %}success{% else %}secondary{% endif %}">
+                            {{ notice.get_status_display }}
+                        </span>
+                        {% if not notice.is_active %}
+                        <span class="badge bg-dark text-white">Hidden</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ notice.title }}</h5>
+                    <p class="card-text text-muted small mb-2">
+                        <i class="fas fa-calendar me-1"></i>{{ notice.notice_date|date:"d M Y" }}
+                        {% if notice.expiry_date %}
+                            <span class="ms-2">
+                                <i class="fas fa-clock me-1"></i>Expires: {{ notice.expiry_date|date:"d M Y" }}
+                                {% if notice.expiry_date < today %}
+                                    <span class="badge bg-danger ms-1">Expired</span>
+                                {% endif %}
+                            </span>
+                        {% endif %}
+                    </p>
+                    <p class="card-text">{{ notice.content|truncatewords:30 }}</p>
+                    {% if notice.attachment %}
+                    <p class="small mb-2">
+                        <i class="fas fa-paperclip me-1"></i>
+                        <a href="{{ notice.attachment.url }}" target="_blank">Attachment</a>
+                    </p>
+                    {% endif %}
+                    {% if notice.specific_class %}
+                    <p class="small text-muted mb-0">
+                        <i class="fas fa-users me-1"></i>Class: {{ notice.specific_class.name }}
+                        {% if notice.specific_section %} - Section {{ notice.specific_section.name }}{% endif %}
+                    </p>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-transparent">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{% url 'students_app:notice_detail' notice.id %}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-eye me-1"></i>View
+                        </a>
+                        {% if user_role in 'admin,super_admin,teacher,school_admin' or request.user.is_superuser %}
+                        <div>
+                            {% if notice.created_by == request.user or user_role in 'admin,super_admin,school_admin' or request.user.is_superuser %}
+                            <a href="{% url 'students_app:notice_edit' notice.id %}" class="btn btn-sm btn-outline-warning">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            {% endif %}
+                            {% if user_role in 'admin,super_admin,school_admin' or request.user.is_superuser %}
+                            <form method="post" action="{% url 'students_app:notice_toggle_publish' notice.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-{% if notice.status == 'published' %}secondary{% else %}success{% endif %}" title="{% if notice.status == 'published' %}Unpublish{% else %}Publish{% endif %}">
+                                    <i class="fas fa-bullhorn"></i>
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'students_app:notice_toggle_active' notice.id %}" class="d-inline ms-1">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-{% if notice.is_active %}secondary{% else %}success{% endif %}" title="{% if notice.is_active %}Deactivate{% else %}Activate{% endif %}">
+                                    <i class="fas fa-{% if notice.is_active %}eye-slash{% else %}eye{% endif %}"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle fa-2x mb-2"></i>
+                <p class="mb-0">No notices found.</p>
+                {% if user_role in 'admin,super_admin,teacher,school_admin' or request.user.is_superuser %}
+                <a href="{% url 'students_app:notice_create' %}" class="btn btn-primary mt-2">
+                    <i class="fas fa-plus me-2"></i>Create First Notice
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

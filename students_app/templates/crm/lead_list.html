@@ -1,0 +1,171 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Lead Management - CRM{% endblock %}
+
+{% block sidebar %}
+{% with role_name=request.user.school_profile.role.name|default_if_none:''|lower %}
+    {% if request.user.is_superuser or role_name == 'super_admin' %}
+        {% include 'includes/super_admin_sidebar.html' %}
+    {% elif role_name == 'school admin' or role_name == 'school_admin' or role_name == 'admin' %}
+        {% include 'includes/admin_sidebar.html' %}
+    {% else %}
+        {% include 'includes/school_sidebar.html' %}
+    {% endif %}
+{% endwith %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-users me-2 text-primary"></i>Lead Management</h2>
+            <p class="text-muted">Manage all student leads and enquiries</p>
+        </div>
+        <a href="{% url 'students_app:lead_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add New Lead
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <input type="text" name="search" class="form-control" placeholder="Search by name, email, phone..." value="{{ search_query }}">
+                </div>
+                <div class="col-md-2">
+                    <select name="status" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="new" {% if status_filter == 'new' %}selected{% endif %}>New</option>
+                        <option value="contacted" {% if status_filter == 'contacted' %}selected{% endif %}>Contacted</option>
+                        <option value="qualified" {% if status_filter == 'qualified' %}selected{% endif %}>Qualified</option>
+                        <option value="enrolled" {% if status_filter == 'enrolled' %}selected{% endif %}>Enrolled</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="source" class="form-select">
+                        <option value="">All Sources</option>
+                        {% for source in sources %}
+                        <option value="{{ source.id }}" {% if source_filter == source.id|stringformat:"s" %}selected{% endif %}>{{ source.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter"></i> Filter
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <a href="{% url 'students_app:lead_list' %}" class="btn btn-outline-secondary w-100">
+                        <i class="fas fa-redo"></i> Reset
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Leads Table -->
+    <div class="card">
+        <div class="card-body">
+            {% if leads %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Contact</th>
+                            <th>Source</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                            <th>Enquiry Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lead in leads %}
+                        <tr>
+                            <td>
+                                <strong>{{ lead.get_full_name }}</strong>
+                                {% if lead.interested_class %}
+                                <br><small class="text-muted">Class: {{ lead.interested_class }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small>{{ lead.phone }}</small><br>
+                                <small class="text-muted">{{ lead.email }}</small>
+                            </td>
+                            <td>
+                                {% if lead.source %}
+                                <span class="badge bg-secondary">{{ lead.source.name }}</span>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if lead.status == 'new' %}
+                                <span class="badge bg-warning">New</span>
+                                {% elif lead.status == 'contacted' %}
+                                <span class="badge bg-info">Contacted</span>
+                                {% elif lead.status == 'qualified' %}
+                                <span class="badge bg-primary">Qualified</span>
+                                {% elif lead.status == 'enrolled' %}
+                                <span class="badge bg-success">Enrolled</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ lead.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if lead.priority == 'urgent' %}
+                                <span class="badge bg-danger">Urgent</span>
+                                {% elif lead.priority == 'high' %}
+                                <span class="badge bg-warning">High</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ lead.get_priority_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ lead.enquiry_date|date:"d M Y" }}</td>
+                            <td>
+                                <a href="{% url 'students_app:lead_detail' lead.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if leads.has_other_pages %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if leads.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ leads.previous_page_number }}">Previous</a>
+                    </li>
+                    {% endif %}
+                    <li class="page-item active">
+                        <span class="page-link">Page {{ leads.number }} of {{ leads.paginator.num_pages }}</span>
+                    </li>
+                    {% if leads.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ leads.next_page_number }}">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No leads found</h5>
+                <p class="text-muted">Start by adding your first lead</p>
+                <a href="{% url 'students_app:lead_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add New Lead
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+

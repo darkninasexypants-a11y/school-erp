@@ -1,0 +1,185 @@
+{% extends "students/base_modern.html" %}
+{% load static %}
+
+{% block title %}Work Tracking - All Entries{% endblock %}
+
+{% block sidebar %}
+{% include 'includes/super_admin_sidebar.html' %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .work-card {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+        margin-bottom: 20px;
+    }
+    .work-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    .filter-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    .filter-card .form-control, .filter-card .form-select {
+        border-radius: 8px;
+    }
+    .expense-badge {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="mb-1">
+                <i class="fas fa-briefcase me-2 text-primary"></i>
+                Work & Expense Tracking
+            </h1>
+            <p class="text-muted mb-0">Track all operational work and expenses</p>
+        </div>
+        <a href="{% url 'students_app:work_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus-circle me-2"></i>Add Work Entry
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-card">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <input type="text" name="search" class="form-control" placeholder="Search..." value="{{ current_search }}">
+            </div>
+            <div class="col-md-2">
+                <select name="school" class="form-select">
+                    <option value="">All Schools</option>
+                    {% for school in schools %}
+                        <option value="{{ school.id }}" {% if current_school == school.id|stringformat:"s" %}selected{% endif %}>
+                            {{ school.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="work_type" class="form-select">
+                    <option value="">All Work Types</option>
+                    <option value="erp_setup" {% if current_work_type == 'erp_setup' %}selected{% endif %}>ERP Setup</option>
+                    <option value="id_card" {% if current_work_type == 'id_card' %}selected{% endif %}>ID Card</option>
+                    <option value="camera_installation" {% if current_work_type == 'camera_installation' %}selected{% endif %}>Camera Installation</option>
+                    <option value="system_installation" {% if current_work_type == 'system_installation' %}selected{% endif %}>System Installation</option>
+                    <option value="printing_material" {% if current_work_type == 'printing_material' %}selected{% endif %}>Printing Material</option>
+                    <option value="training" {% if current_work_type == 'training' %}selected{% endif %}>Training</option>
+                    <option value="maintenance" {% if current_work_type == 'maintenance' %}selected{% endif %}>Maintenance</option>
+                    <option value="other" {% if current_work_type == 'other' %}selected{% endif %}>Other</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="status" class="form-select">
+                    <option value="">All Status</option>
+                    <option value="pending" {% if current_status == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="in_progress" {% if current_status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                    <option value="completed" {% if current_status == 'completed' %}selected{% endif %}>Completed</option>
+                    <option value="on_hold" {% if current_status == 'on_hold' %}selected{% endif %}>On Hold</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="team_member" class="form-select">
+                    <option value="">All Team Members</option>
+                    {% for member in team_members %}
+                        <option value="{{ member.id }}" {% if current_team_member == member.id|stringformat:"s" %}selected{% endif %}>
+                            {{ member.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-light w-100">
+                    <i class="fas fa-filter"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Work Entries -->
+    <div class="row">
+        {% for entry in work_entries %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card work-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="card-title mb-0">{{ entry.title }}</h5>
+                            <span class="status-badge bg-{% if entry.status == 'completed' %}success{% elif entry.status == 'in_progress' %}primary{% elif entry.status == 'pending' %}warning{% else %}secondary{% endif %}">
+                                {{ entry.get_status_display }}
+                            </span>
+                        </div>
+                        
+                        <p class="text-muted mb-2">
+                            <i class="fas fa-school me-2"></i>{{ entry.school.name }}
+                        </p>
+                        
+                        <p class="text-muted mb-2">
+                            <i class="fas fa-briefcase me-2"></i>{{ entry.get_work_type_display }}
+                        </p>
+                        
+                        <p class="text-muted mb-2">
+                            <i class="fas fa-calendar me-2"></i>{{ entry.work_date|date:"d M, Y" }}
+                        </p>
+                        
+                        {% if entry.location %}
+                            <p class="text-muted mb-2">
+                                <i class="fas fa-map-marker-alt me-2"></i>{{ entry.location }}
+                            </p>
+                        {% endif %}
+                        
+                        <div class="mb-3">
+                            <small class="text-muted">Team:</small>
+                            <div class="mt-1">
+                                {% for member in entry.team_members.all %}
+                                    <span class="badge bg-info me-1">{{ member.name }}</span>
+                                {% empty %}
+                                    <span class="text-muted">No team assigned</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="expense-badge">
+                                ₹{{ entry.expense_total|default:0|floatformat:2 }}
+                            </span>
+                            <a href="{% url 'students_app:work_detail' entry.id %}" class="btn btn-sm btn-outline-primary">
+                                View Details <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No work entries found. <a href="{% url 'students_app:work_create' %}">Add your first work entry</a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+

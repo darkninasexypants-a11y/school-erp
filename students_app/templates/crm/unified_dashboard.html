@@ -1,0 +1,246 @@
+{% extends "students/base_modern.html" %}
+{% load static %}
+{% block title %}{% if is_super_admin %}Super Admin - {% endif %}CRM Dashboard - Enrollment Management{% endblock %}
+
+{% block sidebar %}
+{% with role_name=request.user.school_profile.role.name|default_if_none:''|lower %}
+    {% if request.user.is_superuser or role_name == 'super_admin' %}
+        {% include 'includes/super_admin_sidebar.html' %}
+    {% elif role_name == 'school admin' or role_name == 'school_admin' or role_name == 'admin' %}
+        {% include 'includes/admin_sidebar.html' %}
+    {% else %}
+        {% include 'includes/school_sidebar.html' %}
+    {% endif %}
+{% endwith %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-section {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+        margin-bottom: 20px;
+    }
+    .dashboard-section:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .metric-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 15px;
+    }
+    .metric-card.erp {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    .metric-card.crm {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    .quick-action-btn {
+        border-radius: 8px;
+        padding: 12px 20px;
+        transition: all 0.2s;
+        border: 2px solid transparent;
+    }
+    .quick-action-btn:hover {
+        transform: translateY(-2px);
+        border-color: #667eea;
+    }
+    .section-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 12px 12px 0 0;
+        margin: -1px -1px 0 -1px;
+    }
+    .funnel-bar {
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        padding: 0 15px;
+        color: white;
+        font-weight: 600;
+        margin-bottom: 10px;
+        position: relative;
+    }
+    .funnel-bar::after {
+        content: '↓';
+        position: absolute;
+        bottom: -20px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 20px;
+        color: #667eea;
+    }
+    .funnel-bar:last-child::after {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <!-- Main Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="mb-1">
+                <i class="fas fa-tachometer-alt me-2 text-primary"></i>
+                CRM Dashboard
+            </h1>
+            <p class="text-muted mb-0">Complete School Management System - CRM & ERP</p>
+        </div>
+    </div>
+
+    <!-- Key Metrics - CRM Only -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="metric-card crm">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="opacity-75 mb-2">Total Leads</h6>
+                        <h2 class="mb-0">{{ total_leads|default:0 }}</h2>
+                        <small class="opacity-75">Enrollment Pipeline</small>
+                    </div>
+                    <i class="fas fa-users fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="metric-card crm">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="opacity-75 mb-2">Enrolled</h6>
+                        <h2 class="mb-0">{{ enrolled_count|default:0 }}</h2>
+                        <small class="opacity-75">{{ conversion_rate|default:0 }}% conversion</small>
+                    </div>
+                    <i class="fas fa-graduation-cap fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CRM & ERP Sections -->
+    <div class="row g-4">
+        <!-- CRM Section -->
+        <div class="col-lg-12">
+            <div class="card dashboard-section">
+                <div class="section-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Enrollment CRM
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Enrollment Funnel -->
+                    <h6 class="mb-3">Enrollment Funnel</h6>
+                    <div class="funnel-bar" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <span>Enquiries: {{ recent_leads_count|default:0 }}</span>
+                    </div>
+                    <div class="funnel-bar" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <span>Contacted: {{ qualified_leads|default:0 }}</span>
+                    </div>
+                    <div class="funnel-bar" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                        <span>Applications: {{ qualified_leads|default:0 }}</span>
+                    </div>
+                    <div class="funnel-bar" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                        <span>Enrolled: {{ enrolled_count|default:0 }}</span>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="mt-4">
+                        <h6 class="mb-3">Quick Actions</h6>
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'students_app:lead_create' %}" class="btn btn-primary quick-action-btn">
+                                <i class="fas fa-plus-circle"></i> Add New Lead
+                            </a>
+                            <a href="{% url 'students_app:lead_list' %}" class="btn btn-outline-primary quick-action-btn">
+                                <i class="fas fa-list"></i> View All Leads
+                            </a>
+                            <a href="{% url 'students_app:campaign_list' %}" class="btn btn-outline-success quick-action-btn">
+                                <i class="fas fa-bullhorn"></i> Manage Campaigns
+                            </a>
+                            <a href="{% url 'students_app:enrollment_analytics' %}" class="btn btn-outline-info quick-action-btn">
+                                <i class="fas fa-chart-bar"></i> View Analytics
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Recent Leads -->
+                    <div class="mt-4">
+                        <h6 class="mb-3">Recent Leads</h6>
+                        {% if recent_leads %}
+                            {% for lead in recent_leads|slice:":5" %}
+                                <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                                    <div>
+                                        <strong>{{ lead.get_full_name }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ lead.phone }}</small>
+                                    </div>
+                                    <span class="badge bg-{% if lead.status == 'new' %}warning{% elif lead.status == 'enrolled' %}success{% else %}info{% endif %}">
+                                        {{ lead.get_status_display }}
+                                    </span>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted text-center">No leads yet</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Combined Features Grid -->
+    <div class="row g-4 mt-2">
+        <div class="col-12">
+            <div class="card dashboard-section">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-th-large me-2 text-primary"></i>
+                        All Features
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <!-- CRM Features -->
+                        <div class="col-md-6">
+                            <h6 class="text-primary mb-3">
+                                <i class="fas fa-chart-line me-2"></i>CRM Features
+                            </h6>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <a href="{% url 'students_app:lead_list' %}" class="btn btn-outline-primary btn-sm w-100">
+                                        <i class="fas fa-users"></i> Lead Management
+                                    </a>
+                                </div>
+                                <div class="col-6">
+                                    <a href="{% url 'students_app:campaign_list' %}" class="btn btn-outline-success btn-sm w-100">
+                                        <i class="fas fa-bullhorn"></i> Campaigns
+                                    </a>
+                                </div>
+                                <div class="col-6">
+                                    <a href="{% url 'students_app:enrollment_analytics' %}" class="btn btn-outline-info btn-sm w-100">
+                                        <i class="fas fa-chart-bar"></i> Analytics
+                                    </a>
+                                </div>
+                                <div class="col-6">
+                                    <a href="{% url 'students_app:lead_create' %}" class="btn btn-outline-warning btn-sm w-100">
+                                        <i class="fas fa-plus"></i> Add Lead
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

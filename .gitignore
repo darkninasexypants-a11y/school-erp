@@ -1,0 +1,106 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+*.sqlite3
+
+# Media files (user uploads - alag se manage karo)
+/media/
+
+# Static files (collectstatic generate karega)
+/staticfiles/
+
+# Node.js
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# Capacitor / Mobile
+.capacitor/
+android/
+ios/
+erp-dekstop/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+ngrok.log
+ngrok_status.txt
+
+# Build files
+*.apk
+*.aab
+*.keystore
+*.jks
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Large/unnecessary files
+assets/
+teacher_portal_demo/
+tools/
+whatsapp_integration/
+
+# Temporary scripts (deploy ke baad hata sakte ho)
+add_*.py
+check_*.py
+create_*.py
+debug_*.py
+delete_*.py
+fix_*.py
+generate_*.py
+get_*.py
+import_*.py
+inspect_*.py
+investigate_*.py
+keep_only_*.py
+link_*.py
+list_*.py
+merge_*.py
+populate_*.py
+read_*.py
+reset_*.py
+restore_*.py
+simple_*.py
+smart_*.py
+sync_*.py
+superuser_*.py
+test_*.py
+verify_*.py
+view_*.py
+find_*.py
+analyze_*.py
+assign_*.py
+deep_*.py
+final_*.py
+comprehensive_*.py
+manual_*.py
+
+# SQL files
+*.sql
+
+# Markdown docs (optional - remove if you want to keep)
+*.md
+
+# Bat files
+*.bat

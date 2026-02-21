@@ -1,0 +1,228 @@
+{% extends "students/base_modern.html" %}
+{% load static %}
+
+{% block title %}{% if is_edit %}Edit{% else %}Add{% endif %} Work Entry{% endblock %}
+
+{% block sidebar %}
+{% include 'includes/super_admin_sidebar.html' %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .form-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 12px 12px 0 0;
+    }
+    .form-section {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    .form-label {
+        font-weight: 600;
+        color: #495057;
+    }
+    .btn-save {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-weight: 600;
+    }
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <!-- Header -->
+    <div class="mb-4">
+        <h1 class="mb-1">
+            <i class="fas fa-{% if is_edit %}edit{% else %}plus-circle{% endif %} me-2 text-primary"></i>
+            {% if is_edit %}Edit{% else %}Add New{% endif %} Work Entry
+        </h1>
+        <p class="text-muted mb-0">Track operational work done for schools</p>
+    </div>
+
+    <!-- Form -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card form-card">
+                <div class="form-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-clipboard-list me-2"></i>
+                        Work Entry Details
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <!-- Basic Information -->
+                        <div class="form-section">
+                            <h5 class="mb-3">
+                                <i class="fas fa-info-circle me-2 text-primary"></i>
+                                Basic Information
+                            </h5>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="school" class="form-label">School *</label>
+                                    <select name="school" id="school" class="form-select" required>
+                                        <option value="">Select School</option>
+                                        {% for school in schools %}
+                                            <option value="{{ school.id }}" {% if work_entry and work_entry.school.id == school.id %}selected{% endif %}>
+                                                {{ school.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="work_type" class="form-label">Work Type *</label>
+                                    <select name="work_type" id="work_type" class="form-select" required>
+                                        <option value="">Select Work Type</option>
+                                        <option value="erp_setup" {% if work_entry and work_entry.work_type == 'erp_setup' %}selected{% endif %}>ERP Setup & Configuration</option>
+                                        <option value="id_card" {% if work_entry and work_entry.work_type == 'id_card' %}selected{% endif %}>ID Card Generation</option>
+                                        <option value="camera_installation" {% if work_entry and work_entry.work_type == 'camera_installation' %}selected{% endif %}>Camera Installation</option>
+                                        <option value="system_installation" {% if work_entry and work_entry.work_type == 'system_installation' %}selected{% endif %}>System/Hardware Installation</option>
+                                        <option value="printing_material" {% if work_entry and work_entry.work_type == 'printing_material' %}selected{% endif %}>Printing Material Supply</option>
+                                        <option value="training" {% if work_entry and work_entry.work_type == 'training' %}selected{% endif %}>Staff Training</option>
+                                        <option value="maintenance" {% if work_entry and work_entry.work_type == 'maintenance' %}selected{% endif %}>System Maintenance</option>
+                                        <option value="troubleshooting" {% if work_entry and work_entry.work_type == 'troubleshooting' %}selected{% endif %}>Troubleshooting & Support</option>
+                                        <option value="data_migration" {% if work_entry and work_entry.work_type == 'data_migration' %}selected{% endif %}>Data Migration</option>
+                                        <option value="customization" {% if work_entry and work_entry.work_type == 'customization' %}selected{% endif %}>Software Customization</option>
+                                        <option value="other" {% if work_entry and work_entry.work_type == 'other' %}selected{% endif %}>Other Work</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <label for="title" class="form-label">Title *</label>
+                                    <input type="text" name="title" id="title" class="form-control" 
+                                           value="{% if work_entry %}{{ work_entry.title }}{% endif %}" 
+                                           placeholder="Brief title for this work" required>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <label for="description" class="form-label">Description *</label>
+                                    <textarea name="description" id="description" class="form-control" rows="4" 
+                                              placeholder="Detailed description of work done" required>{% if work_entry %}{{ work_entry.description }}{% endif %}</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Work Details -->
+                        <div class="form-section">
+                            <h5 class="mb-3">
+                                <i class="fas fa-calendar-alt me-2 text-success"></i>
+                                Work Details
+                            </h5>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="work_date" class="form-label">Work Date *</label>
+                                    <input type="date" name="work_date" id="work_date" class="form-control" 
+                                           value="{% if work_entry %}{{ work_entry.work_date|date:'Y-m-d' }}{% endif %}" required>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="status" class="form-label">Status *</label>
+                                    <select name="status" id="status" class="form-select" required>
+                                        <option value="pending" {% if work_entry and work_entry.status == 'pending' %}selected{% endif %}>Pending</option>
+                                        <option value="in_progress" {% if work_entry and work_entry.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                                        <option value="completed" {% if work_entry and work_entry.status == 'completed' %}selected{% elif not work_entry %}selected{% endif %}>Completed</option>
+                                        <option value="on_hold" {% if work_entry and work_entry.status == 'on_hold' %}selected{% endif %}>On Hold</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="location" class="form-label">Location</label>
+                                    <input type="text" name="location" id="location" class="form-control" 
+                                           value="{% if work_entry %}{{ work_entry.location }}{% endif %}" 
+                                           placeholder="Work location">
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="hours_spent" class="form-label">Hours Spent</label>
+                                    <input type="number" name="hours_spent" id="hours_spent" class="form-control" 
+                                           value="{% if work_entry %}{{ work_entry.hours_spent }}{% endif %}" 
+                                           placeholder="0" step="0.5" min="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Team Assignment -->
+                        <div class="form-section">
+                            <h5 class="mb-3">
+                                <i class="fas fa-users me-2 text-info"></i>
+                                Team Assignment
+                            </h5>
+                            
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label">Assign Team Members</label>
+                                    <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
+                                        {% for member in team_members %}
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="team_members" 
+                                                       value="{{ member.id }}" id="member_{{ member.id }}"
+                                                       {% if work_entry and member in work_entry.team_members.all %}checked{% endif %}>
+                                                <label class="form-check-label" for="member_{{ member.id }}">
+                                                    {{ member.name }} <small class="text-muted">({{ member.role }})</small>
+                                                </label>
+                                            </div>
+                                        {% empty %}
+                                            <p class="text-muted mb-0">No team members available. <a href="{% url 'students_app:team_member_create' %}">Add team member</a></p>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Notes -->
+                        <div class="form-section">
+                            <h5 class="mb-3">
+                                <i class="fas fa-sticky-note me-2 text-warning"></i>
+                                Additional Notes
+                            </h5>
+                            
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label for="notes" class="form-label">Notes</label>
+                                    <textarea name="notes" id="notes" class="form-control" rows="3" 
+                                              placeholder="Any additional notes or comments">{% if work_entry %}{{ work_entry.notes }}{% endif %}</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <a href="{% if work_entry %}{% url 'students_app:work_detail' work_entry.id %}{% else %}{% url 'students_app:work_list' %}{% endif %}" 
+                               class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-save">
+                                <i class="fas fa-save me-2"></i>
+                                {% if is_edit %}Update{% else %}Save{% endif %} Work Entry
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

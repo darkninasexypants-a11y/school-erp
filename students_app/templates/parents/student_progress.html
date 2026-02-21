@@ -1,0 +1,60 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Progress - {{ student.get_full_name }}{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center mb-3">
+  <h2 class="h5 mb-0"><i class="fas fa-chart-line"></i> {{ student.get_full_name }} - Progress</h2>
+  <div class="ms-auto text-muted">Attendance (30d): {{ present_ratio }}%</div>
+  </div>
+
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="card shadow h-100">
+      <div class="card-header">Subject-wise Class Tests (last)</div>
+      <div class="card-body">
+        <canvas id="testsChart" height="240"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card shadow h-100">
+      <div class="card-header">Exam Performance (aggregate)</div>
+      <div class="card-body">
+        <canvas id="examChart" height="240"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{{ subject_scores|json_script:"subject-scores" }}
+{{ exam_subject_avg|json_script:"exam-avg" }}
+<script>
+  (function(){
+    const subj = JSON.parse(document.getElementById('subject-scores').textContent);
+    const labels = Object.keys(subj);
+    const datasets = labels.map((name, idx) => ({
+      label: name,
+      data: (subj[name] || []).slice(0, 8).reverse().map(x => Math.round((x.score / (x.max||1)) * 100)),
+      borderWidth: 2,
+      fill: false
+    }));
+    new Chart(document.getElementById('testsChart'), {
+      type: 'line', data: { labels: Array(8).fill('').map((_,i)=>`T-${8-i}`), datasets },
+      options: { plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero:true, max:100, ticks:{ callback:v=>v+'%' } } } }
+    });
+
+    const exam = JSON.parse(document.getElementById('exam-avg').textContent);
+    const el = document.getElementById('examChart');
+    const eLabels = Object.keys(exam);
+    const eData = eLabels.map(k => {
+      const v = exam[k]; return v && v.length === undefined ? Math.round((v[0] / (v[1]||1))*100) : 0;
+    });
+    new Chart(el, { type:'bar', data:{ labels:eLabels, datasets:[{ label:'Avg %', data:eData, backgroundColor:'#0d6efd' }] }, options:{ plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, max:100, ticks:{ callback:v=>v+'%' } } } } });
+  })();
+</script>
+{% endblock %}
+
+

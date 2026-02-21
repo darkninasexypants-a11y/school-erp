@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School ERP System - Home</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .hero-section {
+            padding: 80px 0;
+            color: white;
+            text-align: center;
+        }
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .hero-subtitle {
+            font-size: 1.3rem;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+        .feature-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+            height: 100%;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+        .btn-login {
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 50px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+        .features-section {
+            padding: 60px 0;
+            background: rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="hero-section">
+        <div class="container">
+            <h1 class="hero-title">
+                <i class="fas fa-graduation-cap me-3"></i>School ERP System
+            </h1>
+            <p class="hero-subtitle">
+                Complete School Management Solution for Modern Education
+            </p>
+            <div class="mt-4">
+                {% if user.is_authenticated %}
+                    {% if user.is_superuser %}
+                        <a href="{% url 'students_app:admin_dashboard' %}" class="btn btn-light btn-login me-3">
+                            <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                        </a>
+                    {% else %}
+                    <a href="{% url 'students_app:dashboard' %}" class="btn btn-light btn-login me-3">
+                        <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'students_app:user_logout' %}" class="btn btn-outline-light btn-login">
+                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                    </a>
+                {% else %}
+                    <a href="{% url 'students_app:simple_login' %}" class="btn btn-light btn-login">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login Now
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="features-section">
+        <div class="container">
+            <h2 class="text-center text-white mb-5">Key Features</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <i class="fas fa-users feature-icon text-primary"></i>
+                        <h4>Student Management</h4>
+                        <p>Comprehensive student information management, attendance tracking, and academic records.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <i class="fas fa-chalkboard-teacher feature-icon text-success"></i>
+                        <h4>Teacher Portal</h4>
+                        <p>Dedicated portal for teachers to manage classes, assignments, and student progress.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <i class="fas fa-user-friends feature-icon text-info"></i>
+                        <h4>Parent Access</h4>
+                        <p>Parents can view their child's attendance, grades, and communicate with teachers.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <i class="fas fa-money-bill-wave feature-icon text-warning"></i>
+                        <h4>Fee Management</h4>
+                        <p>Automated fee collection, payment tracking, and receipt generation.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <i class="fas fa-comments feature-icon text-danger"></i>
+                        <h4>Communication</h4>
+                        <p>Encrypted messaging system between teachers, parents, and students.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <i class="fas fa-book feature-icon text-secondary"></i>
+                        <h4>Library Management</h4>
+                        <p>Complete library system with book issue, return, and inventory management.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center text-white py-4">
+        <div class="container">
+            <p class="mb-0">
+                <i class="fas fa-shield-alt me-2"></i>
+                Secure & Encrypted Communication System
+            </p>
+            <p class="mt-2 mb-0">
+                <small>© 2025 School ERP System. All rights reserved.</small>
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+
+
+
+

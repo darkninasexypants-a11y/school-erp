@@ -1,0 +1,335 @@
+{% extends 'students/base.html' %}
+
+{% block title %}Parent Portal Demo - School ERP{% endblock %}
+
+{% block extra_css %}
+<style>
+    .demo-banner {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    
+    .demo-banner h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+    }
+    
+    .demo-banner p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+    }
+    
+    .parent-card {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .child-card {
+        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 20px;
+        border: 1px solid #cbd5e1;
+        transition: all 0.3s ease;
+    }
+    
+    .child-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+    }
+    
+    .child-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2rem;
+        font-weight: bold;
+        margin-right: 20px;
+    }
+    
+    .progress-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        margin-bottom: 20px;
+    }
+    
+    .subject-progress {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .subject-progress:last-child {
+        border-bottom: none;
+    }
+    
+    .progress-bar-custom {
+        height: 8px;
+        background: #e2e8f0;
+        border-radius: 4px;
+        overflow: hidden;
+        width: 200px;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+    
+    .attendance-chart {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+    
+    .demo-feature {
+        background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+        border: 2px solid #0ea5e9;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .demo-feature h4 {
+        color: #0369a1;
+        margin-bottom: 10px;
+    }
+    
+    .demo-feature p {
+        color: #0c4a6e;
+        margin-bottom: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="demo-banner">
+    <h1>👨‍👩‍👧‍👦 Parent Portal Demo</h1>
+    <p>Experience the complete parent dashboard without login</p>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Parent Dashboard -->
+        <div class="parent-card">
+            <h2 class="mb-4">📊 Your Children's Progress</h2>
+            
+            <!-- Child 1 -->
+            <div class="child-card">
+                <div class="d-flex align-items-center">
+                    <div class="child-avatar">R</div>
+                    <div class="flex-grow-1">
+                        <h4 class="mb-1">Rahul Sharma</h4>
+                        <p class="text-muted mb-2">Class 1 - Section A | Roll No: 1</p>
+                        <div class="d-flex gap-2">
+                            <span class="badge bg-success">Active</span>
+                            <span class="badge bg-info">Attendance: 95%</span>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="btn btn-primary">View Details</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Child 2 -->
+            <div class="child-card">
+                <div class="d-flex align-items-center">
+                    <div class="child-avatar">P</div>
+                    <div class="flex-grow-1">
+                        <h4 class="mb-1">Priya Patel</h4>
+                        <p class="text-muted mb-2">Class 1 - Section A | Roll No: 2</p>
+                        <div class="d-flex gap-2">
+                            <span class="badge bg-success">Active</span>
+                            <span class="badge bg-info">Attendance: 98%</span>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="btn btn-primary">View Details</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Subject-wise Progress -->
+        <div class="progress-card">
+            <h4 class="mb-4">📚 Subject-wise Performance</h4>
+            
+            <div class="subject-progress">
+                <div>
+                    <strong>Mathematics</strong>
+                    <div class="text-muted small">Last 5 tests average</div>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div class="progress-bar-custom me-3">
+                        <div class="progress-fill" style="width: 85%; background: linear-gradient(135deg, #10b981, #059669);"></div>
+                    </div>
+                    <span class="fw-bold text-success">85%</span>
+                </div>
+            </div>
+            
+            <div class="subject-progress">
+                <div>
+                    <strong>English</strong>
+                    <div class="text-muted small">Last 5 tests average</div>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div class="progress-bar-custom me-3">
+                        <div class="progress-fill" style="width: 92%; background: linear-gradient(135deg, #3b82f6, #1d4ed8);"></div>
+                    </div>
+                    <span class="fw-bold text-primary">92%</span>
+                </div>
+            </div>
+            
+            <div class="subject-progress">
+                <div>
+                    <strong>Science</strong>
+                    <div class="text-muted small">Last 5 tests average</div>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div class="progress-bar-custom me-3">
+                        <div class="progress-fill" style="width: 78%; background: linear-gradient(135deg, #f59e0b, #d97706);"></div>
+                    </div>
+                    <span class="fw-bold text-warning">78%</span>
+                </div>
+            </div>
+            
+            <div class="subject-progress">
+                <div>
+                    <strong>Hindi</strong>
+                    <div class="text-muted small">Last 5 tests average</div>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div class="progress-bar-custom me-3">
+                        <div class="progress-fill" style="width: 88%; background: linear-gradient(135deg, #8b5cf6, #7c3aed);"></div>
+                    </div>
+                    <span class="fw-bold text-purple">88%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Attendance Chart -->
+        <div class="attendance-chart">
+            <h4 class="mb-4">📅 Attendance Overview</h4>
+            <canvas id="attendanceChart" height="200"></canvas>
+        </div>
+        
+        <!-- Recent Activities -->
+        <div class="parent-card">
+            <h4 class="mb-4">🔔 Recent Activities</h4>
+            
+            <div class="d-flex align-items-start mb-3">
+                <div class="bg-success rounded-circle p-2 me-3">
+                    <i class="bi bi-check-circle text-white"></i>
+                </div>
+                <div>
+                    <div class="fw-semibold">Assignment Submitted</div>
+                    <div class="text-muted small">Math homework completed</div>
+                    <div class="text-muted small">2 hours ago</div>
+                </div>
+            </div>
+            
+            <div class="d-flex align-items-start mb-3">
+                <div class="bg-info rounded-circle p-2 me-3">
+                    <i class="bi bi-calendar-event text-white"></i>
+                </div>
+                <div>
+                    <div class="fw-semibold">Parent-Teacher Meeting</div>
+                    <div class="text-muted small">Scheduled for tomorrow</div>
+                    <div class="text-muted small">1 day ago</div>
+                </div>
+            </div>
+            
+            <div class="d-flex align-items-start mb-3">
+                <div class="bg-warning rounded-circle p-2 me-3">
+                    <i class="bi bi-exclamation-triangle text-white"></i>
+                </div>
+                <div>
+                    <div class="fw-semibold">Attendance Alert</div>
+                    <div class="text-muted small">Rahul was absent yesterday</div>
+                    <div class="text-muted small">2 days ago</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Demo Features -->
+        <div class="demo-feature">
+            <h4>🎯 Key Features</h4>
+            <p>• Real-time attendance tracking</p>
+            <p>• Subject-wise performance analysis</p>
+            <p>• Interactive progress charts</p>
+            <p>• Parent-teacher communication</p>
+            <p>• Fee payment status</p>
+            <p>• School announcements</p>
+        </div>
+    </div>
+</div>
+
+<!-- Login Section -->
+<div class="parent-card text-center">
+    <h3 class="mb-4">🔐 Ready to Access Your Account?</h3>
+    <p class="text-muted mb-4">Login with your admission ID and child's name to access the full parent portal</p>
+    <div class="d-flex gap-3 justify-content-center">
+        <a href="{% url 'students_app:parent_login' %}" class="btn btn-primary btn-lg">
+            <i class="bi bi-person-circle"></i> Parent Login
+        </a>
+        <a href="{% url 'students_app:teacher_login' %}" class="btn btn-outline-primary btn-lg">
+            <i class="bi bi-person-badge"></i> Teacher Login
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Attendance Chart
+    const ctx = document.getElementById('attendanceChart');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Present', 'Absent', 'Late'],
+            datasets: [{
+                data: [95, 3, 2],
+                backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
+

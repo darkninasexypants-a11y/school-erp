@@ -1,0 +1,284 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Enrollment Analytics - CRM{% endblock %}
+
+{% block sidebar %}
+{% with role_name=request.user.school_profile.role.name|default_if_none:''|lower %}
+    {% if request.user.is_superuser or role_name == 'super_admin' %}
+        {% include 'includes/super_admin_sidebar.html' %}
+    {% elif role_name == 'school admin' or role_name == 'school_admin' or role_name == 'admin' %}
+        {% include 'includes/admin_sidebar.html' %}
+    {% else %}
+        {% include 'includes/school_sidebar.html' %}
+    {% endif %}
+{% endwith %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-chart-bar me-2 text-primary"></i>Enrollment Analytics</h2>
+            <p class="text-muted">Track enrollment funnel and conversion rates</p>
+        </div>
+        <div>
+            <select class="form-select" onchange="window.location.href='?days='+this.value">
+                <option value="7" {% if days == 7 %}selected{% endif %}>Last 7 days</option>
+                <option value="30" {% if days == 30 %}selected{% endif %}>Last 30 days</option>
+                <option value="90" {% if days == 90 %}selected{% endif %}>Last 90 days</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Funnel Metrics -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body">
+                    <h6>Enquiries</h6>
+                    <h2>{{ enquiries|default:0 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="card-body">
+                    <h6>Contacted</h6>
+                    <h2>{{ contacted|default:0 }}</h2>
+                    <small>{{ enquiry_to_contact|default:0 }}% conversion</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="card-body">
+                    <h6>Qualified</h6>
+                    <h2>{{ qualified|default:0 }}</h2>
+                    <small>{{ contact_to_qualify|default:0 }}% conversion</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                <div class="card-body">
+                    <h6>Enrolled</h6>
+                    <h2>{{ enrolled|default:0 }}</h2>
+                    <small>{{ overall_conversion|default:0 }}% overall</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue Metrics -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Revenue Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h4 class="text-success">₹{{ total_revenue|default:0 }}</h4>
+                            <small class="text-muted">Total Revenue</small>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="text-primary">₹{{ avg_enrollment_value|default:0 }}</h4>
+                            <small class="text-muted">Avg per Enrollment</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Conversion Rates</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Enquiry → Contact</span>
+                            <strong>{{ enquiry_to_contact|default:0 }}%</strong>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar" style="width: {{ enquiry_to_contact|default:0 }}%"></div>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Contact → Qualify</span>
+                            <strong>{{ contact_to_qualify|default:0 }}%</strong>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" style="width: {{ contact_to_qualify|default:0 }}%"></div>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Overall Conversion</span>
+                            <strong>{{ overall_conversion|default:0 }}%</strong>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-info" style="width: {{ overall_conversion|default:0 }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lead Source Performance -->
+    {% if source_performance %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Lead Source Performance</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Source</th>
+                            <th>Total Leads</th>
+                            <th>Enrolled</th>
+                            <th>Conversion Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for source in source_performance %}
+                        <tr>
+                            <td><strong>{{ source.name }}</strong></td>
+                            <td>{{ source.total_leads }}</td>
+                            <td>{{ source.enrolled }}</td>
+                            <td>
+                                <span class="badge bg-{% if source.conversion_rate >= 20 %}success{% elif source.conversion_rate >= 10 %}warning{% else %}danger{% endif %}">
+                                    {{ source.conversion_rate|default:0 }}%
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Daily Trends Chart -->
+    {% if daily_trends %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Daily Trends</h5>
+        </div>
+        <div class="card-body">
+            <canvas id="dailyTrendsChart" height="80"></canvas>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Applications Breakdown -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Funnel Breakdown</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Applications</span>
+                            <strong>{{ applications|default:0 }}</strong>
+                        </div>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-warning" style="width: {{ qualify_to_apply|default:0 }}%">
+                                {{ qualify_to_apply|default:0 }}%
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Apply → Enroll</span>
+                            <strong>{{ apply_to_enroll|default:0 }}%</strong>
+                        </div>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-success" style="width: {{ apply_to_enroll|default:0 }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Stats</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <div class="p-3 bg-light rounded">
+                                <h3 class="text-primary mb-0">{{ applications|default:0 }}</h3>
+                                <small class="text-muted">Applications</small>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="p-3 bg-light rounded">
+                                <h3 class="text-success mb-0">{{ enrolled|default:0 }}</h3>
+                                <small class="text-muted">Enrolled</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded">
+                                <h3 class="text-info mb-0">{{ qualified|default:0 }}</h3>
+                                <small class="text-muted">Qualified</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded">
+                                <h3 class="text-warning mb-0">{{ contacted|default:0 }}</h3>
+                                <small class="text-muted">Contacted</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+    // Daily Trends Chart
+    {% if daily_trends %}
+    const ctx = document.getElementById('dailyTrendsChart').getContext('2d');
+    const dailyTrendsChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [{% for trend in daily_trends %}'{{ trend.date|date:"M d" }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+            datasets: [{
+                label: 'Enquiries',
+                data: [{% for trend in daily_trends %}{{ trend.enquiries }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.1
+            }, {
+                label: 'Enrolled',
+                data: [{% for trend in daily_trends %}{{ trend.enrolled }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                borderColor: 'rgb(54, 162, 235)',
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+    {% endif %}
+</script>
+{% endblock %}
+

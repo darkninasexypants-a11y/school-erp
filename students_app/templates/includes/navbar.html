@@ -1,0 +1,83 @@
+<nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+        <i class="fa fa-bars"></i>
+    </button>
+
+    <ul class="navbar-nav ml-auto">
+        <!-- Notifications -->
+        <li class="nav-item dropdown me-2">
+            <a class="nav-link position-relative" href="#" id="notificationsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-bell"></i>
+                <span id="notifBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">
+                    0
+                </span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end p-0" aria-labelledby="notificationsDropdown" style="min-width: 320px;">
+                <div class="p-2 border-bottom d-flex justify-content-between align-items-center">
+                    <strong>Notifications</strong>
+                    <a class="small text-decoration-none" href="{% url 'students_app:notifications_feed' %}">View all</a>
+                </div>
+                <div id="notifList" class="list-group list-group-flush" style="max-height: 360px; overflow-y: auto;">
+                    <div class="p-3 text-muted small">Loading...</div>
+                </div>
+            </div>
+        </li>
+        <li class="nav-item dropdown no-arrow">
+            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <span class="mr-2 d-none d-lg-inline text-gray-600 small">
+                    नमस्ते, {{ request.user.get_full_name|default:request.user.username }}
+                </span>
+                <img class="img-profile rounded-circle" src="{% static 'img/profile.png' %}" style="width: 30px; height: 30px;">
+            </a>
+            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+                <a class="dropdown-item" href="{% url 'admin:logout' %}">
+                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                    लॉगआउट
+                </a>
+                </div>
+        </li>
+    </ul>
+</nav>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    fetch('{% url "students_app:notifications_json" %}', { credentials: 'same-origin' })
+        .then(r => r.json())
+        .then(data => {
+            const badge = document.getElementById('notifBadge');
+            const list = document.getElementById('notifList');
+            if (!badge || !list) return;
+            if (data.count > 0) {
+                badge.textContent = data.count;
+                badge.classList.remove('d-none');
+            } else {
+                badge.classList.add('d-none');
+            }
+            // Build list
+            if (!data.items || data.items.length === 0) {
+                list.innerHTML = '<div class="p-3 text-muted small">No notifications</div>';
+                return;
+            }
+            list.innerHTML = '';
+            data.items.forEach(n => {
+                const icon = n.icon || 'fa-info-circle';
+                const item = document.createElement('a');
+                item.className = 'list-group-item list-group-item-action d-flex gap-2 align-items-start';
+                item.innerHTML = `
+                    <div class="text-${n.type === 'alert' ? 'warning' : 'primary'} pt-1">
+                        <i class="fas ${icon}"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold">${n.title || 'Notification'}</div>
+                        <div class="small text-muted">${n.message || ''}</div>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        })
+        .catch(() => {
+            const list = document.getElementById('notifList');
+            if (list) list.innerHTML = '<div class="p-3 text-danger small">Failed to load notifications</div>';
+        });
+});
+</script>

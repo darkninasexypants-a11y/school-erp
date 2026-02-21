@@ -1,0 +1,129 @@
+<div class="row g-3">
+    <div class="col-md-6">
+        <label class="form-label small text-muted">First Name</label>
+        <input type="text" name="first_name[]" class="form-control" value="{{ item.first_name }}" required>
+    </div>
+    <div class="col-md-6">
+        <label class="form-label small text-muted">Last Name</label>
+        <input type="text" name="last_name[]" class="form-control" value="{{ item.last_name }}" required>
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label small text-muted">Admission Number</label>
+        <input type="text" name="admission_number[]" class="form-control" value="{{ item.admission_number }}" required>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label small text-muted">Roll Number</label>
+        <input type="text" name="roll_number[]" class="form-control" value="{{ item.roll_number }}">
+    </div>
+    <div class="col-md-4">
+        <label class="form-label small text-muted">Date of Birth</label>
+        <input type="date" name="dob[]" class="form-control" value="{{ item.date_of_birth }}" required>
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label small text-muted">Email</label>
+        <input type="email" name="email[]" class="form-control" value="{{ item.email }}">
+    </div>
+    <div class="col-md-3">
+        <label class="form-label small text-muted">Gender</label>
+        <select name="gender[]" class="form-select">
+            <option value="M" {% if item.gender=="M" %}selected{% endif %}>Male</option>
+            <option value="F" {% if item.gender=="F" %}selected{% endif %}>Female</option>
+            <option value="O" {% if item.gender=="O" %}selected{% endif %}>Other</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label small text-muted">Phone</label>
+        <input type="text" name="phone[]" class="form-control" value="{{ item.phone }}">
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label small text-muted">Father Name</label>
+        <input type="text" name="father_name[]" class="form-control" value="{{ item.father_name }}">
+    </div>
+    <div class="col-md-6">
+        <label class="form-label small text-muted">Father Phone</label>
+        <input type="text" name="father_phone[]" class="form-control" value="{{ item.father_phone }}">
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label small text-muted">Mother Name</label>
+        <input type="text" name="mother_name[]" class="form-control" value="{{ item.mother_name }}">
+    </div>
+    <div class="col-md-6">
+        <label class="form-label small text-muted">Mother Phone</label>
+        <input type="text" name="mother_phone[]" class="form-control" value="{{ item.mother_phone }}">
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label small text-muted">Assigned Class</label>
+        <select name="assigned_class[]" class="form-select">
+            <option value="">No Class Assigned</option>
+            {% for class in available_classes %}
+            <option value="{{ class.id }}" {% if item.current_class and item.current_class.id==class.id %}selected{%
+                endif %}>{{ class.name }} ({{ class.section_set.count }} sections)</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-6">
+        <label class="form-label small text-muted">Assigned Section</label>
+        <select name="assigned_section[]" class="form-select">
+            <option value="">No Section Assigned</option>
+            {% for section in available_sections %}
+            <option value="{{ section.id }}" {% if item.section and item.section.id==section.id %}selected{% endif %}>{{
+                section.name }} ({{ section.class_assigned.name }})</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label small text-muted">Academic Year</label>
+        <select name="academic_year[]" class="form-select">
+            {% for year in academic_years %}
+            <option value="{{ year.id }}" {% if item.academic_year and item.academic_year.id==year.id %}selected{% endif
+                %}>{{ year.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-6">
+        <label class="form-label small text-muted">Address</label>
+        <input type="text" name="address[]" class="form-control" value="{{ item.address }}">
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label small text-muted">Designation</label>
+        <select name="designation[]" class="form-select">
+            <option value="">Select Designation</option>
+            <option value="Student" {% if item.designation=="Student" %}selected{% endif %}>Student</option>
+            <option value="Class Monitor" {% if item.designation=="Class Monitor" %}selected{% endif %}>Class Monitor
+            </option>
+            <option value="House Captain" {% if item.designation=="House Captain" %}selected{% endif %}>House Captain
+            </option>
+            <option value="Prefect" {% if item.designation=="Prefect" %}selected{% endif %}>Prefect</option>
+            <option value="Sports Captain" {% if item.designation=="Sports Captain" %}selected{% endif %}>Sports Captain
+            </option>
+            <option value="Library Monitor" {% if item.designation=="Library Monitor" %}selected{% endif %}>Library
+                Monitor</option>
+            <option value="Other" {% if item.designation=="Other" %}selected{% endif %}>Other</option>
+        </select>
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label small text-muted">Aadhaar Card</label>
+        <input type="text" name="aadhaar_card[]" class="form-control" value="{{ item.aadhaar_card }}">
+    </div>
+    <div class="col-md-6">
+        <label class="form-label small text-muted">Samagra ID</label>
+        <input type="text" name="samagra_id[]" class="form-control" value="{{ item.samagra_id }}">
+    </div>
+
+    <div class="col-md-12">
+        <label class="form-label small text-muted">Student Photo (optional)</label>
+        <input type="file" name="student_photo_{{ forloop_counter0 }}" class="form-control" accept="image/*">
+        <small class="text-muted">If you upload here, it will be used for this student (overrides ZIP).</small>
+    </div>
+
+    <!-- Hidden fields for data processing -->
+    <input type="hidden" name="image_filename[]" value="{{ item.image_filename|default:'' }}">
+</div>

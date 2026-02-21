@@ -1,0 +1,138 @@
+{% extends "students/base_modern.html" %}
+{% load static %}
+
+{% block title %}Team Members{% endblock %}
+
+{% block sidebar %}
+{% include 'includes/super_admin_sidebar.html' %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .member-card {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+        margin-bottom: 20px;
+    }
+    .member-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .member-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 24px;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="mb-1">
+                <i class="fas fa-user-friends me-2 text-primary"></i>
+                Team Members
+            </h1>
+            <p class="text-muted mb-0">Manage your operational team</p>
+        </div>
+        <a href="{% url 'students_app:team_member_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus-circle me-2"></i>Add Team Member
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-6">
+                    <input type="text" name="search" class="form-control" placeholder="Search by name, phone, email..." value="{{ current_search }}">
+                </div>
+                <div class="col-md-4">
+                    <select name="status" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="active" {% if current_status == 'active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if current_status == 'inactive' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Team Members Grid -->
+    <div class="row">
+        {% for member in team_members %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card member-card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start mb-3">
+                            <div class="member-avatar me-3">
+                                {{ member.name.0|upper }}
+                            </div>
+                            <div class="flex-grow-1">
+                                <h5 class="mb-1">{{ member.name }}</h5>
+                                <p class="text-muted mb-0">{{ member.role }}</p>
+                                <span class="badge bg-{% if member.is_active %}success{% else %}secondary{% endif %} mt-1">
+                                    {% if member.is_active %}Active{% else %}Inactive{% endif %}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <i class="fas fa-phone text-primary me-2"></i>
+                            <small>{{ member.phone }}</small>
+                        </div>
+
+                        {% if member.email %}
+                            <div class="mb-2">
+                                <i class="fas fa-envelope text-primary me-2"></i>
+                                <small>{{ member.email }}</small>
+                            </div>
+                        {% endif %}
+
+                        <div class="mb-2">
+                            <i class="fas fa-calendar text-primary me-2"></i>
+                            <small>Joined: {{ member.joining_date|date:"d M, Y" }}</small>
+                        </div>
+
+                        <hr>
+
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <small class="text-muted">Work Entries</small>
+                                <div><strong>{{ member.work_count }}</strong></div>
+                            </div>
+                            <div>
+                                <small class="text-muted">Expenses Paid</small>
+                                <div><strong>₹{{ member.expenses_paid|floatformat:2 }}</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No team members found. <a href="{% url 'students_app:team_member_create' %}">Add your first team member</a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+

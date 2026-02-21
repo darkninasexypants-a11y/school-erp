@@ -1,0 +1,142 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Staff List{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-users-cog me-2 text-primary"></i>Staff List</h2>
+            <p class="text-muted mb-0">View all non-teaching staff members</p>
+            {% if total_count %}
+            <small class="text-muted">Total: {{ total_count }} staff member{{ total_count|pluralize }}</small>
+            {% endif %}
+        </div>
+        <div>
+            <a href="{% url 'students_app:staff_bulk_upload' %}" class="btn btn-success me-2">
+                <i class="fas fa-file-excel me-2"></i>Bulk Upload
+            </a>
+            <a href="{% url 'students_app:add_staff' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Add Staff
+            </a>
+        </div>
+    </div>
+
+    <!-- Search Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                {% if is_super_admin %}
+                <div class="col-md-3">
+                    <label class="form-label">Select School <span class="text-danger">*</span></label>
+                    <select name="school" class="form-select" onchange="this.form.submit()" required>
+                        <option value="">-- Select School --</option>
+                        {% for school in schools %}
+                        <option value="{{ school.id }}" {% if selected_school == school.id %}selected{% endif %}>{{ school.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                <div class="col-md-{% if is_super_admin %}7{% else %}10{% endif %}">
+                    <label class="form-label">Search</label>
+                    <input type="text" name="search" class="form-control"
+                        placeholder="Name, Employee ID, Phone, Email, Designation..."
+                        value="{{ request.GET.search|default:'' }}">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Staff Table -->
+    <div class="card">
+        <div class="card-body">
+            {% if is_super_admin and not selected_school %}
+            <div class="alert alert-warning text-center py-5">
+                <i class="fas fa-exclamation-triangle fa-3x mb-3 text-warning"></i>
+                <h5>Please Select a School</h5>
+                <p class="mb-0">Select a school from the dropdown above to view staff members.</p>
+            </div>
+            {% elif staff_members %}
+            <form method="post" action="{% url 'students_app:bulk_delete_staff' %}" onsubmit="return confirm('Delete selected staff members? This cannot be undone.');">
+                {% csrf_token %}
+                <div class="d-flex justify-content-end gap-2 mb-3">
+                    <button type="submit" class="btn btn-sm btn-danger">
+                        <i class="fas fa-trash me-1"></i> Delete Selected
+                    </button>
+                </div>
+                <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="40">
+                                <input type="checkbox" class="form-check-input" id="selectAllStaff" onclick="document.querySelectorAll('input[name=staff_ids]').forEach(cb => cb.checked = this.checked);">
+                            </th>
+                            <th>Employee ID</th>
+                            <th>Name</th>
+                            <th>Designation</th>
+                            <th>Department</th>
+                            <th>Category</th>
+                            <th>Phone</th>
+                            <th>Email</th>
+                            {% if request.user.is_superuser %}
+                            <th>School</th>
+                            {% endif %}
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for staff in staff_members %}
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="form-check-input" name="staff_ids" value="{{ staff.id }}">
+                            </td>
+                            <td><strong>{{ staff.employee_id }}</strong></td>
+                            <td>
+                                {% if staff.photo %}
+                                <img src="{{ staff.photo.url }}" alt="{{ staff.get_full_name }}"
+                                    class="rounded-circle me-2" width="32" height="32">
+                                {% else %}
+                                <div class="bg-secondary rounded-circle d-inline-flex align-items-center justify-content-center me-2"
+                                    style="width: 32px; height: 32px;">
+                                    <i class="fas fa-user text-white small"></i>
+                                </div>
+                                {% endif %}
+                                {{ staff.get_full_name }}
+                            </td>
+                            <td>{{ staff.designation }}</td>
+                            <td>{{ staff.department }}</td>
+                            <td><span class="badge bg-info">{{ staff.category.name }}</span></td>
+                            <td>{{ staff.phone }}</td>
+                            <td>{{ staff.user.email|default:"N/A" }}</td>
+                            {% if request.user.is_superuser %}
+                            <td>{{ staff.school.name|default:"N/A" }}</td>
+                            {% endif %}
+                            <td>
+                                <a href="{% url 'students_app:delete_staff' staff.id %}" class="btn btn-sm btn-outline-danger" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+            </form>
+            {% else %}
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle fa-2x mb-2"></i>
+                <p class="mb-0">No staff members found.</p>
+                <a href="{% url 'students_app:add_staff' %}" class="btn btn-primary mt-2">
+                    <i class="fas fa-plus me-2"></i>Add First Staff Member
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,208 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Timetable{% endblock %}
+
+{% block sidebar %}
+{% include 'includes/admin_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="top-bar">
+    <div class="page-title">
+        <h1><i class="bi bi-calendar3 me-2"></i>Timetable</h1>
+        <p>View class schedules and periods</p>
+    </div>
+    <!-- Timetable is view-only for students and parents -->
+    <!-- Admin/Teacher management is available through separate management page -->
+</div>
+
+    <!-- Section Selector -->
+    <div class="card mb-4">
+        <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label fw-semibold">
+                    <i class="bi bi-building me-1"></i>Select Class & Section
+                </label>
+                    <select name="section" class="form-select form-select-lg" onchange="this.form.submit()">
+                        <option value="">Choose Section...</option>
+                        {% for sec in sections %}
+                        <option value="{{ sec.id }}" {% if section and section.id == sec.id %}selected{% endif %}>
+                            {{ sec.class_assigned.name|default:"" }} - Section {{ sec.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            {% if current_year %}
+            <div class="col-md-4">
+                <div class="p-3 rounded" style="background: #dbeafe;">
+                    <small class="text-muted d-block">Academic Year</small>
+                    <strong class="text-primary">{{ current_year.year }}</strong>
+                </div>
+            </div>
+            {% endif %}
+            </form>
+        </div>
+    </div>
+
+    {% if not current_year %}
+<div class="alert alert-warning d-flex align-items-center" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+    <div>
+        <strong>Warning:</strong> No active academic year is set. Please set an academic year as current to view timetables.
+    </div>
+    </div>
+    {% endif %}
+
+    {% if timetable %}
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+            <i class="bi bi-table me-2"></i>
+                {% if section %}
+            {{ section.class_assigned.name|default:"" }} - Section {{ section.name }}
+                {% else %}
+            Weekly Schedule
+                {% endif %}
+            </h5>
+        {% if has_timetable %}
+        <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Active</span>
+            {% endif %}
+        </div>
+    <div class="card-body p-0">
+            <div class="table-responsive">
+            <table class="table table-bordered mb-0" style="min-width: 900px;">
+                <thead>
+                    <tr style="background: linear-gradient(135deg, #4f46e5, #6366f1); color: white;">
+                        <th class="text-center py-3" style="width: 120px;">
+                            <i class="bi bi-clock me-1"></i>Time
+                        </th>
+                        <th class="text-center py-3">
+                            <i class="bi bi-calendar-day me-1"></i>Monday
+                        </th>
+                        <th class="text-center py-3">
+                            <i class="bi bi-calendar-day me-1"></i>Tuesday
+                        </th>
+                        <th class="text-center py-3">
+                            <i class="bi bi-calendar-day me-1"></i>Wednesday
+                        </th>
+                        <th class="text-center py-3">
+                            <i class="bi bi-calendar-day me-1"></i>Thursday
+                        </th>
+                        <th class="text-center py-3">
+                            <i class="bi bi-calendar-day me-1"></i>Friday
+                        </th>
+                        <th class="text-center py-3">
+                            <i class="bi bi-calendar-day me-1"></i>Saturday
+                        </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for slot in timetable %}
+                        <tr>
+                        <td class="text-center fw-semibold" style="background: #f8fafc; vertical-align: middle;">
+                            <div class="small text-primary">{{ slot.start_time|time:"g:i A" }}</div>
+                            <div class="small text-muted">to</div>
+                            <div class="small text-primary">{{ slot.end_time|time:"g:i A" }}</div>
+                        </td>
+                        <td class="text-center p-2" style="vertical-align: middle;">
+                            {% if slot.monday_subject %}
+                            <div class="p-2 rounded" style="background: #dbeafe; color: #1e40af;">
+                                <div class="fw-semibold small">{{ slot.monday_subject }}</div>
+                            </div>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center p-2" style="vertical-align: middle;">
+                            {% if slot.tuesday_subject %}
+                            <div class="p-2 rounded" style="background: #dcfce7; color: #166534;">
+                                <div class="fw-semibold small">{{ slot.tuesday_subject }}</div>
+                            </div>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center p-2" style="vertical-align: middle;">
+                            {% if slot.wednesday_subject %}
+                            <div class="p-2 rounded" style="background: #fef3c7; color: #92400e;">
+                                <div class="fw-semibold small">{{ slot.wednesday_subject }}</div>
+                            </div>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center p-2" style="vertical-align: middle;">
+                            {% if slot.thursday_subject %}
+                            <div class="p-2 rounded" style="background: #ede9fe; color: #5b21b6;">
+                                <div class="fw-semibold small">{{ slot.thursday_subject }}</div>
+                            </div>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center p-2" style="vertical-align: middle;">
+                            {% if slot.friday_subject %}
+                            <div class="p-2 rounded" style="background: #fee2e2; color: #991b1b;">
+                                <div class="fw-semibold small">{{ slot.friday_subject }}</div>
+                            </div>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center p-2" style="vertical-align: middle;">
+                            {% if slot.saturday_subject %}
+                            <div class="p-2 rounded" style="background: #e0f2fe; color: #075985;">
+                                <div class="fw-semibold small">{{ slot.saturday_subject }}</div>
+                            </div>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+<!-- Legend -->
+<div class="card mt-4">
+    <div class="card-body">
+        <h6 class="mb-3"><i class="bi bi-info-circle me-2"></i>Legend</h6>
+        <div class="d-flex flex-wrap gap-3">
+            <span class="badge" style="background: #dbeafe; color: #1e40af; padding: 8px 12px;">Monday</span>
+            <span class="badge" style="background: #dcfce7; color: #166534; padding: 8px 12px;">Tuesday</span>
+            <span class="badge" style="background: #fef3c7; color: #92400e; padding: 8px 12px;">Wednesday</span>
+            <span class="badge" style="background: #ede9fe; color: #5b21b6; padding: 8px 12px;">Thursday</span>
+            <span class="badge" style="background: #fee2e2; color: #991b1b; padding: 8px 12px;">Friday</span>
+            <span class="badge" style="background: #e0f2fe; color: #075985; padding: 8px 12px;">Saturday</span>
+        </div>
+    </div>
+</div>
+
+    {% else %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <div class="mb-4">
+            <i class="bi bi-calendar-x text-muted" style="font-size: 4rem;"></i>
+        </div>
+        {% if section %}
+        <h5>No timetable found for this section</h5>
+        <p class="text-muted">
+            {% if current_year %}
+            No schedule has been created for academic year {{ current_year.year }}.
+            {% else %}
+            Please set an academic year first.
+            {% endif %}
+        </p>
+        <!-- Timetable is view-only for students and parents -->
+        {% else %}
+        <h5>Select a Section</h5>
+        <p class="text-muted">Please select a class and section from the dropdown above to view the timetable.</p>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

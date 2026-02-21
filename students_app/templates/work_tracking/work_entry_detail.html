@@ -1,0 +1,311 @@
+{% extends "students/base_modern.html" %}
+{% load static %}
+
+{% block title %}{{ work_entry.title }} - Work Details{% endblock %}
+
+{% block sidebar %}
+{% include 'includes/super_admin_sidebar.html' %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-card {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    .detail-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 25px;
+        border-radius: 12px 12px 0 0;
+    }
+    .info-row {
+        padding: 15px 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    .info-label {
+        font-weight: 600;
+        color: #6c757d;
+        margin-bottom: 5px;
+    }
+    .info-value {
+        color: #212529;
+    }
+    .expense-card {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 15px;
+    }
+    .expense-item {
+        background: white;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .team-badge {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+        padding: 8px 15px;
+        border-radius: 20px;
+        display: inline-block;
+        margin: 5px;
+        font-weight: 600;
+    }
+    .status-badge-large {
+        padding: 10px 20px;
+        border-radius: 25px;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="mb-1">
+                <i class="fas fa-briefcase me-2 text-primary"></i>
+                {{ work_entry.title }}
+            </h1>
+            <p class="text-muted mb-0">Work Entry Details</p>
+        </div>
+        <div>
+            <a href="{% url 'students_app:work_edit' work_entry.id %}" class="btn btn-primary me-2">
+                <i class="fas fa-edit me-2"></i>Edit
+            </a>
+            <a href="{% url 'students_app:work_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Work Details -->
+        <div class="col-lg-8">
+            <div class="card detail-card">
+                <div class="detail-header">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h3 class="mb-2">{{ work_entry.title }}</h3>
+                            <p class="mb-0 opacity-75">
+                                <i class="fas fa-school me-2"></i>{{ work_entry.school.name }}
+                            </p>
+                        </div>
+                        <span class="status-badge-large bg-{% if work_entry.status == 'completed' %}success{% elif work_entry.status == 'in_progress' %}primary{% elif work_entry.status == 'pending' %}warning{% else %}secondary{% endif %}">
+                            {{ work_entry.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <div class="info-row">
+                        <div class="info-label">Work Type</div>
+                        <div class="info-value">
+                            <i class="fas fa-briefcase me-2 text-primary"></i>
+                            {{ work_entry.get_work_type_display }}
+                        </div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label">Description</div>
+                        <div class="info-value">{{ work_entry.description }}</div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-row">
+                                <div class="info-label">Work Date</div>
+                                <div class="info-value">
+                                    <i class="fas fa-calendar me-2 text-success"></i>
+                                    {{ work_entry.work_date|date:"d M, Y" }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if work_entry.location %}
+                            <div class="col-md-6">
+                                <div class="info-row">
+                                    <div class="info-label">Location</div>
+                                    <div class="info-value">
+                                        <i class="fas fa-map-marker-alt me-2 text-danger"></i>
+                                        {{ work_entry.location }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if work_entry.hours_spent %}
+                        <div class="info-row">
+                            <div class="info-label">Hours Spent</div>
+                            <div class="info-value">
+                                <i class="fas fa-clock me-2 text-warning"></i>
+                                {{ work_entry.hours_spent }} hours
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="info-row">
+                        <div class="info-label">Team Members</div>
+                        <div class="info-value">
+                            {% for member in work_entry.team_members.all %}
+                                <span class="team-badge">
+                                    <i class="fas fa-user me-1"></i>{{ member.name }}
+                                </span>
+                            {% empty %}
+                                <span class="text-muted">No team members assigned</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    {% if work_entry.notes %}
+                        <div class="info-row">
+                            <div class="info-label">Additional Notes</div>
+                            <div class="info-value">{{ work_entry.notes }}</div>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="info-row">
+                        <div class="info-label">Created By</div>
+                        <div class="info-value">
+                            {{ work_entry.created_by.get_full_name|default:work_entry.created_by.username }}
+                            <small class="text-muted">on {{ work_entry.created_at|date:"d M, Y" }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expenses Summary -->
+        <div class="col-lg-4">
+            <div class="expense-card">
+                <h4 class="mb-3">
+                    <i class="fas fa-rupee-sign me-2"></i>
+                    Expense Summary
+                </h4>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Total Expenses:</span>
+                    <strong>₹{{ total_expenses|floatformat:2 }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Company Paid:</span>
+                    <strong>₹{{ company_paid|floatformat:2 }}</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>Team Paid:</span>
+                    <strong>₹{{ team_paid|floatformat:2 }}</strong>
+                </div>
+            </div>
+
+            <!-- Add Expense Button -->
+            <a href="{% url 'students_app:expense_create' work_entry.id %}" class="btn btn-success w-100 mb-3">
+                <i class="fas fa-plus-circle me-2"></i>Add Expense
+            </a>
+
+            <!-- Expenses by Category -->
+            {% if expenses_by_category %}
+                <div class="card detail-card">
+                    <div class="card-body">
+                        <h6 class="mb-3">Expenses by Category</h6>
+                        {% for item in expenses_by_category %}
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>{{ item.category|title }}:</span>
+                                <strong>₹{{ item.total|floatformat:2 }}</strong>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Expenses List -->
+    {% if work_entry.expenses.all %}
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card detail-card">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-receipt me-2 text-primary"></i>
+                            Expense Details
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Category</th>
+                                        <th>Description</th>
+                                        <th>Amount</th>
+                                        <th>Paid By</th>
+                                        <th>Team Member</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for expense in work_entry.expenses.all %}
+                                        <tr>
+                                            <td>{{ expense.expense_date|date:"d M, Y" }}</td>
+                                            <td>
+                                                <span class="badge bg-info">{{ expense.category|title }}</span>
+                                            </td>
+                                            <td>{{ expense.description }}</td>
+                                            <td><strong>₹{{ expense.amount|floatformat:2 }}</strong></td>
+                                            <td>
+                                                <span class="badge bg-{% if expense.paid_by == 'company' %}success{% else %}warning{% endif %}">
+                                                    {{ expense.get_paid_by_display }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {% if expense.team_member %}
+                                                    {{ expense.team_member.name }}
+                                                {% else %}
+                                                    <span class="text-muted">N/A</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'students_app:expense_edit' expense.id %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                                   onclick="deleteExpense('{{ expense.id }}', '{{ expense.description|escapejs }}')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/universal_delete.js' %}"></script>
+<script>
+    function deleteExpense(id, description) {
+        universalDelete(
+            '{% url "students_app:expense_delete" 0 %}'.replace('0', id),
+            id,
+            description,
+            'expense'
+        );
+    }
+</script>
+

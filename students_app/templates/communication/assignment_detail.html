@@ -1,0 +1,100 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Assignment Detail{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-tasks me-2"></i>{{ assignment.title }}</h4>
+                    <a href="{% url 'students_app:assignment_list' %}" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p><strong>Subject:</strong> {{ assignment.subject.name }}</p>
+                            <p><strong>Class:</strong> {{ assignment.target_class.name }}{% if assignment.target_section %} - {{ assignment.target_section.name }}{% endif %}</p>
+                            <p><strong>Teacher:</strong> {{ assignment.teacher.user.get_full_name }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Due Date:</strong> {{ assignment.due_date|date:"F d, Y H:i" }}</p>
+                            <p><strong>Max Marks:</strong> {{ assignment.max_marks }}</p>
+                            <p><strong>Submission Type:</strong> {{ assignment.get_submission_type_display }}</p>
+                            <p><strong>Status:</strong> 
+                                <span class="badge bg-{% if assignment.status == 'published' %}success{% elif assignment.status == 'closed' %}secondary{% else %}warning{% endif %}">
+                                    {{ assignment.get_status_display }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="mb-3">
+                        <h5>Description</h5>
+                        <p>{{ assignment.decrypted_description|linebreaks }}</p>
+                    </div>
+                    
+                    {% if assignment.decrypted_instructions %}
+                    <div class="mb-3">
+                        <h5>Instructions</h5>
+                        <p>{{ assignment.decrypted_instructions|linebreaks }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if assignment.attachment %}
+                        <div class="mb-3">
+                            <strong>Attachment:</strong><br>
+                            <a href="{{ assignment.attachment.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                <i class="fas fa-download me-1"></i>Download Attachment
+                            </a>
+                        </div>
+                    {% endif %}
+                    
+                    {% if user_role == 'student' %}
+                        <hr>
+                        <h5>Your Submission</h5>
+                        {% if submission %}
+                            <div class="alert alert-info">
+                                <p><strong>Status:</strong> {{ submission.get_status_display }}</p>
+                                {% if submission.digital_submitted_at %}
+                                    <p><strong>Digital Submission:</strong> {{ submission.digital_submitted_at|date:"F d, Y H:i" }}</p>
+                                    {% if submission.decrypted_digital_text %}
+                                        <p><strong>Text:</strong> {{ submission.decrypted_digital_text|linebreaks }}</p>
+                                    {% endif %}
+                                    {% if submission.digital_file %}
+                                        <p><a href="{{ submission.digital_file.url }}" target="_blank">Download File</a></p>
+                                    {% endif %}
+                                {% endif %}
+                                {% if submission.physical_submitted %}
+                                    <p><strong>Physical Submission:</strong> {{ submission.physical_submitted_at|date:"F d, Y H:i" }}</p>
+                                    {% if submission.decrypted_physical_remarks %}
+                                        <p><strong>Remarks:</strong> {{ submission.decrypted_physical_remarks }}</p>
+                                    {% endif %}
+                                {% endif %}
+                                {% if submission.marks_obtained %}
+                                    <p><strong>Marks Obtained:</strong> {{ submission.marks_obtained }}/{{ assignment.max_marks }}</p>
+                                {% endif %}
+                                {% if submission.decrypted_feedback %}
+                                    <p><strong>Feedback:</strong> {{ submission.decrypted_feedback|linebreaks }}</p>
+                                {% endif %}
+                            </div>
+                            <a href="{% url 'students_app:assignment_submit' assignment.id %}" class="btn btn-primary">
+                                <i class="fas fa-edit me-1"></i>Update Submission
+                            </a>
+                        {% else %}
+                            <a href="{% url 'students_app:assignment_submit' assignment.id %}" class="btn btn-success">
+                                <i class="fas fa-upload me-1"></i>Submit Assignment
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

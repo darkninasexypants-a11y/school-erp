@@ -1,0 +1,128 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Change Student Photo{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="top-bar">
+    <div class="page-title">
+        <h1><i class="bi bi-camera me-2"></i>Change Student Photo</h1>
+        <p>Update profile picture for {{ student.get_full_name }}</p>
+    </div>
+    <div class="top-bar-actions">
+        <a href="{% url 'students_app:student_detail' admission_number=student.admission_number %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Student
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-image me-2"></i>Upload New Photo</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- Current Photo Preview -->
+                    <div class="text-center mb-4">
+                        <h6 class="mb-3">Current Photo</h6>
+                        {% if student.photo %}
+                            <img src="{{ student.photo.url }}" alt="{{ student.get_full_name }}" 
+                                 class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #6366f1;">
+                        {% else %}
+                            <div class="rounded-circle mb-3 d-inline-flex align-items-center justify-content-center" 
+                                 style="width: 150px; height: 150px; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; font-size: 3rem; font-weight: 700;">
+                                {{ student.first_name.0|default:"S" }}{{ student.last_name.0|default:"" }}
+                            </div>
+                        {% endif %}
+                        <p class="text-muted small">{{ student.get_full_name }}</p>
+                        <p class="text-muted small">Admission No: {{ student.admission_number }}</p>
+                    </div>
+                    
+                    <!-- Photo Upload -->
+                    <div class="mb-4">
+                        <label for="photo" class="form-label fw-semibold">
+                            <i class="bi bi-upload me-1"></i>Select New Photo
+                        </label>
+                        <input type="file" name="photo" id="photo" class="form-control" accept="image/*" required>
+                        <small class="text-muted">Supported formats: JPG, PNG, GIF. Max size: 5MB</small>
+                    </div>
+                    
+                    <!-- Preview New Photo -->
+                    <div class="mb-4" id="previewContainer" style="display: none;">
+                        <h6 class="mb-3">Preview</h6>
+                        <div class="text-center">
+                            <img id="previewImage" src="" alt="Preview" 
+                                 class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #6366f1;">
+                        </div>
+                    </div>
+                    
+                    <!-- Submit Buttons -->
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-2"></i>Update Photo
+                        </button>
+                        <a href="{% url 'students_app:student_detail' admission_number=student.admission_number %}" class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Help Card -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Photo Guidelines</h6>
+            </div>
+            <div class="card-body">
+                <ul class="small mb-0 ps-3">
+                    <li class="mb-2">Use a clear, professional photo</li>
+                    <li class="mb-2">Face should be clearly visible</li>
+                    <li class="mb-2">Recommended size: Square (1:1 ratio)</li>
+                    <li class="mb-2">File size should be less than 5MB</li>
+                    <li>Supported formats: JPG, PNG, GIF</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Student Info Card -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-person me-2"></i>Student Information</h6>
+            </div>
+            <div class="card-body">
+                <p class="mb-2"><strong>Name:</strong> {{ student.get_full_name }}</p>
+                <p class="mb-2"><strong>Admission No:</strong> {{ student.admission_number }}</p>
+                <p class="mb-2"><strong>Class:</strong> {{ student.current_class|default:"N/A" }}</p>
+                <p class="mb-0"><strong>Section:</strong> {{ student.section|default:"N/A" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+// Preview image before upload
+document.getElementById('photo').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('previewImage').src = e.target.result;
+            document.getElementById('previewContainer').style.display = 'block';
+        }
+        reader.readAsDataURL(file);
+    } else {
+        document.getElementById('previewContainer').style.display = 'none';
+    }
+});
+</script>
+{% endblock %}
+
+{% endblock %}
+

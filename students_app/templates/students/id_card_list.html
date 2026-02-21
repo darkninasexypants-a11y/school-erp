@@ -1,0 +1,320 @@
+{% extends "students/base_modern.html" %}
+{% block title %}ID Cards{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-id-card me-2"></i>Generated ID Cards</h2>
+        <div>
+            <button type="button" class="btn btn-sm btn-outline-info me-2" onclick="toggleView()" id="toggleViewBtn">
+                <i class="fas fa-layer-group"></i> <span id="viewModeText">Group by Class</span>
+            </button>
+            <a href="{% url 'students_app:generate_bulk_id_cards' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Generate ID Cards
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                {% if is_super_admin %}
+                <div class="col-md-3">
+                    <label for="school" class="form-label">School</label>
+                    <select name="school" id="school" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Schools</option>
+                        {% for school in schools %}
+                        <option value="{{ school.id }}" {% if selected_school == school.id|stringformat:'s' %}selected{% endif %}>{{ school.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                
+                <div class="col-md-3">
+                    <label for="class" class="form-label">Class</label>
+                    <select name="class" id="class" class="form-select" 
+                        {% if is_super_admin and not selected_school %}disabled{% endif %}
+                        onchange="this.form.submit()">
+                        <option value="">All Classes</option>
+                        {% for cls in classes %}
+                        <option value="{{ cls.id }}" {% if selected_class == cls.id|stringformat:'s' %}selected{% endif %}>{{ cls.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <label for="search" class="form-label">Search Students</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control" id="search" name="search" 
+                               placeholder="Search by name..." value="{{ search_query }}">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter me-1"></i> Filter
+                    </button>
+                </div>
+                
+                {% if selected_class and id_cards %}
+                <div class="col-md-2">
+                    <a href="{% url 'students_app:bulk_download_id_cards' %}?class={{ selected_class }}{% if selected_school %}&school={{ selected_school }}{% endif %}" 
+                       class="btn btn-success w-100">
+                        <i class="fas fa-download me-1"></i> Download All
+                    </a>
+                </div>
+                {% endif %}
+                
+                {% if search_query or selected_school or selected_class %}
+                <div class="col-12">
+                    <a href="{% url 'students_app:id_card_list' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-times me-1"></i> Clear All Filters
+                    </a>
+                    {% if search_query %}
+                    <span class="text-muted ms-2">
+                        <i class="fas fa-info-circle"></i> 
+                        Search: <strong>"{{ search_query }}"</strong>
+                    </span>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            {% if id_cards %}
+            <form method="post" id="bulkDeleteForm" action="{% url 'students_app:bulk_delete_id_cards' %}">
+                {% csrf_token %}
+                <div class="mb-3 d-flex justify-content-between align-items-center">
+                    <div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectAll()">
+                            <i class="fas fa-check-square"></i> Select All
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll()">
+                            <i class="fas fa-square"></i> Deselect All
+                        </button>
+                        <span class="ms-2 text-muted" id="selectedCount">0 selected</span>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="confirmBulkDelete()" id="bulkDeleteBtn" disabled>
+                        <i class="fas fa-trash"></i> Delete Selected
+                    </button>
+                </div>
+            
+            <!-- Flat View (Default) -->
+            <div id="flatView">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th width="40">
+                                    <input type="checkbox" id="selectAllCheckbox" onchange="toggleAll(this)">
+                                </th>
+                                <th>Student</th>
+                                <th>Admission No</th>
+                                <th>Class</th>
+                                <th>Generated Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for card in id_cards %}
+                            <tr>
+                                <td>
+                                    <input type="checkbox" name="card_ids" value="{{ card.id }}" class="card-checkbox" onchange="updateSelectedCount()">
+                                </td>
+                                <td>{{ card.student.get_full_name }}</td>
+                                <td>{{ card.student.admission_number }}</td>
+                                <td>{{ card.student.current_class.name }}</td>
+                                <td>
+                                    {% if card.generated_at %}
+                                        {{ card.generated_at|date:"d M Y" }}
+                                    {% elif card.issue_date %}
+                                        {{ card.issue_date|date:"d M Y" }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'students_app:id_card_detail' card.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    <a href="{% url 'students_app:download_id_card' card.id %}" class="btn btn-sm btn-outline-success">
+                                        <i class="fas fa-download"></i> Download
+                                    </a>
+                                    <a href="{% url 'students_app:delete_id_card' card.id %}" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Grouped by Class View -->
+            <div id="groupedView" style="display: none;">
+                {% if id_cards_by_class %}
+                    {% for class_name, cards in id_cards_by_class.items %}
+                    <div class="mb-4">
+                        <div class="card border-primary">
+                            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-users me-2"></i>{{ class_name }}
+                                    <span class="badge bg-light text-dark ms-2">{{ cards|length }} ID Card{{ cards|length|pluralize }}</span>
+                                </h5>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th width="40">
+                                                    <input type="checkbox" class="class-select-all" data-class="{{ class_name }}" onchange="toggleClassAll(this, '{{ class_name }}')">
+                                                </th>
+                                                <th>Student</th>
+                                                <th>Admission No</th>
+                                                <th>Section</th>
+                                                <th>Generated Date</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for card in cards %}
+                                            <tr>
+                                                <td>
+                                                    <input type="checkbox" name="card_ids" value="{{ card.id }}" class="card-checkbox class-{{ class_name }}" onchange="updateSelectedCount()">
+                                                </td>
+                                                <td>{{ card.student.get_full_name }}</td>
+                                                <td>{{ card.student.admission_number }}</td>
+                                                <td>{{ card.student.section.name|default:"-" }}</td>
+                                                <td>
+                                                    {% if card.generated_at %}
+                                                        {{ card.generated_at|date:"d M Y" }}
+                                                    {% elif card.issue_date %}
+                                                        {{ card.issue_date|date:"d M Y" }}
+                                                    {% else %}
+                                                        <span class="text-muted">-</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <a href="{% url 'students_app:id_card_detail' card.id %}" class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-eye"></i> View
+                                                    </a>
+                                                    <a href="{% url 'students_app:download_id_card' card.id %}" class="btn btn-sm btn-outline-success">
+                                                        <i class="fas fa-download"></i> Download
+                                                    </a>
+                                                    <a href="{% url 'students_app:delete_id_card' card.id %}" class="btn btn-sm btn-outline-danger">
+                                                        <i class="fas fa-trash"></i> Delete
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            </form>
+            {% else %}
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle fa-2x mb-2"></i>
+                <p class="mb-0">
+                    {% if search_query %}
+                        No ID cards found matching "{{ search_query }}".
+                    {% else %}
+                        No ID cards generated yet.
+                    {% endif %}
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleAll(checkbox) {
+    const checkboxes = document.querySelectorAll('.card-checkbox');
+    checkboxes.forEach(cb => cb.checked = checkbox.checked);
+    updateSelectedCount();
+}
+
+function selectAll() {
+    const checkboxes = document.querySelectorAll('.card-checkbox');
+    checkboxes.forEach(cb => cb.checked = true);
+    document.getElementById('selectAllCheckbox').checked = true;
+    updateSelectedCount();
+}
+
+function deselectAll() {
+    const checkboxes = document.querySelectorAll('.card-checkbox');
+    checkboxes.forEach(cb => cb.checked = false);
+    document.getElementById('selectAllCheckbox').checked = false;
+    updateSelectedCount();
+}
+
+function updateSelectedCount() {
+    const checked = document.querySelectorAll('.card-checkbox:checked');
+    const count = checked.length;
+    document.getElementById('selectedCount').textContent = count + ' selected';
+    document.getElementById('bulkDeleteBtn').disabled = count === 0;
+}
+
+function confirmBulkDelete() {
+    const checked = document.querySelectorAll('.card-checkbox:checked');
+    if (checked.length === 0) {
+        alert('Please select at least one ID card to delete.');
+        return;
+    }
+    
+    if (confirm(`Are you sure you want to delete ${checked.length} ID card(s)? This action cannot be undone.`)) {
+        document.getElementById('bulkDeleteForm').submit();
+    }
+}
+
+// Update count on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateSelectedCount();
+});
+
+// Toggle between flat and grouped view
+let isGroupedView = false;
+function toggleView() {
+    isGroupedView = !isGroupedView;
+    const flatView = document.getElementById('flatView');
+    const groupedView = document.getElementById('groupedView');
+    const viewModeText = document.getElementById('viewModeText');
+    
+    if (isGroupedView) {
+        flatView.style.display = 'none';
+        groupedView.style.display = 'block';
+        viewModeText.textContent = 'Flat View';
+    } else {
+        flatView.style.display = 'block';
+        groupedView.style.display = 'none';
+        viewModeText.textContent = 'Group by Class';
+    }
+}
+
+// Toggle all checkboxes for a specific class
+function toggleClassAll(checkbox, className) {
+    const classCheckboxes = document.querySelectorAll(`.class-${className}`);
+    classCheckboxes.forEach(cb => cb.checked = checkbox.checked);
+    updateSelectedCount();
+    
+    // Update main select all checkbox
+    const allCheckboxes = document.querySelectorAll('.card-checkbox');
+    const allChecked = document.querySelectorAll('.card-checkbox:checked');
+    document.getElementById('selectAllCheckbox').checked = allCheckboxes.length === allChecked.length;
+}
+</script>
+{% endblock %}
+
+

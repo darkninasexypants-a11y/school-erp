@@ -1,0 +1,509 @@
+{% extends "students/base_modern.html" %}
+{% load static %}
+
+{% block title %}School Setup Wizard{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-school me-2 text-primary"></i>School Setup Wizard</h2>
+            <p class="text-muted">Configure your school structure before importing data</p>
+        </div>
+        <div>
+            <a href="{% url 'students_app:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">Setup Progress</h5>
+                <span class="badge bg-primary">{{ current_step }}/4</span>
+            </div>
+            <div class="progress" style="height: 8px;">
+                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ current_step|mul:25 }}%" aria-valuenow="{{ current_step|mul:25 }}" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            <div class="d-flex justify-content-between mt-2">
+                <small class="text-muted">Basic Info</small>
+                <small class="text-muted">Classes & Sections</small>
+                <small class="text-muted">Academic Years</small>
+                <small class="text-muted">Designations</small>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" id="setupWizardForm">
+        {% csrf_token %}
+        <input type="hidden" name="step" value="{{ current_step }}">
+
+        <!-- Step 1: Basic School Information -->
+        {% if current_step == 1 %}
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Step 1: Basic School Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label"><strong>School Name <span class="text-danger">*</span></strong></label>
+                        <input type="text" name="school_name" class="form-control" value="{{ form_data.school_name|default:'' }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label"><strong>School Code <span class="text-danger">*</span></strong></label>
+                        <input type="text" name="school_code" class="form-control" value="{{ form_data.school_code|default:'' }}" required>
+                        <small class="text-muted">Unique identifier for your school</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label"><strong>Address</label>
+                        <input type="text" name="school_address" class="form-control" value="{{ form_data.school_address|default:'' }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label"><strong>Phone Number</label>
+                        <input type="text" name="school_phone" class="form-control" value="{{ form_data.school_phone|default:'' }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label"><strong>Email</label>
+                        <input type="email" name="school_email" class="form-control" value="{{ form_data.school_email|default:'' }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label"><strong>Website</label>
+                        <input type="url" name="school_website" class="form-control" value="{{ form_data.school_website|default:'' }}">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label"><strong>School Type</strong></label>
+                        <select name="school_type" class="form-select">
+                            <option value="">Select School Type</option>
+                            <option value="primary" {% if form_data.school_type == 'primary' %}selected{% endif %}>Primary School</option>
+                            <option value="secondary" {% if form_data.school_type == 'secondary' %}selected{% endif %}>Secondary School</option>
+                            <option value="higher_secondary" {% if form_data.school_type == 'higher_secondary' %}selected{% endif %}>Higher Secondary School</option>
+                            <option value="senior_secondary" {% if form_data.school_type == 'senior_secondary' %}selected{% endif %}>Senior Secondary School</option>
+                            <option value="cbse" {% if form_data.school_type == 'cbse' %}selected{% endif %}>CBSE School</option>
+                            <option value="icse" {% if form_data.school_type == 'icse' %}selected{% endif %}>ICSE School</option>
+                            <option value="state_board" {% if form_data.school_type == 'state_board' %}selected{% endif %}>State Board School</option>
+                            <option value="international" {% if form_data.school_type == 'international' %}selected{% endif %}>International School</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <button type="submit" class="btn btn-primary">
+                    Next Step <i class="fas fa-arrow-right ms-2"></i>
+                </button>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Step 2: Classes and Sections -->
+        {% if current_step == 2 %}
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-chalkboard me-2"></i>Step 2: Classes and Sections Setup</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Define how many classes and sections your school has. This will be used for smart assignment during bulk imports.
+                </div>
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label"><strong>Total Classes <span class="text-danger">*</span></strong></label>
+                        <input type="number" name="total_classes" class="form-control" value="{{ form_data.total_classes|default:10 }}" min="1" max="20" required>
+                        <small class="text-muted">Number of classes (e.g., 1-12)</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label"><strong>Sections per Class <span class="text-danger">*</span></strong></label>
+                        <input type="number" name="sections_per_class" class="form-control" value="{{ form_data.sections_per_class|default:3 }}" min="1" max="10" required>
+                        <small class="text-muted">Sections like A, B, C per class</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label"><strong>Class Naming Pattern</strong></label>
+                        <select name="class_naming" class="form-select">
+                            <option value="numeric" {% if form_data.class_naming == 'numeric' %}selected{% endif %}>Numeric (1, 2, 3...)</option>
+                            <option value="grade" {% if form_data.class_naming == 'grade' %}selected{% endif %}>Grade (Grade 1, Grade 2...)</option>
+                            <option value="standard" {% if form_data.class_naming == 'standard' %}selected{% endif %}>Standard (Std 1, Std 2...)</option>
+                            <option value="class" {% if form_data.class_naming == 'class' %}selected{% endif %}>Class (Class 1, Class 2...)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label"><strong>Section Naming Pattern</strong></label>
+                        <select name="section_naming" class="form-select">
+                            <option value="alphabetical" {% if form_data.section_naming == 'alphabetical' %}selected{% endif %}>Alphabetical (A, B, C...)</option>
+                            <option value="numeric" {% if form_data.section_naming == 'numeric' %}selected{% endif %}>Numeric (1, 2, 3...)</option>
+                            <option value="flower" {% if form_data.section_naming == 'flower' %}selected{% endif %}>Flower Names (Rose, Lily...)</option>
+                            <option value="color" {% if form_data.section_naming == 'color' %}selected{% endif %}>Colors (Red, Blue...)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Preview of Structure -->
+                <div class="mt-4">
+                    <h6><i class="fas fa-eye me-2"></i>Preview of School Structure</h6>
+                    <div class="border rounded p-3 bg-light">
+                        <div id="structurePreview">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="d-flex justify-content-between">
+                    <button type="submit" name="previous" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i> Previous
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        Next Step <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Step 3: Academic Years -->
+        {% if current_step == 3 %}
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Step 3: Academic Years Setup</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Define academic years for your school. The current year will be used for student admissions and teacher assignments.
+                </div>
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label"><strong>Current Academic Year <span class="text-danger">*</span></strong></label>
+                        <input type="text" name="current_year_name" class="form-control" value="{{ form_data.current_year_name|default:'2023-24' }}" required>
+                        <small class="text-muted">e.g., 2023-24, 2023-2024</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label"><strong>Start Date <span class="text-danger">*</span></strong></label>
+                        <input type="date" name="current_year_start" class="form-control" value="{{ form_data.current_year_start|default:'2023-04-01' }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label"><strong>End Date <span class="text-danger">*</span></strong></label>
+                        <input type="date" name="current_year_end" class="form-control" value="{{ form_data.current_year_end|default:'2024-03-31' }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label"><strong>Previous Academic Years</strong></label>
+                        <input type="number" name="previous_years_count" class="form-control" value="{{ form_data.previous_years_count|default:2 }}" min="0" max="5">
+                        <small class="text-muted">Number of previous years to create</small>
+                    </div>
+                </div>
+
+                <!-- Preview of Academic Years -->
+                <div class="mt-4">
+                    <h6><i class="fas fa-eye me-2"></i>Preview of Academic Years</h6>
+                    <div class="border rounded p-3 bg-light">
+                        <div id="academicYearsPreview">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="d-flex justify-content-between">
+                    <button type="submit" name="previous" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i> Previous
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        Next Step <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Step 4: Designations Setup -->
+        {% if current_step == 4 %}
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-user-tag me-2"></i>Step 4: Designations Setup</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Define designations for different user types. These will be available for assignment during bulk imports.
+                </div>
+                
+                <!-- Student Designations -->
+                <div class="mb-4">
+                    <h6><i class="fas fa-graduation-cap me-2"></i>Student Designations</h6>
+                    <div class="row g-2">
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="student_designations[]" value="Student" id="std_student" checked>
+                                <label class="form-check-label" for="std_student">Student</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="student_designations[]" value="Class Monitor" id="std_monitor">
+                                <label class="form-check-label" for="std_monitor">Class Monitor</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="student_designations[]" value="House Captain" id="std_captain">
+                                <label class="form-check-label" for="std_captain">House Captain</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="student_designations[]" value="Prefect" id="std_prefect">
+                                <label class="form-check-label" for="std_prefect">Prefect</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Teacher Designations -->
+                <div class="mb-4">
+                    <h6><i class="fas fa-chalkboard-teacher me-2"></i>Teacher Designations</h6>
+                    <div class="row g-2">
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="teacher_designations[]" value="Teacher" id="tch_teacher" checked>
+                                <label class="form-check-label" for="tch_teacher">Teacher</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="teacher_designations[]" value="Librarian" id="tch_librarian">
+                                <label class="form-check-label" for="tch_librarian">Librarian</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="teacher_designations[]" value="Principal" id="tch_principal">
+                                <label class="form-check-label" for="tch_principal">Principal</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="teacher_designations[]" value="Vice Principal" id="tch_vice_principal">
+                                <label class="form-check-label" for="tch_vice_principal">Vice Principal</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="teacher_designations[]" value="Head Master" id="tch_head_master">
+                                <label class="form-check-label" for="tch_head_master">Head Master</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="teacher_designations[]" value="Lab Assistant" id="tch_lab_assistant">
+                                <label class="form-check-label" for="tch_lab_assistant">Lab Assistant</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="teacher_designations[]" value="Sports Teacher" id="tch_sports">
+                                <label class="form-check-label" for="tch_sports">Sports Teacher</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="teacher_designations[]" value="Music Teacher" id="tch_music">
+                                <label class="form-check-label" for="tch_music">Music Teacher</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Staff Designations -->
+                <div class="mb-4">
+                    <h6><i class="fas fa-users me-2"></i>Staff Designations</h6>
+                    <div class="row g-2">
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="staff_designations[]" value="Accountant" id="staff_accountant" checked>
+                                <label class="form-check-label" for="staff_accountant">Accountant</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="staff_designations[]" value="Clerk" id="staff_clerk">
+                                <label class="form-check-label" for="staff_clerk">Clerk</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="staff_designations[]" value="Peon" id="staff_peon">
+                                <label class="form-check-label" for="staff_peon">Peon</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="staff_designations[]" value="Driver" id="staff_driver">
+                                <label class="form-check-label" for="staff_driver">Driver</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="staff_designations[]" value="Security Guard" id="staff_security">
+                                <label class="form-check-label" for="staff_security">Security Guard</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="staff_designations[]" value="Cleaner" id="staff_cleaner">
+                                <label class="form-check-label" for="staff_cleaner">Cleaner</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="staff_designations[]" value="Office Staff" id="staff_office">
+                                <label class="form-check-label" for="staff_office">Office Staff</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="staff_designations[]" value="Lab Attendant" id="staff_lab">
+                                <label class="form-check-label" for="staff_lab">Lab Attendant</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Custom Designations -->
+                <div class="mb-4">
+                    <h6><i class="fas fa-plus me-2"></i>Custom Designations</h6>
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <input type="text" name="custom_designations[]" class="form-control" placeholder="Add custom designation">
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" name="custom_designations[]" class="form-control" placeholder="Add custom designation">
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" name="custom_designations[]" class="form-control" placeholder="Add custom designation">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="d-flex justify-content-between">
+                    <button type="submit" name="previous" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i> Previous
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check me-2"></i> Complete Setup
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </form>
+</div>
+
+<script>
+// Preview functions
+document.addEventListener('DOMContentLoaded', function() {
+    // Structure preview for Step 2
+    if (document.querySelector('#structurePreview')) {
+        updateStructurePreview();
+        document.querySelectorAll('input[name="total_classes"], input[name="sections_per_class"], select[name="class_naming"], select[name="section_naming"]').forEach(input => {
+            input.addEventListener('change', updateStructurePreview);
+        });
+    }
+
+    // Academic years preview for Step 3
+    if (document.querySelector('#academicYearsPreview')) {
+        updateAcademicYearsPreview();
+        document.querySelectorAll('input[name="current_year_name"], input[name="current_year_start"], input[name="current_year_end"], input[name="previous_years_count"]').forEach(input => {
+            input.addEventListener('change', updateAcademicYearsPreview);
+        });
+    }
+});
+
+function updateStructurePreview() {
+    const totalClasses = parseInt(document.querySelector('input[name="total_classes"]').value) || 10;
+    const sectionsPerClass = parseInt(document.querySelector('input[name="sections_per_class"]').value) || 3;
+    const classNaming = document.querySelector('select[name="class_naming"]').value;
+    const sectionNaming = document.querySelector('select[name="section_naming"]').value;
+    
+    let preview = '<div class="row">';
+    let classCount = 0;
+    
+    for (let i = 1; i <= Math.min(totalClasses, 6); i++) {
+        let className = getClassName(i, classNaming);
+        preview += `<div class="col-md-4 mb-2"><strong>${className}:</strong> `;
+        
+        for (let j = 1; j <= Math.min(sectionsPerClass, 3); j++) {
+            let sectionName = getSectionName(j, sectionNaming);
+            preview += `<span class="badge bg-secondary me-1">${className}-${sectionName}</span>`;
+        }
+        
+        if (sectionsPerClass > 3) {
+            preview += `<span class="text-muted">+${sectionsPerClass - 3} more</span>`;
+        }
+        
+        preview += '</div>';
+        classCount++;
+        
+        if (classCount % 3 === 0) {
+            preview += '</div><div class="row">';
+        }
+    }
+    
+    if (totalClasses > 6) {
+        preview += `<div class="col-12"><span class="text-muted">... and ${totalClasses - 6} more classes</span></div>`;
+    }
+    
+    preview += '</div>';
+    document.querySelector('#structurePreview').innerHTML = preview;
+}
+
+function getClassName(num, pattern) {
+    switch(pattern) {
+        case 'grade': return `Grade ${num}`;
+        case 'standard': return `Std ${num}`;
+        case 'class': return `Class ${num}`;
+        default: return num.toString();
+    }
+}
+
+function getSectionName(num, pattern) {
+    switch(pattern) {
+        case 'numeric': return num.toString();
+        case 'flower': return ['Rose', 'Lily', 'Tulip', 'Daisy', 'Sunflower'][num-1] || `Section ${num}`;
+        case 'color': return ['Red', 'Blue', 'Green', 'Yellow', 'Purple'][num-1] || `Section ${num}`;
+        default: return String.fromCharCode(64 + num); // A, B, C...
+    }
+}
+
+function updateAcademicYearsPreview() {
+    const currentYearName = document.querySelector('input[name="current_year_name"]').value || '2023-24';
+    const previousYearsCount = parseInt(document.querySelector('input[name="previous_years_count"]').value) || 2;
+    
+    let preview = '<div class="list-group">';
+    
+    // Previous years
+    for (let i = previousYearsCount; i >= 1; i--) {
+        const yearNum = parseInt(currentYearName.split('-')[0]) - i;
+        const prevYearName = `${yearNum}-${yearNum + 1}`;
+        preview += `<div class="list-group-item">
+            <span class="badge bg-secondary me-2">Previous</span>
+            ${prevYearName}
+        </div>`;
+    }
+    
+    // Current year
+    preview += `<div class="list-group-item list-group-item-primary">
+        <span class="badge bg-primary me-2">Current</span>
+        ${currentYearName}
+    </div>`;
+    
+    preview += '</div>';
+    document.querySelector('#academicYearsPreview').innerHTML = preview;
+}
+</script>
+{% endblock %}

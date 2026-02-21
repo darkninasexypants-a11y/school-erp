@@ -1,0 +1,289 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Fee Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-chart-line me-2 text-primary"></i>Fee Analytics Dashboard</h2>
+            <p class="text-muted">Comprehensive fee collection insights and trends</p>
+        </div>
+        <div>
+            <select class="form-select" onchange="window.location.href='?days='+this.value">
+                <option value="7" {% if days == 7 %}selected{% endif %}>Last 7 days</option>
+                <option value="30" {% if days == 30 %}selected{% endif %}>Last 30 days</option>
+                <option value="90" {% if days == 90 %}selected{% endif %}>Last 90 days</option>
+                <option value="365" {% if days == 365 %}selected{% endif %}>Last Year</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body">
+                    <h6>Total Collected</h6>
+                    <h2>₹{{ total_collected|default:0|floatformat:2 }}</h2>
+                    <small>{{ payment_count }} payments</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="card-body">
+                    <h6>Avg Payment</h6>
+                    <h2>₹{{ avg_payment|default:0|floatformat:2 }}</h2>
+                    <small>Per transaction</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="card-body">
+                    <h6>Total Discounts</h6>
+                    <h2>₹{{ total_discounts|default:0|floatformat:2 }}</h2>
+                    <small>Given to students</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                <div class="card-body">
+                    <h6>Late Fees</h6>
+                    <h2>₹{{ total_late_fees|default:0|floatformat:2 }}</h2>
+                    <small>Collected</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Trends Chart -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-area me-2"></i>Daily Collection Trends</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="dailyTrendsChart" height="80"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-credit-card me-2"></i>Payment Methods</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="paymentMethodsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Class-wise Collection -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-graduation-cap me-2"></i>Class-wise Collection</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Class</th>
+                                    <th>Amount</th>
+                                    <th>Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in class_collection %}
+                                <tr>
+                                    <td><strong>{{ item.student__current_class__name|default:"N/A" }}</strong></td>
+                                    <td>₹{{ item.total|floatformat:2 }}</td>
+                                    <td><span class="badge bg-primary">{{ item.count }}</span></td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="3" class="text-center text-muted">No data available</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Monthly Comparison</h5>
+                </div>
+                <div class="card-body">
+                    {% if monthly_data %}
+                    <canvas id="monthlyChart"></canvas>
+                    {% else %}
+                    <p class="text-muted text-center">Select 30+ days to view monthly comparison</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+    // Daily Trends Chart
+    {% if daily_trends %}
+    const ctx1 = document.getElementById('dailyTrendsChart');
+    if (ctx1) {
+        new Chart(ctx1.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: [{% for trend in daily_trends %}'{{ trend.date|date:"M d" }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+                datasets: [{
+                    label: 'Collection Amount (₹)',
+                    data: [{% for trend in daily_trends %}{{ trend.amount }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    tension: 0.1,
+                    yAxisID: 'y',
+                }, {
+                    label: 'Payment Count',
+                    data: [{% for trend in daily_trends %}{{ trend.count }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                    borderColor: 'rgb(255, 99, 132)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    tension: 0.1,
+                    yAxisID: 'y1',
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                interaction: { mode: 'index', intersect: false },
+                scales: {
+                    y: { 
+                        type: 'linear', 
+                        position: 'left', 
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '₹' + value.toLocaleString('en-IN');
+                            }
+                        }
+                    },
+                    y1: { 
+                        type: 'linear', 
+                        position: 'right', 
+                        beginAtZero: true, 
+                        grid: { drawOnChartArea: false }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                if (context.datasetIndex === 0) {
+                                    return 'Amount: ₹' + context.parsed.y.toLocaleString('en-IN');
+                                } else {
+                                    return 'Count: ' + context.parsed.y;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    {% else %}
+    document.getElementById('dailyTrendsChart').parentElement.innerHTML = '<p class="text-muted text-center p-4">No data available for the selected period</p>';
+    {% endif %}
+
+    // Payment Methods Chart
+    {% if payment_methods %}
+    const ctx2 = document.getElementById('paymentMethodsChart');
+    if (ctx2) {
+        new Chart(ctx2.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: [{% for method in payment_methods %}'{{ method.payment_method|title }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+                datasets: [{
+                    data: [{% for method in payment_methods %}{{ method.total }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.6)',
+                        'rgba(54, 162, 235, 0.6)',
+                        'rgba(255, 206, 86, 0.6)',
+                        'rgba(75, 192, 192, 0.6)',
+                        'rgba(153, 102, 255, 0.6)',
+                        'rgba(255, 159, 64, 0.6)',
+                    ],
+                }]
+            },
+            options: { 
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return label + ': ₹' + value.toLocaleString('en-IN') + ' (' + percentage + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    {% else %}
+    document.getElementById('paymentMethodsChart').parentElement.innerHTML = '<p class="text-muted text-center p-4">No payment method data available</p>';
+    {% endif %}
+
+    {% if monthly_data %}
+    // Monthly Chart
+    const ctx3 = document.getElementById('monthlyChart');
+    if (ctx3) {
+        new Chart(ctx3.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: [{% for month in monthly_data %}'{{ month.month }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+                datasets: [{
+                    label: 'Collection (₹)',
+                    data: [{% for month in monthly_data %}{{ month.total }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                }]
+            },
+            options: { 
+                responsive: true, 
+                scales: { 
+                    y: { 
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '₹' + value.toLocaleString('en-IN');
+                            }
+                        }
+                    } 
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Collection: ₹' + context.parsed.y.toLocaleString('en-IN');
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    {% endif %}
+</script>
+{% endblock %}
+

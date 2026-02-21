@@ -1,0 +1,249 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Manage Timetables{% endblock %}
+
+{% block sidebar %}
+{% include 'includes/admin_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="top-bar">
+    <div class="page-title">
+        <h1><i class="bi bi-calendar-check me-2"></i>Timetable Management</h1>
+        <p>Manage and monitor all class timetables</p>
+    </div>
+    <div class="top-bar-actions">
+        <a href="#section-timetables" class="btn btn-primary" onclick="document.getElementById('section-timetables').scrollIntoView({behavior: 'smooth'}); return false;">
+            <i class="bi bi-calendar-plus me-2"></i>Create Timetable
+        </a>
+        <a href="{% url 'students_app:import_timetable' %}" class="btn btn-success">
+            <i class="bi bi-upload me-2"></i>Import Timetable
+        </a>
+        <a href="{% url 'students_app:timetable_conflicts' %}" class="btn btn-warning">
+            <i class="bi bi-exclamation-triangle me-2"></i>Check Conflicts
+        </a>
+        <a href="{% url 'students_app:bulk_timetable_operations' %}" class="btn btn-info">
+            <i class="bi bi-gear me-2"></i>Bulk Operations
+        </a>
+        <a href="{% url 'students_app:manage_timetable_requests' %}" class="btn btn-warning">
+            <i class="bi bi-calendar-x me-2"></i>Change Requests
+            {% if request.user.is_staff or request.user.is_superuser %}
+            <span class="badge bg-danger ms-1" id="pending-requests-badge" style="display: none;">0</span>
+            {% endif %}
+        </a>
+        <a href="{% url 'students_app:view_timetable' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Timetable
+        </a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Filter by Class</label>
+                <select name="class_id" class="form-select" onchange="this.form.submit()">
+                    <option value="">All Classes</option>
+                    {% for class in classes %}
+                    <option value="{{ class.id }}" {% if selected_class_id == class.id %}selected{% endif %}>
+                        {{ class.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Filter by Section</label>
+                <select name="section_id" class="form-select" onchange="this.form.submit()">
+                    <option value="">All Sections</option>
+                    {% for stat in section_stats %}
+                    <option value="{{ stat.section.id }}" {% if selected_section_id == stat.section.id %}selected{% endif %}>
+                        {{ stat.section.class_assigned.name }} - {{ stat.section.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">&nbsp;</label>
+                <div>
+                    <a href="{% url 'students_app:manage_timetables' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle me-1"></i>Clear Filters
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Academic Year Info -->
+{% if current_year %}
+<div class="alert alert-info mb-4">
+    <i class="bi bi-info-circle me-2"></i>
+    <strong>Current Academic Year:</strong> {{ current_year.name }}
+    ({{ current_year.start_date|date:"M d, Y" }} - {{ current_year.end_date|date:"M d, Y" }})
+</div>
+{% else %}
+<div class="alert alert-warning mb-4">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    <strong>Warning:</strong> No active academic year found. Please set an academic year first.
+</div>
+{% endif %}
+
+<!-- Timetable Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-primary">{{ total_sections }}</h3>
+                <p class="text-muted mb-0">Total Sections</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-success">{{ sections_with_timetable }}</h3>
+                <p class="text-muted mb-0">Sections with Timetable</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-warning">{{ sections_without_timetable }}</h3>
+                <p class="text-muted mb-0">Sections without Timetable</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-info">{{ total_entries }}</h3>
+                <p class="text-muted mb-0">Total Timetable Entries</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Info Card -->
+<div class="card mb-4 bg-light">
+    <div class="card-body py-2">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-lightbulb text-warning fs-5"></i>
+            <div class="flex-grow-1">
+                <strong>How to Create Timetable:</strong>
+                <span class="text-muted">
+                    <strong>Important:</strong> Timetable banane ke liye pehle sections honi chahiye. 
+                    Agar sections nahi hain, to pehle sections create karein (Django Admin se ya Student Import se). 
+                    Phir "Create Timetable" button click karein ya "Import Timetable" se Excel se import karein.
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Timetable List -->
+<div class="card" id="section-timetables">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Section Timetables</h5>
+    </div>
+    <div class="card-body">
+        {% if not section_stats %}
+        <!-- No Sections Warning -->
+        <div class="alert alert-warning border-warning">
+            <div class="d-flex align-items-start gap-3">
+                <div class="flex-shrink-0">
+                    <i class="bi bi-exclamation-triangle-fill fs-1 text-warning"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <h5 class="alert-heading mb-3">
+                        <i class="bi bi-info-circle me-2"></i>No Sections Found
+                    </h5>
+                    <p class="mb-3">
+                        <strong>Timetable ke liye sections zaroori hain!</strong> Pehle sections create karein, phir timetable banayenge.
+                    </p>
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-lightbulb me-2"></i>
+                        <strong>Note:</strong> Sections create karne ke liye Students page se students import karein ya add karein. 
+                        Har class ke liye kam se kam ek section (jaise "A", "B", "C") zaroori hai.
+                        {% if user.is_superuser %}
+                        <br><small class="text-muted mt-2 d-block">
+                            <i class="bi bi-shield-check me-1"></i>Superuser: Aap Django Admin se bhi sections create kar sakte hain.
+                        </small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% elif section_stats %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Class</th>
+                        <th>Section</th>
+                        <th>Status</th>
+                        <th>Entries</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stat in section_stats %}
+                    <tr>
+                        <td>
+                            <strong>{{ stat.section.class_assigned.name }}</strong>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">{{ stat.section.name }}</span>
+                        </td>
+                        <td>
+                            {% if stat.has_timetable %}
+                            <span class="badge bg-success">
+                                <i class="bi bi-check-circle me-1"></i>Has Timetable
+                            </span>
+                            {% else %}
+                            <span class="badge bg-warning">
+                                <i class="bi bi-exclamation-circle me-1"></i>No Timetable
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-info">{{ stat.timetable_count }} entries</span>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                {% if stat.has_timetable %}
+                                <a href="{% url 'students_app:view_timetable' %}?section={{ stat.section.id }}" 
+                                   class="btn btn-sm btn-outline-primary" title="View Timetable">
+                                    <i class="bi bi-eye me-1"></i>View
+                                </a>
+                                <a href="{% url 'students_app:edit_timetable' stat.section.id %}" 
+                                   class="btn btn-sm btn-success" title="Edit Timetable">
+                                    <i class="bi bi-pencil me-1"></i>Edit
+                                </a>
+                                <a href="{% url 'students_app:export_timetable' stat.section.id %}" 
+                                   class="btn btn-sm btn-outline-info" title="Export Timetable">
+                                    <i class="bi bi-download me-1"></i>Export
+                                </a>
+                                {% else %}
+                                <a href="{% url 'students_app:edit_timetable' stat.section.id %}" 
+                                   class="btn btn-sm btn-primary" title="Create Timetable">
+                                    <i class="bi bi-plus-circle me-1"></i>Create Timetable
+                                </a>
+                                <a href="{% url 'students_app:view_timetable' %}?section={{ stat.section.id }}" 
+                                   class="btn btn-sm btn-outline-secondary" title="View (Empty)">
+                                    <i class="bi bi-eye me-1"></i>View
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,130 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Add Schedule for {{ exam.name }}{% endblock %}
+
+{% block sidebar %}
+{% include 'includes/admin_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="top-bar">
+    <div class="page-title">
+        <h1><i class="bi bi-calendar-plus me-2"></i>Add Schedule for {{ exam.name }}</h1>
+        <p>Create a new exam schedule for this exam</p>
+    </div>
+    <div class="top-bar-actions">
+        <a href="{% url 'students_app:exam_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Exams
+        </a>
+    </div>
+</div>
+
+{% if messages %}
+<div class="mb-4">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Form Card -->
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header" style="background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: #fff;">
+                <h5 class="mb-0">
+                    <i class="bi bi-calendar-event me-2"></i>Add Schedule for {{ exam.name }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <!-- Hidden Exam Field -->
+                    <div class="d-none">
+                        {{ form.exam }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-people me-1"></i>Class <span class="text-danger">*</span>
+                        </label>
+                        {{ form.class_assigned }}
+                        {% if form.class_assigned.errors %}
+                        <div class="text-danger small mt-1">{{ form.class_assigned.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">Select the class for this exam</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-book me-1"></i>Subject <span class="text-danger">*</span>
+                        </label>
+                        {{ form.subject }}
+                        {% if form.subject.errors %}
+                        <div class="text-danger small mt-1">{{ form.subject.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">Select the subject for this exam</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-calendar3 me-1"></i>Exam Date <span class="text-danger">*</span>
+                        </label>
+                        {{ form.exam_date }}
+                        {% if form.exam_date.errors %}
+                        <div class="text-danger small mt-1">{{ form.exam_date.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">Select the date when this exam will be conducted</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-trophy me-1"></i>Maximum Marks <span class="text-danger">*</span>
+                        </label>
+                        {{ form.max_marks }}
+                        {% if form.max_marks.errors %}
+                        <div class="text-danger small mt-1">{{ form.max_marks.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">Maximum marks for this exam paper (e.g., 100, 50, 80)</div>
+                    </div>
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                    {% endif %}
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-circle me-2"></i>Save Schedule
+                        </button>
+                        <a href="{% url 'students_app:exam_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle me-2"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Info Card -->
+        <div class="card mt-4 border-info">
+            <div class="card-body">
+                <h6 class="text-info mb-3">
+                    <i class="bi bi-info-circle me-2"></i>Important Notes
+                </h6>
+                <ul class="mb-0 small">
+                    <li>Each exam schedule must be unique (same exam, class, and subject combination)</li>
+                    <li>Make sure the exam date falls within the exam's date range</li>
+                    <li>Maximum marks should be between 1 and 1000</li>
+                    <li>You can manage all schedules from the Exam Schedules page</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

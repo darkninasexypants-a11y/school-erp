@@ -1,0 +1,76 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Verify ID Card (OCR){% endblock %}
+
+{% block sidebar %}
+{% if request.user.is_authenticated %}
+    {% with teacher=request.user.teacher %}
+        {% if teacher %}
+            {% include 'includes/teacher_sidebar.html' %}
+        {% else %}
+            {% with role_name=request.user.school_profile.role.name|default_if_none:''|lower %}
+                {% if request.user.is_superuser or role_name == 'super_admin' %}
+                    {% include 'includes/super_admin_sidebar.html' %}
+                {% elif role_name == 'school admin' or role_name == 'school_admin' or role_name == 'admin' %}
+                    {% include 'includes/admin_sidebar.html' %}
+                {% else %}
+                    {% include 'includes/admin_sidebar.html' %}
+                {% endif %}
+            {% endwith %}
+        {% endif %}
+    {% endwith %}
+{% else %}
+    {% include 'includes/admin_sidebar.html' %}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <div class="page-title">
+        <h1><i class="bi bi-eye me-2"></i>Verify ID Card (OCR)</h1>
+        <p>Extract and verify text from ID card images</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-upload me-2"></i>Upload ID Card Image</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="mb-4">
+                <label class="form-label fw-semibold">
+                    <i class="bi bi-image me-2"></i>ID Card Image <span class="text-danger">*</span>
+                </label>
+                <input type="file" class="form-control" name="id_card_image" accept="image/*" required>
+                <small class="form-text text-muted">
+                    Upload a clear image of the ID card. Supported formats: JPG, PNG, etc.
+                </small>
+            </div>
+            
+            {% if templates %}
+            <div class="mb-4">
+                <label class="form-label fw-semibold">
+                    <i class="bi bi-file-earmark-image me-2"></i>Template (Optional)
+                </label>
+                <select class="form-select" name="template_id">
+                    <option value="">-- No Template (Learning Disabled) --</option>
+                    {% for template in templates %}
+                    <option value="{{ template.id }}">{{ template.name }}</option>
+                    {% endfor %}
+                </select>
+                <small class="form-text text-muted">
+                    Select a template to store detected fields for learning purposes. Only text present in the image will be extracted.
+                </small>
+            </div>
+            {% endif %}
+            
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-search me-2"></i>Extract Text
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

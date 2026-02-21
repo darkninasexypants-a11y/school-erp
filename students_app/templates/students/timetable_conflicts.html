@@ -1,0 +1,178 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Timetable Conflicts{% endblock %}
+
+{% block sidebar %}
+{% include 'includes/admin_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="top-bar">
+    <div class="page-title">
+        <h1><i class="bi bi-exclamation-triangle me-2"></i>Timetable Conflicts</h1>
+        <p>Detect and resolve scheduling conflicts</p>
+    </div>
+    <div class="top-bar-actions">
+        <a href="{% url 'students_app:manage_timetables' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Management
+        </a>
+    </div>
+</div>
+
+<!-- Academic Year Info -->
+{% if current_year %}
+<div class="alert alert-info mb-4">
+    <i class="bi bi-info-circle me-2"></i>
+    <strong>Checking conflicts for:</strong> {{ current_year.name }}
+</div>
+{% endif %}
+
+<!-- Conflict Summary -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body text-center">
+                <h2 class="mb-3">
+                    {% if conflict_count == 0 %}
+                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                    <span class="text-success">No Conflicts Found!</span>
+                    {% else %}
+                    <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
+                    <span class="text-danger">{{ conflict_count }} Conflict(s) Detected</span>
+                    {% endif %}
+                </h2>
+                <p class="text-muted">
+                    {% if conflict_count == 0 %}
+                    All timetables are properly scheduled with no conflicts.
+                    {% else %}
+                    Please review and resolve the conflicts listed below.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Conflicts List -->
+{% if conflicts %}
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Conflict Details</h5>
+    </div>
+    <div class="card-body">
+        {% for conflict in conflicts %}
+        <div class="alert alert-{% if conflict.type == 'teacher' %}danger{% elif conflict.type == 'room' %}warning{% else %}info{% endif %} mb-4">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <h5 class="alert-heading">
+                        <i class="bi bi-{% if conflict.type == 'teacher' %}person-x{% elif conflict.type == 'room' %}building{% else %}collection{% endif %} me-2"></i>
+                        {{ conflict.type|title }} Conflict
+                    </h5>
+                    <p class="mb-0">{{ conflict.message }}</p>
+                </div>
+                <span class="badge bg-{% if conflict.type == 'teacher' %}danger{% elif conflict.type == 'room' %}warning{% else %}info{% endif %}">
+                    {{ conflict.entries|length }} entries
+                </span>
+            </div>
+            
+            <div class="table-responsive mt-3">
+                <table class="table table-sm table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Section</th>
+                            <th>Day</th>
+                            <th>Time Slot</th>
+                            <th>Subject</th>
+                            {% if conflict.type != 'teacher' %}
+                            <th>Teacher</th>
+                            {% endif %}
+                            {% if conflict.type != 'room' %}
+                            <th>Room</th>
+                            {% endif %}
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in conflict.entries %}
+                        <tr>
+                            <td>
+                                <strong>{{ entry.section.class_assigned.name }}</strong> - 
+                                <span class="badge bg-secondary">{{ entry.section.name }}</span>
+                            </td>
+                            <td>{{ entry.get_weekday_display }}</td>
+                            <td>
+                                {% if entry.time_slot %}
+                                {{ entry.time_slot.slot_name }}<br>
+                                <small class="text-muted">
+                                    {{ entry.time_slot.start_time|time:"g:i A" }} - {{ entry.time_slot.end_time|time:"g:i A" }}
+                                </small>
+                                {% else %}
+                                <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ entry.subject.name|default:"N/A" }}</td>
+                            {% if conflict.type != 'teacher' %}
+                            <td>
+                                {% if entry.teacher %}
+                                {{ entry.teacher.user.get_full_name|default:entry.teacher.user.username }}
+                                {% else %}
+                                <span class="text-muted">Not assigned</span>
+                                {% endif %}
+                            </td>
+                            {% endif %}
+                            {% if conflict.type != 'room' %}
+                            <td>
+                                {% if entry.room_number %}
+                                <span class="badge bg-info">{{ entry.room_number }}</span>
+                                {% else %}
+                                <span class="text-muted">Not assigned</span>
+                                {% endif %}
+                            </td>
+                            {% endif %}
+                            <td>
+                                <a href="{% url 'students_app:edit_timetable' entry.section.id %}" 
+                                   class="btn btn-sm btn-outline-primary" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Help Section -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-question-circle me-2"></i>About Conflicts</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <h6><i class="bi bi-person-x text-danger me-2"></i>Teacher Conflicts</h6>
+                <p class="text-muted small">
+                    Occurs when the same teacher is assigned to multiple classes at the same time slot and day.
+                </p>
+            </div>
+            <div class="col-md-4">
+                <h6><i class="bi bi-building text-warning me-2"></i>Room Conflicts</h6>
+                <p class="text-muted small">
+                    Occurs when the same room is assigned to multiple classes at the same time slot and day.
+                </p>
+            </div>
+            <div class="col-md-4">
+                <h6><i class="bi bi-collection text-info me-2"></i>Section Conflicts</h6>
+                <p class="text-muted small">
+                    Occurs when a section has duplicate entries for the same time slot and day.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

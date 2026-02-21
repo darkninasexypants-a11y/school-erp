@@ -1,0 +1,220 @@
+{% extends "students/base_modern.html" %}
+{% load static %}
+
+{% block title %}Select Class & Section{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-school me-2"></i>
+                        Select Class & Section
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if classes %}
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Select Class</label>
+                        <select class="form-select form-select-lg" id="classSelect" onchange="loadSections()">
+                            <option value="">Choose a class...</option>
+                            {% for class_obj in classes %}
+                            <option value="{{ class_obj.id }}">{{ class_obj.name }} (Grade {{ class_obj.numeric_value }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Select Section</label>
+                        <select class="form-select form-select-lg" id="sectionSelect" disabled>
+                            <option value="">First select a class...</option>
+                        </select>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="button" class="btn btn-success btn-lg" onclick="confirmSelection()" id="confirmBtn" disabled>
+                            <i class="fas fa-check me-2"></i>
+                            Confirm Selection
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-lg" onclick="clearSelection()">
+                            <i class="fas fa-times me-2"></i>
+                            Clear
+                        </button>
+                    </div>
+
+                    <!-- Selection Display -->
+                    <div class="mt-4 p-3 bg-light rounded" id="selectionDisplay" style="display: none;">
+                        <h6 class="text-primary mb-2">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Your Selection:
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Class:</strong> <span id="selectedClass"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Section:</strong> <span id="selectedSection"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-school fa-4x text-muted mb-3"></i>
+                        <h5 class="text-muted">No Classes Available</h5>
+                        <p class="text-muted">Please set up your school classes first.</p>
+                        <a href="{% url 'students_app:school_setup_wizard' %}" class="btn btn-primary">
+                            <i class="fas fa-cog"></i> Set Up School
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function loadSections() {
+    const classSelect = document.getElementById('classSelect');
+    const sectionSelect = document.getElementById('sectionSelect');
+    const confirmBtn = document.getElementById('confirmBtn');
+    const classId = classSelect.value;
+    
+    // Reset section select
+    sectionSelect.innerHTML = '<option value="">Loading...</option>';
+    sectionSelect.disabled = true;
+    confirmBtn.disabled = true;
+    
+    if (classId) {
+        fetch(`/api/classes/${classId}/sections/`)
+            .then(response => response.json())
+            .then(data => {
+                sectionSelect.innerHTML = '<option value="">Select a section...</option>';
+                
+                if (data.sections && data.sections.length > 0) {
+                    data.sections.forEach(section => {
+                        const option = document.createElement('option');
+                        option.value = section.id;
+                        option.textContent = `${section.name} (Capacity: ${section.capacity})`;
+                        sectionSelect.appendChild(option);
+                    });
+                    sectionSelect.disabled = false;
+                } else {
+                    sectionSelect.innerHTML = '<option value="">No sections available</option>';
+                    sectionSelect.disabled = true;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading sections:', error);
+                sectionSelect.innerHTML = '<option value="">Error loading sections</option>';
+                sectionSelect.disabled = true;
+            });
+    } else {
+        sectionSelect.innerHTML = '<option value="">First select a class...</option>';
+        sectionSelect.disabled = true;
+    }
+}
+
+function confirmSelection() {
+    const classSelect = document.getElementById('classSelect');
+    const sectionSelect = document.getElementById('sectionSelect');
+    const selectedClass = classSelect.options[classSelect.selectedIndex];
+    const selectedSection = sectionSelect.options[sectionSelect.selectedIndex];
+    
+    if (classSelect.value && sectionSelect.value) {
+        // Show selection display
+        document.getElementById('selectedClass').textContent = selectedClass.textContent;
+        document.getElementById('selectedSection').textContent = selectedSection.textContent;
+        document.getElementById('selectionDisplay').style.display = 'block';
+        
+        // Store in localStorage or send to parent
+        const selection = {
+            class_id: classSelect.value,
+            class_name: selectedClass.textContent,
+            section_id: sectionSelect.value,
+            section_name: selectedSection.textContent
+        };
+        
+        localStorage.setItem('selectedClassSection', JSON.stringify(selection));
+        
+        // Notify parent window if in iframe
+        if (window.parent) {
+            window.parent.postMessage({
+                type: 'classSectionSelected',
+                data: selection
+            }, '*');
+        }
+        
+        // Show success message
+        showNotification('Class and section selected successfully!', 'success');
+    }
+}
+
+function clearSelection() {
+    document.getElementById('classSelect').value = '';
+    document.getElementById('sectionSelect').innerHTML = '<option value="">First select a class...</option>';
+    document.getElementById('sectionSelect').disabled = true;
+    document.getElementById('confirmBtn').disabled = true;
+    document.getElementById('selectionDisplay').style.display = 'none';
+    localStorage.removeItem('selectedClassSection');
+}
+
+function showNotification(message, type) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 3000);
+}
+
+// Load saved selection on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const saved = localStorage.getItem('selectedClassSection');
+    if (saved) {
+        const selection = JSON.parse(saved);
+        document.getElementById('selectedClass').textContent = selection.class_name;
+        document.getElementById('selectedSection').textContent = selection.section_name;
+        document.getElementById('selectionDisplay').style.display = 'block';
+    }
+});
+</script>
+
+<style>
+.position-fixed {
+    position: fixed;
+}
+
+.d-grid {
+    display: grid;
+}
+
+@media (min-width: 768px) {
+    .d-md-flex {
+        display: flex !important;
+    }
+    
+    .justify-content-md-end {
+        justify-content: flex-end !important;
+    }
+    
+    .d-md-flex > * {
+        margin-left: 0.5rem;
+    }
+}
+</style>
+{% endblock %}

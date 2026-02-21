@@ -1,0 +1,459 @@
+{% extends 'students/base.html' %}
+
+{% block title %}Teacher Portal Demo - School ERP{% endblock %}
+
+{% block extra_css %}
+<style>
+    .demo-banner {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 20px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    
+    .demo-banner h1 {
+        font-size: 3rem;
+        margin-bottom: 15px;
+    }
+    
+    .demo-banner p {
+        font-size: 1.3rem;
+        opacity: 0.9;
+    }
+    
+    .teacher-card {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 25px;
+        margin-bottom: 30px;
+    }
+    
+    .feature-card {
+        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        border-radius: 15px;
+        padding: 25px;
+        border: 1px solid #cbd5e1;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .feature-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+    }
+    
+    .feature-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 15px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.8rem;
+        margin-bottom: 15px;
+    }
+    
+    .student-list {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        margin-bottom: 20px;
+    }
+    
+    .student-item {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        background: #f8fafc;
+        transition: all 0.3s ease;
+    }
+    
+    .student-item:hover {
+        background: #e2e8f0;
+        transform: translateX(5px);
+    }
+    
+    .student-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        margin-right: 15px;
+    }
+    
+    .attendance-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .attendance-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        border: 1px solid #e2e8f0;
+    }
+    
+    .attendance-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+    
+    .attendance-label {
+        color: #64748b;
+        font-size: 0.9rem;
+    }
+    
+    .question-paper-demo {
+        background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+        border: 2px solid #0ea5e9;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 20px;
+    }
+    
+    .question-paper-demo h4 {
+        color: #0369a1;
+        margin-bottom: 15px;
+    }
+    
+    .question-item {
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 10px;
+        border-left: 4px solid #0ea5e9;
+    }
+    
+    .whatsapp-demo {
+        background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+        border: 2px solid #22c55e;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 20px;
+    }
+    
+    .whatsapp-demo h4 {
+        color: #15803d;
+        margin-bottom: 15px;
+    }
+    
+    .message-preview {
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 10px;
+        border: 1px solid #22c55e;
+    }
+    
+    .demo-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        border: 1px solid #e2e8f0;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #667eea;
+        margin-bottom: 5px;
+    }
+    
+    .stat-label {
+        color: #64748b;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="demo-banner">
+    <h1>👨‍🏫 Teacher Portal Demo</h1>
+    <p>Experience the complete teacher dashboard without login</p>
+</div>
+
+<!-- Teacher Stats -->
+<div class="demo-stats">
+    <div class="stat-card">
+        <div class="stat-number">3</div>
+        <div class="stat-label">Classes Assigned</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">45</div>
+        <div class="stat-label">Total Students</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">5</div>
+        <div class="stat-label">Subjects</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">98%</div>
+        <div class="stat-label">Attendance Rate</div>
+    </div>
+</div>
+
+<!-- Main Features Grid -->
+<div class="feature-grid">
+    <!-- Student Management -->
+    <div class="feature-card">
+        <div class="feature-icon">
+            <i class="bi bi-people-fill"></i>
+        </div>
+        <h4>Student Management</h4>
+        <p>View and manage your students, track their progress, and access detailed profiles.</p>
+        <div class="student-list">
+            <div class="student-item">
+                <div class="student-avatar">R</div>
+                <div>
+                    <div class="fw-semibold">Rahul Sharma</div>
+                    <div class="text-muted small">Class 1A | Roll: 1</div>
+                </div>
+            </div>
+            <div class="student-item">
+                <div class="student-avatar">P</div>
+                <div>
+                    <div class="fw-semibold">Priya Patel</div>
+                    <div class="text-muted small">Class 1A | Roll: 2</div>
+                </div>
+            </div>
+            <div class="student-item">
+                <div class="student-avatar">A</div>
+                <div>
+                    <div class="fw-semibold">Arjun Singh</div>
+                    <div class="text-muted small">Class 2A | Roll: 1</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Management -->
+    <div class="feature-card">
+        <div class="feature-icon">
+            <i class="bi bi-calendar-check"></i>
+        </div>
+        <h4>Attendance Management</h4>
+        <p>Mark and track student attendance with real-time updates and reports.</p>
+        <div class="attendance-grid">
+            <div class="attendance-card">
+                <div class="attendance-number text-success">42</div>
+                <div class="attendance-label">Present Today</div>
+            </div>
+            <div class="attendance-card">
+                <div class="attendance-number text-danger">3</div>
+                <div class="attendance-label">Absent Today</div>
+            </div>
+            <div class="attendance-card">
+                <div class="attendance-number text-warning">2</div>
+                <div class="attendance-label">Late Today</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Marks Upload -->
+    <div class="feature-card">
+        <div class="feature-icon">
+            <i class="bi bi-clipboard-data"></i>
+        </div>
+        <h4>Marks Upload</h4>
+        <p>Upload and manage student marks for exams and class tests with detailed analytics.</p>
+        <div class="d-flex gap-2">
+            <span class="badge bg-success">Math: 45/50</span>
+            <span class="badge bg-primary">English: 42/50</span>
+            <span class="badge bg-warning">Science: 38/50</span>
+        </div>
+    </div>
+
+    <!-- Report Generation -->
+    <div class="feature-card">
+        <div class="feature-icon">
+            <i class="bi bi-file-earmark-text"></i>
+        </div>
+        <h4>Report Generation</h4>
+        <p>Generate comprehensive reports with improvement suggestions and performance analytics.</p>
+        <div class="progress" style="height: 8px;">
+            <div class="progress-bar bg-success" style="width: 85%"></div>
+        </div>
+        <small class="text-muted">Class Performance: 85%</small>
+    </div>
+</div>
+
+<!-- Question Paper Creation Demo -->
+<div class="question-paper-demo">
+    <h4>📝 AI-Powered Question Paper Creation</h4>
+    <p>Create question papers with AI assistance and Google search integration</p>
+    
+    <div class="question-item">
+        <strong>Q1.</strong> What is the capital of India? (2 marks)
+        <div class="text-muted small">AI Suggested: Based on Class 1 Geography syllabus</div>
+    </div>
+    
+    <div class="question-item">
+        <strong>Q2.</strong> Solve: 5 + 3 = ? (1 mark)
+        <div class="text-muted small">AI Suggested: Basic arithmetic for Class 1</div>
+    </div>
+    
+    <div class="question-item">
+        <strong>Q3.</strong> Write 5 sentences about your family. (3 marks)
+        <div class="text-muted small">AI Suggested: Creative writing exercise</div>
+    </div>
+    
+    <button class="btn btn-primary mt-3">
+        <i class="bi bi-plus-circle"></i> Add More Questions
+    </button>
+</div>
+
+<!-- WhatsApp Integration Demo -->
+<div class="whatsapp-demo">
+    <h4>💬 WhatsApp Communication</h4>
+    <p>Send messages to students and parents individually or in bulk</p>
+    
+    <div class="message-preview">
+        <strong>Message Preview:</strong><br>
+        "Dear Parents, Tomorrow's Math test has been postponed to next week. Please ensure your child brings their calculator. - Mrs. Sarah Johnson"
+    </div>
+    
+    <div class="d-flex gap-2">
+        <span class="badge bg-success">Individual: 5 parents</span>
+        <span class="badge bg-info">Bulk: Class 1A (25 students)</span>
+    </div>
+    
+    <button class="btn btn-success mt-3">
+        <i class="bi bi-whatsapp"></i> Send Message
+    </button>
+</div>
+
+<!-- School Announcements -->
+<div class="teacher-card">
+    <h4 class="mb-4">📢 School Announcements & Events</h4>
+    
+    <div class="d-flex align-items-start mb-3">
+        <div class="bg-primary rounded-circle p-2 me-3">
+            <i class="bi bi-calendar-event text-white"></i>
+        </div>
+        <div>
+            <div class="fw-semibold">Parent-Teacher Meeting</div>
+            <div class="text-muted small">Scheduled for this Friday at 2:00 PM</div>
+            <div class="text-muted small">2 hours ago</div>
+        </div>
+    </div>
+    
+    <div class="d-flex align-items-start mb-3">
+        <div class="bg-warning rounded-circle p-2 me-3">
+            <i class="bi bi-exclamation-triangle text-white"></i>
+        </div>
+        <div>
+            <div class="fw-semibold">Exam Schedule Update</div>
+            <div class="text-muted small">Math exam moved to next Monday</div>
+            <div class="text-muted small">1 day ago</div>
+        </div>
+    </div>
+    
+    <div class="d-flex align-items-start mb-3">
+        <div class="bg-success rounded-circle p-2 me-3">
+            <i class="bi bi-check-circle text-white"></i>
+        </div>
+        <div>
+            <div class="fw-semibold">New Teaching Resources</div>
+            <div class="text-muted small">Digital textbooks available in library</div>
+            <div class="text-muted small">3 days ago</div>
+        </div>
+    </div>
+</div>
+
+<!-- Login Section -->
+<div class="teacher-card text-center">
+    <h3 class="mb-4">🔐 Ready to Access Your Account?</h3>
+    <p class="text-muted mb-4">Login with your mobile number and name to access the full teacher portal</p>
+    <div class="d-flex gap-3 justify-content-center">
+        <a href="{% url 'students_app:teacher_login' %}" class="btn btn-primary btn-lg">
+            <i class="bi bi-person-badge"></i> Teacher Login
+        </a>
+        <a href="{% url 'students_app:parent_demo' %}" class="btn btn-outline-primary btn-lg">
+            <i class="bi bi-person-circle"></i> Parent Portal
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add some interactive animations
+    document.querySelectorAll('.feature-card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-10px) scale(1.02)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+    });
+    
+    // Animate stats on load
+    const statNumbers = document.querySelectorAll('.stat-number');
+    statNumbers.forEach(stat => {
+        const finalValue = stat.textContent;
+        const isPercentage = finalValue.includes('%');
+        const numericValue = parseInt(finalValue.replace('%', ''));
+        
+        let currentValue = 0;
+        const increment = numericValue / 20;
+        
+        const timer = setInterval(() => {
+            currentValue += increment;
+            if (currentValue >= numericValue) {
+                stat.textContent = finalValue;
+                clearInterval(timer);
+            } else {
+                stat.textContent = Math.floor(currentValue) + (isPercentage ? '%' : '');
+            }
+        }, 50);
+    });
+</script>
+{% endblock %}
+

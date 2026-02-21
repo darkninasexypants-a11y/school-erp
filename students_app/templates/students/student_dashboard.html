@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Portal - {{ student.get_full_name }}</title>
+
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fredoka:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <!-- AOS Animation -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --warning-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            --danger-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            --dark-gradient: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        .bg-animated {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background:
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3), transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(138, 92, 246, 0.3), transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(59, 130, 246, 0.2), transparent 50%);
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.8;
+                transform: scale(1.05);
+            }
+        }
+
+        /* Floating Elements */
+        .floating-element {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .floating-element:nth-child(1) {
+            width: 80px;
+            height: 80px;
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .floating-element:nth-child(2) {
+            width: 120px;
+            height: 120px;
+            top: 60%;
+            right: 10%;
+            animation-delay: 2s;
+        }
+
+        .floating-element:nth-child(3) {
+            width: 60px;
+            height: 60px;
+            bottom: 20%;
+            left: 20%;
+            animation-delay: 4s;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-20px) rotate(180deg);
+            }
+        }
+
+        /* Header */
+        .student-header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 0 0 30px 30px;
+            padding: 30px 0;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .student-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            z-index: -1;
+        }
+
+        .student-profile {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .student-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: var(--success-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+            font-weight: 900;
+            font-family: 'Fredoka', sans-serif;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            position: relative;
+            animation: pulse 2s infinite;
+        }
+
+        .student-avatar::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            border-radius: 50%;
+            background: var(--success-gradient);
+            z-index: -1;
+            animation: rotate 3s linear infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .student-info h1 {
+            color: white;
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            text-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .student-info p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+
+        .student-badges {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .badge {
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin: 40px 0;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 25px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.5s;
+        }
+
+        .stat-card:hover::before {
+            left: 100%;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 2rem;
+            color: white;
+            position: relative;
+        }
+
+        .stat-icon.attendance {
+            background: var(--success-gradient);
+        }
+
+        .stat-icon.academic {
+            background: var(--primary-gradient);
+        }
+
+        .stat-icon.activities {
+            background: var(--secondary-gradient);
+        }
+
+        .stat-icon.achievements {
+            background: var(--warning-gradient);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #1e293b;
+            margin-bottom: 10px;
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        /* Co-curricular Activities */
+        .activities-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            padding: 40px;
+            margin: 40px 0;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Subject Cards */
+        .subjects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .subject-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .subject-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            border-color: #667eea;
+        }
+
+        .subject-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.5s;
+        }
+
+        .subject-card:hover::before {
+            left: 100%;
+        }
+
+        .subject-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 2rem;
+            color: white;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .subject-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+
+        .subject-description {
+            color: #64748b;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .subject-stats {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .stat-item i {
+            color: #667eea;
+        }
+
+        /* Mock Tests Specific Styles */
+        .mock-tests-section .subject-card {
+            border: 2px solid #e2e8f0;
+        }
+
+        .mock-tests-section .subject-card:hover {
+            border-color: #10b981;
+            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+        }
+
+        .mock-tests-section .subject-icon {
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        /* Games Specific Styles */
+        .games-section .subject-card {
+            border: 2px solid #e2e8f0;
+        }
+
+        .games-section .subject-card:hover {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+
+        .games-section .subject-icon {
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .section-title {
+            color: #1e293b;
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        .section-title i {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 3rem;
+        }
+
+        .activities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .activity-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .activity-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: var(--primary-gradient);
+        }
+
+        .activity-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .activity-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .activity-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .activity-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .activity-description {
+            color: #64748b;
+            margin-bottom: 15px;
+        }
+
+        .activity-status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .status-registered {
+            background: rgba(16, 185, 129, 0.1);
+            color: #059669;
+        }
+
+        .status-available {
+            background: rgba(59, 130, 246, 0.1);
+            color: #1d4ed8;
+        }
+
+        /* Hall of Fame */
+        .hall-of-fame {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            padding: 40px;
+            margin: 40px 0;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .achievement-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 30px;
+            color: white;
+            text-align: center;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .achievement-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+
+            0%,
+            100% {
+                transform: translateX(-100%) translateY(-100%) rotate(30deg);
+            }
+
+            50% {
+                transform: translateX(100%) translateY(100%) rotate(30deg);
+            }
+        }
+
+        .achievement-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            20%,
+            50%,
+            80%,
+            100% {
+                transform: translateY(0);
+            }
+
+            40% {
+                transform: translateY(-10px);
+            }
+
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .achievement-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        .achievement-description {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* Interactive Elements */
+        .interactive-btn {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .interactive-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .interactive-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .interactive-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Logout Button */
+        .logout-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .logout-btn:hover {
+            background: #dc2626;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .student-profile {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .student-info h1 {
+                font-size: 2rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .activities-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    {% csrf_token %}
+    <!-- Animated Background -->
+    <div class="bg-animated"></div>
+    <div class="floating-element"></div>
+    <div class="floating-element"></div>
+    <div class="floating-element"></div>
+
+    <!-- Logout Button -->
+    <button class="logout-btn" onclick="logout()">
+        <i class="bi bi-box-arrow-right"></i> Logout
+    </button>
+
+    <div class="container-fluid">
+        <!-- Student Header -->
+        <div class="student-header">
+            <div class="container">
+                <div class="student-profile" data-aos="fade-up">
+                    <div class="student-avatar">
+                        {{ student.first_name.0|default:"S" }}
+                    </div>
+                    <div class="student-info">
+                        <h1>{{ student.get_full_name }}</h1>
+                        <p><strong>Admission ID:</strong> {{ student.admission_number }}</p>
+                        <p><strong>Class:</strong> {{ student.current_class.name }} - {{ student.section.name }}</p>
+                        <p><strong>Roll Number:</strong> {{ student.roll_number }}</p>
+                        <div class="student-badges">
+                            <span class="badge">🌟 Star Student</span>
+                            <span class="badge">🏆 Achiever</span>
+                            <span class="badge">⭐ Active</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <!-- Statistics -->
+            <div class="stats-grid">
+                <div class="stat-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="stat-icon attendance">
+                        <i class="bi bi-calendar-check"></i>
+                    </div>
+                    <div class="stat-value">95%</div>
+                    <div class="stat-label">Attendance</div>
+                </div>
+
+                <div class="stat-card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="stat-icon academic">
+                        <i class="bi bi-trophy"></i>
+                    </div>
+                    <div class="stat-value">A+</div>
+                    <div class="stat-label">Overall Grade</div>
+                </div>
+
+                <div class="stat-card" data-aos="fade-up" data-aos-delay="300">
+                    <div class="stat-icon activities">
+                        <i class="bi bi-star"></i>
+                    </div>
+                    <div class="stat-value">8</div>
+                    <div class="stat-label">Activities</div>
+                </div>
+
+                <div class="stat-card" data-aos="fade-up" data-aos-delay="400">
+                    <div class="stat-icon achievements">
+                        <i class="bi bi-award"></i>
+                    </div>
+                    <div class="stat-value">12</div>
+                    <div class="stat-label">Achievements</div>
+                </div>
+            </div>
+
+            <!-- Co-curricular Activities -->
+            <div class="activities-section" data-aos="fade-up">
+                <h2 class="section-title">
+                    <i class="bi bi-star-fill"></i>
+                    Co-curricular Activities
+                </h2>
+
+                <div class="activities-grid">
+                    <div class="activity-card" onclick="showActivityDetails('music')">
+                        <div class="activity-header">
+                            <div class="activity-icon" style="background: var(--secondary-gradient);">
+                                <i class="bi bi-music-note-beamed"></i>
+                            </div>
+                            <div class="activity-title">Music Club</div>
+                        </div>
+                        <div class="activity-description">
+                            Join our music club and learn various instruments, singing, and music theory.
+                        </div>
+                        <span class="activity-status status-registered">Registered</span>
+                    </div>
+
+                    <div class="activity-card" onclick="showActivityDetails('dance')">
+                        <div class="activity-header">
+                            <div class="activity-icon" style="background: var(--warning-gradient);">
+                                <i class="bi bi-person-dance"></i>
+                            </div>
+                            <div class="activity-title">Dance Society</div>
+                        </div>
+                        <div class="activity-description">
+                            Express yourself through various dance forms including classical, contemporary, and folk.
+                        </div>
+                        <span class="activity-status status-registered">Registered</span>
+                    </div>
+
+                    <div class="activity-card" onclick="showActivityDetails('debate')">
+                        <div class="activity-header">
+                            <div class="activity-icon" style="background: var(--primary-gradient);">
+                                <i class="bi bi-chat-dots"></i>
+                            </div>
+                            <div class="activity-title">Debate Club</div>
+                        </div>
+                        <div class="activity-description">
+                            Sharpen your speaking skills and critical thinking through debates and discussions.
+                        </div>
+                        <span class="activity-status status-available">Available</span>
+                    </div>
+
+                    <div class="activity-card" onclick="showActivityDetails('art')">
+                        <div class="activity-header">
+                            <div class="activity-icon" style="background: var(--success-gradient);">
+                                <i class="bi bi-palette"></i>
+                            </div>
+                            <div class="activity-title">Art & Craft</div>
+                        </div>
+                        <div class="activity-description">
+                            Unleash your creativity through painting, drawing, and various craft activities.
+                        </div>
+                        <span class="activity-status status-registered">Registered</span>
+                    </div>
+
+                    <div class="activity-card" onclick="showActivityDetails('sports')">
+                        <div class="activity-header">
+                            <div class="activity-icon" style="background: var(--danger-gradient);">
+                                <i class="bi bi-trophy"></i>
+                            </div>
+                            <div class="activity-title">Sports Club</div>
+                        </div>
+                        <div class="activity-description">
+                            Stay fit and competitive with various sports including football, basketball, and athletics.
+                        </div>
+                        <span class="activity-status status-available">Available</span>
+                    </div>
+
+                    <div class="activity-card" onclick="showActivityDetails('drama')">
+                        <div class="activity-header">
+                            <div class="activity-icon" style="background: var(--dark-gradient);">
+                                <i class="bi bi-theater-masks"></i>
+                            </div>
+                            <div class="activity-title">Drama Society</div>
+                        </div>
+                        <div class="activity-description">
+                            Explore acting, scriptwriting, and stage performance in our drama society.
+                        </div>
+                        <span class="activity-status status-registered">Registered</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Educational Games & Mock Tests -->
+            <div class="activities-section" data-aos="fade-up">
+                <h2 class="section-title">
+                    <i class="bi bi-controller"></i>
+                    {% if student.current_class.numeric_value >= 9 %}
+                        <!-- Mock Tests for 9th-12th Class -->
+                        <div class="mock-tests-section">
+                            <div class="alert alert-info mb-4">
+                                <i class="bi bi-info-circle"></i>
+                                <strong>Mock Tests for {{ student.current_class.name }} Class</strong><br>
+                                Practice with difficult questions from your syllabus to prepare for final exams
+                            </div>
+
+                            <div class="subjects-grid">
+                                <div class="subject-card" onclick="startMockTest('maths')">
+                                    <div class="subject-icon" style="background: var(--secondary-gradient);">
+                                        <i class="bi bi-calculator"></i>
+                                    </div>
+                                    <div class="subject-title">Mathematics</div>
+                                    <div class="subject-description">
+                                        Algebra, geometry, statistics, advanced math
+                                    </div>
+                                    <div class="subject-stats">
+                                        <span class="stat-item"><i class="bi bi-clock"></i> 20-30 min</span>
+                                        <span class="stat-item"><i class="bi bi-star"></i> Hard</span>
+                                    </div>
+                                </div>
+
+                                <div class="subject-card" onclick="startMockTest('science')">
+                                    <div class="subject-icon" style="background: var(--success-gradient);">
+                                        <i class="bi bi-flask"></i>
+                                    </div>
+                                    <div class="subject-title">Science</div>
+                                    <div class="subject-description">
+                                        Physics, chemistry, biology experiments
+                                    </div>
+                                    <div class="subject-stats">
+                                        <span class="stat-item"><i class="bi bi-clock"></i> 20-30 min</span>
+                                        <span class="stat-item"><i class="bi bi-star"></i> Hard</span>
+                                    </div>
+                                </div>
+
+                                <div class="subject-card" onclick="startMockTest('hindi')">
+                                    <div class="subject-icon" style="background: var(--warning-gradient);">
+                                        <i class="bi bi-translate"></i>
+                                    </div>
+                                    <div class="subject-title">Hindi</div>
+                                    <div class="subject-description">
+                                        Literature, advanced grammar, essays
+                                    </div>
+                                    <div class="subject-stats">
+                                        <span class="stat-item"><i class="bi bi-clock"></i> 20-30 min</span>
+                                        <span class="stat-item"><i class="bi bi-star"></i> Hard</span>
+                                    </div>
+                                </div>
+
+                                <div class="subject-card" onclick="startMockTest('english')">
+                                    <div class="subject-icon" style="background: var(--danger-gradient);">
+                                        <i class="bi bi-book"></i>
+                                    </div>
+                                    <div class="subject-title">English</div>
+                                    <div class="subject-description">
+                                        Literature, advanced grammar, comprehension
+                                    </div>
+                                    <div class="subject-stats">
+                                        <span class="stat-item"><i class="bi bi-clock"></i> 20-30 min</span>
+                                        <span class="stat-item"><i class="bi bi-star"></i> Hard</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-center mt-4">
+                                <button class="btn btn-primary btn-lg" onclick="goToMockTests()">
+                                    <i class="bi bi-pencil-square"></i> View All Mock Tests
+                                </button>
+                            </div>
+                        </div>
+                    {% else %}
+                        <!-- Educational Games for Nursery-8th Class -->
+                        <div class="educational-games-section">
+                            <div class="alert alert-info mb-4">
+                                <i class="bi bi-info-circle"></i>
+                                <strong>Games for {{ student.current_class.name }} Class</strong><br>
+                                Choose a subject to practice through fun and interactive games
+                            </div>
+
+                            <div class="subjects-grid">
+                                <div class="subject-card" onclick="selectSubject('maths')">
+                                    <div class="subject-icon" style="background: var(--secondary-gradient);">
+                                        <i class="bi bi-calculator"></i>
+                                    </div>
+                                    <div class="subject-title">Mathematics</div>
+                                    <div class="subject-description">
+                                        {% if student.current_class.numeric_value <= 2 %}
+                                            Count numbers, learn shapes, basic addition
+                                        {% elif student.current_class.numeric_value <= 5 %}
+                                            Tables, fractions, geometry, word problems
+                                        {% else %}
+                                            Algebra, geometry, statistics, advanced math
+                                        {% endif %}
+                                    </div>
+                                    <div class="subject-stats">
+                                        <span class="stat-item"><i class="bi bi-clock"></i> 5-10 min</span>
+                                        <span class="stat-item">
+                                            <i class="bi bi-star"></i>
+                                            {% if student.current_class.numeric_value <= 2 %}
+                                                Easy
+                                            {% elif student.current_class.numeric_value <= 5 %}
+                                                Medium
+                                            {% else %}
+                                                Hard
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="subject-card" onclick="selectSubject('science')">
+                                    <div class="subject-icon" style="background: var(--success-gradient);">
+                                        <i class="bi bi-flask"></i>
+                                    </div>
+                                    <div class="subject-title">Science</div>
+                                    <div class="subject-description">
+                                        {% if student.current_class.numeric_value <= 2 %}
+                                            Animals, plants, weather, nature
+                                        {% elif student.current_class.numeric_value <= 5 %}
+                                            Solar system, human body, environment
+                                        {% else %}
+                                            Physics, chemistry, biology experiments
+                                        {% endif %}
+                                    </div>
+                                    <div class="subject-stats">
+                                        <span class="stat-item"><i class="bi bi-clock"></i> 5-10 min</span>
+                                        <span class="stat-item">
+                                            <i class="bi bi-star"></i>
+                                            {% if student.current_class.numeric_value <= 2 %}
+                                                Easy
+                                            {% elif student.current_class.numeric_value <= 5 %}
+                                                Medium
+                                            {% else %}
+                                                Hard
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="subject-card" onclick="selectSubject('hindi')">
+                                    <div class="subject-icon" style="background: var(--warning-gradient);">
+                                        <i class="bi bi-translate"></i>
+                                    </div>
+                                    <div class="subject-title">Hindi</div>
+                                    <div class="subject-description">
+                                        {% if student.current_class.numeric_value <= 2 %}
+                                            Vowels, consonants, basic words
+                                        {% elif student.current_class.numeric_value <= 5 %}
+                                            Grammar, stories, poems, writing
+                                        {% else %}
+                                            Literature, advanced grammar, essays
+                                        {% endif %}
+                                    </div>
+                                    <div class="subject-stats">
+                                        <span class="stat-item"><i class="bi bi-clock"></i> 5-10 min</span>
+                                        <span class="stat-item">
+                                            <i class="bi bi-star"></i>
+                                            {% if student.current_class.numeric_value <= 2 %}
+                                                Easy
+                                            {% elif student.current_class.numeric_value <= 5 %}
+                                                Medium
+                                            {% else %}
+                                                Hard
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="subject-card" onclick="selectSubject('english')">
+                                    <div class="subject-icon" style="background: var(--danger-gradient);">
+                                        <i class="bi bi-book"></i>
+                                    </div>
+                                    <div class="subject-title">English</div>
+                                    <div class="subject-description">
+                                        {% if student.current_class.numeric_value <= 2 %}
+                                            Alphabets, basic words, phonics
+                                        {% elif student.current_class.numeric_value <= 5 %}
+                                            Grammar, reading, writing, vocabulary
+                                        {% else %}
+                                            Literature, advanced grammar, comprehension
+                                        {% endif %}
+                                    </div>
+                                    <div class="subject-stats">
+                                        <span class="stat-item"><i class="bi bi-clock"></i> 5-10 min</span>
+                                        <span class="stat-item">
+                                            <i class="bi bi-star"></i>
+                                            {% if student.current_class.numeric_value <= 2 %}
+                                                Easy
+                                            {% elif student.current_class.numeric_value <= 5 %}
+                                                Medium
+                                            {% else %}
+                                                Hard
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="text-center mt-4">
+                                <button class="btn btn-primary btn-lg" onclick="goToGames()">
+                                    <i class="bi bi-controller"></i> Play All Games
+                                </button>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    </div>
+    <!-- Hall of Fame -->
+                                    <div class="hall-of-fame" data-aos="fade-up">
+                                        <h2 class="section-title">
+                                            <i class="bi bi-trophy-fill"></i>
+                                            Hall of Fame
+                                        </h2>
+
+                                        <div class="achievement-card" data-aos="zoom-in">
+                                            <div class="achievement-icon">🏆</div>
+                                            <div class="achievement-title">Student of the Year 2024</div>
+                                            <div class="achievement-description">
+                                                Outstanding performance in academics, sports, and co-curricular
+                                                activities
+                                            </div>
+                                        </div>
+
+                                        <div class="achievement-card" data-aos="zoom-in" data-aos-delay="200">
+                                            <div class="achievement-icon">🎭</div>
+                                            <div class="achievement-title">Best Actor Award</div>
+                                            <div class="achievement-description">
+                                                Exceptional performance in the annual drama competition
+                                            </div>
+                                        </div>
+
+                                        <div class="achievement-card" data-aos="zoom-in" data-aos-delay="400">
+                                            <div class="achievement-icon">🎵</div>
+                                            <div class="achievement-title">Music Excellence</div>
+                                            <div class="achievement-description">
+                                                First place in the inter-school music competition
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Action Buttons -->
+                                    <div class="text-center mt-5 mb-5" data-aos="fade-up">
+                                        <button class="interactive-btn me-3" onclick="viewProgress()">
+                                            <i class="bi bi-graph-up"></i> View My Progress
+                                        </button>
+                                        <button class="interactive-btn me-3" onclick="joinActivity()">
+                                            <i class="bi bi-plus-circle"></i> Join Activity
+                                        </button>
+                                        <button class="interactive-btn" onclick="viewAchievements()">
+                                            <i class="bi bi-award"></i> My Achievements
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- AOS Animation -->
+                            <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+                            <script>
+                                // Initialize AOS
+                                AOS.init({
+                                    duration: 1000,
+                                    once: true,
+                                    offset: 100
+                                });
+
+                                // Games and Mock Tests Functions
+                                function selectSubject(subject) {
+                                    // For Nursery to 8th class - redirect to games with subject filter
+                                    const classId = "{{ student.current_class.id }}";
+                                    window.location.href = `/games/class/${classId}/?subject=${subject}`;
+                                }
+
+                                function startMockTest(subject) {
+                                    // For 9th to 12th class - redirect to mock tests
+                                    const classId = "{{ student.current_class.id }}";
+                                    window.location.href = `/mock-tests/class/${classId}/?subject=${subject}`;
+                                }
+
+                                function goToGames() {
+                                    // Redirect to games home page
+                                    window.location.href = '/games/';
+                                }
+
+                                function goToMockTests() {
+                                    // Redirect to mock tests home page
+                                    window.location.href = '/mock-tests/';
+                                }
+
+                                function playGame(gameType) {
+                                    // Legacy function for backward compatibility
+                                    selectSubject(gameType);
+                                }
+
+                                // Interactive Functions
+                                function showActivityDetails(activity) {
+                                    const activities = {
+                                        music: {
+                                            title: 'Music Club',
+                                            description: 'Join our music club and learn various instruments, singing, and music theory.',
+                                            instructor: 'Ms. Sarah Johnson',
+                                            schedule: 'Every Tuesday & Thursday, 4:00 PM - 5:30 PM',
+                                            venue: 'Music Room 1'
+                                        },
+                                        dance: {
+                                            title: 'Dance Society',
+                                            description: 'Express yourself through various dance forms including classical, contemporary, and folk.',
+                                            instructor: 'Mr. Raj Patel',
+                                            schedule: 'Every Monday & Wednesday, 3:30 PM - 5:00 PM',
+                                            venue: 'Dance Studio'
+                                        },
+                                        debate: {
+                                            title: 'Debate Club',
+                                            description: 'Sharpen your speaking skills and critical thinking through debates and discussions.',
+                                            instructor: 'Dr. Amit Kumar',
+                                            schedule: 'Every Friday, 4:30 PM - 6:00 PM',
+                                            venue: 'Conference Room'
+                                        },
+                                        art: {
+                                            title: 'Art & Craft',
+                                            description: 'Unleash your creativity through painting, drawing, and various craft activities.',
+                                            instructor: 'Ms. Priya Singh',
+                                            schedule: 'Every Saturday, 10:00 AM - 12:00 PM',
+                                            venue: 'Art Room'
+                                        },
+                                        sports: {
+                                            title: 'Sports Club',
+                                            description: 'Stay fit and competitive with various sports including football, basketball, and athletics.',
+                                            instructor: 'Mr. Vikram Sharma',
+                                            schedule: 'Every Day, 6:00 AM - 7:30 AM',
+                                            venue: 'Sports Ground'
+                                        },
+                                        drama: {
+                                            title: 'Drama Society',
+                                            description: 'Explore acting, scriptwriting, and stage performance in our drama society.',
+                                            instructor: 'Ms. Kavita Gupta',
+                                            schedule: 'Every Sunday, 2:00 PM - 4:00 PM',
+                                            venue: 'Auditorium'
+                                        }
+                                    };
+
+                                    const activityInfo = activities[activity];
+                                    alert(`${activityInfo.title}\n\n${activityInfo.description}\n\nInstructor: ${activityInfo.instructor}\nSchedule: ${activityInfo.schedule}\nVenue: ${activityInfo.venue}`);
+                                }
+
+                                function viewProgress() {
+                                    alert('📊 Your Progress Dashboard\n\n• Academic Performance: A+\n• Attendance: 95%\n• Activities Participated: 8\n• Achievements: 12\n• Behavior Rating: Excellent');
+                                }
+
+                                function joinActivity() {
+                                    alert('🎯 Join New Activity\n\nSelect from available activities:\n• Debate Club\n• Sports Club\n\nContact your class teacher to register!');
+                                }
+
+                                function viewAchievements() {
+                                    alert('🏆 Your Achievements\n\n• Student of the Year 2024\n• Best Actor Award\n• Music Excellence Award\n• Perfect Attendance (3 months)\n• Debate Champion\n• Art Competition Winner');
+                                }
+
+                                function logout() {
+                                    if (confirm('Are you sure you want to logout?')) {
+                                        // Clear session data
+                                        fetch('{% url "students_app:ajax_logout" %}', {
+                                            method: 'POST',
+                                            headers: {
+                                                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                                                'Content-Type': 'application/json',
+                                            },
+                                            body: JSON.stringify({})
+                                        })
+                                            .then(response => response.json())
+                                            .then(data => {
+                                                if (data.redirect_url) {
+                                                    window.location.href = data.redirect_url;
+                                                } else {
+                                                    window.location.href = '/simple-login/';
+                                                }
+                                            })
+                                            .catch(error => {
+                                                console.error('Error:', error);
+                                                window.location.href = '/simple-login/';
+                                            });
+                                    }
+                                }
+
+                                // Add hover effects to cards
+                                document.querySelectorAll('.stat-card, .activity-card').forEach(card => {
+                                    card.addEventListener('mouseenter', function () {
+                                        this.style.transform = 'translateY(-10px) scale(1.02)';
+                                    });
+
+                                    card.addEventListener('mouseleave', function () {
+                                        this.style.transform = 'translateY(0) scale(1)';
+                                    });
+                                });
+
+                                // Add click animations
+                                document.querySelectorAll('.interactive-btn').forEach(btn => {
+                                    btn.addEventListener('click', function () {
+                                        this.style.transform = 'scale(0.95)';
+                                        setTimeout(() => {
+                                            this.style.transform = 'scale(1)';
+                                        }, 150);
+                                    });
+                                });
+                            </script>
+</body>
+
+</html>

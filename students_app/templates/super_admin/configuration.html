@@ -1,0 +1,106 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Configuration Settings - Super Admin{% endblock %}
+
+{% block content %}
+{% include 'includes/super_admin_sidebar.html' %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-sliders-h me-2 text-warning"></i>Configuration Settings</h2>
+            <p class="text-muted">Customize software features, enable/disable modules, and configure system settings</p>
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        
+        {% for group in grouped_features %}
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-layer-group me-2 text-primary"></i>{{ group.label }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    {% for feature in group.features %}
+                    <div class="col-md-6 col-xl-4">
+                        <div class="feature-toggle h-100 p-3 border rounded">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                        <div class="form-check form-switch">
+                                        <input
+                                            class="form-check-input"
+                                            type="checkbox"
+                                            name="{{ feature.definition.key }}"
+                                            id="{{ feature.definition.key }}"
+                                            {% if feature.enabled %}checked{% endif %}
+                                        >
+                                        <label class="form-check-label fw-semibold" for="{{ feature.definition.key }}">
+                                            {{ feature.definition.label }}
+                            </label>
+                        </div>
+                    </div>
+                        </div>
+                            {% if feature.definition.description %}
+                            <p class="text-muted small mb-2">{{ feature.definition.description }}</p>
+                            {% endif %}
+                            {% if feature.definition.roles %}
+                            <div class="small text-muted">
+                                <i class="fas fa-users me-1"></i>
+                                Target users:
+                                {{ feature.definition.roles|join:", " }}
+                    </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="d-flex justify-content-end gap-2">
+            <a href="{% url 'students_app:admin_dashboard' %}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Save Configuration
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+.form-check-input:checked {
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
+}
+
+.form-check-input:focus {
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.form-check-input {
+    width: 3em !important;
+    height: 1.5em !important;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.feature-toggle {
+    background-color: #f8f9fa;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.feature-toggle:hover {
+    border-color: rgba(13, 110, 253, 0.4);
+    box-shadow: 0 0.5rem 1rem rgba(13, 110, 253, 0.1);
+}
+
+.form-check-input:checked + .form-check-label {
+    color: #0d6efd;
+}
+</style>
+{% endblock %}
+

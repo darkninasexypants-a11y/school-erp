@@ -1,0 +1,67 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Parent Login{% endblock %}
+
+{% block content %}
+<div class="container-fluid vh-100 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="row w-100 justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-lg border-0" style="border-radius: 20px;">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-user-friends fa-3x text-info mb-3"></i>
+                        <h3 class="fw-bold text-dark">Parent Login</h3>
+                        <p class="text-muted">Enter your child's details to access the portal</p>
+                    </div>
+
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label for="{{ form.admission_id.id_for_label }}" class="form-label fw-semibold">
+                                <i class="fas fa-id-card me-2"></i>{{ form.admission_id.label }}
+                            </label>
+                            {{ form.admission_id }}
+                            <div class="form-text">Enter your child's admission number</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.child_name.id_for_label }}" class="form-label fw-semibold">
+                                <i class="fas fa-user me-2"></i>{{ form.child_name.label }}
+                            </label>
+                            {{ form.child_name }}
+                            <div class="form-text">Enter your child's full name as registered</div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-info btn-lg">
+                                <i class="fas fa-sign-in-alt me-2"></i>Login to Parent Portal
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="text-center mt-4">
+                        <a href="{% url 'students_app:multi_login' %}" class="text-decoration-none">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Login Options
+                        </a>
+                    </div>
+
+                    <div class="text-center mt-3">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Need help? Contact your school office
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

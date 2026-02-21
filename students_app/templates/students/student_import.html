@@ -1,0 +1,108 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Import Students{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    {% if messages %}
+    <div class="mb-4">
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show d-flex align-items-center" role="alert">
+            <i class="bi bi-{% if message.tags == 'error' %}exclamation-triangle-fill{% elif message.tags == 'success' %}check-circle-fill{% else %}info-circle-fill{% endif %} me-2" style="font-size: 1.2rem;"></i>
+            <span class="flex-grow-1">{{ message }}</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-file-upload me-2"></i>Import Students</h2>
+        <a href="{% url 'students_app:student_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data" class="row g-3" id="importForm">
+                {% csrf_token %}
+                
+                <div class="col-md-8">
+                    <label class="form-label"><strong>Excel File <span class="text-danger">*</span></strong></label>
+                    <input type="file" name="excel_file" class="form-control" accept=".xlsx,.xls" required id="excel_file_input">
+                    <small class="text-muted">Upload an Excel file (.xlsx) with student data</small>
+                    <div id="excelError" class="text-danger small mt-1" style="display:none;"></div>
+                </div>
+
+                <div class="col-md-8">
+                    <label class="form-label"><strong>Photos ZIP File</strong></label>
+                    <input type="file" name="images_zip" class="form-control" accept=".zip" id="images_zip_input">
+                    <small class="text-muted">Optional. ZIP file containing student photos. It must contain images matching filename references in Excel.</small>
+                </div>
+
+                <div class="col-md-8">
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="checkbox" value="on" id="require_section" name="require_section">
+                        <label class="form-check-label" for="require_section">
+                            Section is mandatory
+                        </label>
+                    </div>
+                    <small class="text-muted">If enabled, rows without Section will be rejected during import.</small>
+                </div>
+
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Instructions:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li><strong>Required columns</strong> (names can vary: "Admission Number" or "admission_number" both work): admission_number, first_name, last_name, date_of_birth, gender, class_name, father_name, father_phone, address, city, state, pincode</li>
+                            <li><strong>Optional:</strong> section, roll_number, mother_name, mother_phone, email, blood_group</li>
+                            <li><strong>Date format:</strong> DD.MM.YYYY, DD-MM-YYYY, or YYYY-MM-DD</li>
+                            <li><strong>Photo (optional):</strong> Column like <code>Image Filename</code> or <code>photo</code> + ZIP file with matching images</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-12">
+
+
+                    <button type="submit" class="btn btn-primary btn-lg" id="importBtn">
+                        <i class="bi bi-upload me-2"></i> <span id="importBtnText">Import Students</span>
+                    </button>
+                    <a href="{% url 'students_app:download_sample_template' %}" class="btn btn-outline-secondary btn-lg ms-2">
+                        <i class="bi bi-download me-2"></i> Download Sample Template
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('importForm').addEventListener('submit', function(e) {
+    var excelInput = document.getElementById('excel_file_input');
+    var excelError = document.getElementById('excelError');
+    excelError.style.display = 'none';
+    excelError.textContent = '';
+
+    if (!excelInput || !excelInput.files || !excelInput.files.length) {
+        e.preventDefault();
+        excelError.textContent = 'Please select an Excel file before importing.';
+        excelError.style.display = 'block';
+        excelInput.focus();
+        return false;
+    }
+    // Show loading state
+    var btn = document.getElementById('importBtn');
+    var btnText = document.getElementById('importBtnText');
+    if (btn && btnText) {
+        btn.disabled = true;
+        btnText.textContent = 'Importing...';
+    }
+});
+</script>
+{% endblock %}
+
+

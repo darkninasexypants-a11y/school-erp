@@ -1,0 +1,55 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Delete Student{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Confirm Delete Student
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Warning:</strong> This action cannot be undone. The student record and related login (if any) will be permanently deleted.
+                    </div>
+
+                    <h6>Student Details:</h6>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th width="30%">Name:</th>
+                            <td>{{ student.get_full_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Admission Number:</th>
+                            <td>{{ student.admission_number }}</td>
+                        </tr>
+                        <tr>
+                            <th>Class:</th>
+                            <td>
+                                {% if student.current_class %}{{ student.current_class.name }}{% else %}<span class="text-muted">-</span>{% endif %}
+                                {% if student.section %} - {{ student.section.name }}{% endif %}
+                            </td>
+                        </tr>
+                    </table>
+
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'students_app:student_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-2"></i>Yes, Delete Student
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

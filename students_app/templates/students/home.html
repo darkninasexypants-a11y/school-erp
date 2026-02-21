@@ -1,0 +1,243 @@
+{% extends 'students/base_modern.html' %}
+
+{% block title %}Dashboard - School ERP{% endblock %}
+
+{% block sidebar %}
+{% include 'includes/admin_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+    <!-- Page Header -->
+<div class="top-bar">
+    <div class="page-title">
+        <h1>Welcome Back! 👋</h1>
+        <p>Here's what's happening with your school today</p>
+                        </div>
+    <div class="top-bar-actions">
+        <span class="badge bg-primary bg-opacity-10 text-primary" style="padding: 10px 15px; font-size: 0.9rem;">
+            <i class="bi bi-calendar3 me-1"></i> {{ today|date:"l, F d, Y" }}
+            </span>
+                    </div>
+                </div>
+    
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
+    <div class="col-md-6 col-lg-3">
+            <div class="stat-card">
+            <div class="stat-icon blue"><i class="bi bi-people-fill"></i></div>
+                <div class="stat-value">{{ total_students|default:0 }}</div>
+                <div class="stat-label">Total Students</div>
+            </div>
+</div>
+    <div class="col-md-6 col-lg-3">
+            <div class="stat-card">
+            <div class="stat-icon green"><i class="bi bi-person-video3"></i></div>
+                <div class="stat-value">{{ total_teachers|default:0 }}</div>
+                <div class="stat-label">Total Teachers</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+            <div class="stat-card">
+            <div class="stat-icon purple"><i class="bi bi-building"></i></div>
+                <div class="stat-value">{{ total_classes|default:0 }}</div>
+                <div class="stat-label">Total Classes</div>
+                    </div>
+                </div>
+    <div class="col-md-6 col-lg-3">
+            <div class="stat-card">
+            <div class="stat-icon orange"><i class="bi bi-grid-3x3-gap-fill"></i></div>
+                <div class="stat-value">{{ total_sections|default:0 }}</div>
+                <div class="stat-label">Total Sections</div>
+            </div>
+        </div>
+    </div>
+
+<!-- Quick Actions -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-lightning-charge me-2"></i>Quick Actions</h5>
+                </div>
+            <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-2 col-4">
+                <a href="{% url 'students_app:add_student' %}" class="quick-action flex-column text-center py-3">
+                    <div class="icon mb-2" style="background: #dbeafe; color: #2563eb;"><i class="bi bi-person-plus"></i></div>
+                    <small>Add Student</small>
+                </a>
+                                </div>
+            <div class="col-md-2 col-4">
+                <a href="{% url 'students_app:attendance_mark' %}" class="quick-action flex-column text-center py-3">
+                    <div class="icon mb-2" style="background: #dcfce7; color: #16a34a;"><i class="bi bi-check2-square"></i></div>
+                    <small>Attendance</small>
+                </a>
+                            </div>
+            <div class="col-md-2 col-4">
+                <a href="{% url 'students_app:fee_collection' %}" class="quick-action flex-column text-center py-3">
+                    <div class="icon mb-2" style="background: #fef3c7; color: #d97706;"><i class="bi bi-currency-rupee"></i></div>
+                    <small>Collect Fee</small>
+                </a>
+                        </div>
+            <div class="col-md-2 col-4">
+                <a href="{% url 'students_app:marks_entry' %}" class="quick-action flex-column text-center py-3">
+                    <div class="icon mb-2" style="background: #ede9fe; color: #7c3aed;"><i class="bi bi-journal-text"></i></div>
+                    <small>Enter Marks</small>
+                </a>
+                                </div>
+            <div class="col-md-2 col-4">
+                <a href="{% url 'students_app:library_dashboard' %}" class="quick-action flex-column text-center py-3">
+                    <div class="icon mb-2" style="background: #fee2e2; color: #dc2626;"><i class="bi bi-book"></i></div>
+                    <small>Library</small>
+                </a>
+                            </div>
+            <div class="col-md-2 col-4">
+                <a href="{% url 'students_app:notice_list' %}" class="quick-action flex-column text-center py-3">
+                    <div class="icon mb-2" style="background: #e0f2fe; color: #0284c7;"><i class="bi bi-megaphone"></i></div>
+                    <small>Notices</small>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Attendance Overview -->
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-calendar-check me-2"></i>Today's Attendance</h5>
+                <a href="{% url 'students_app:view_attendance' %}" class="btn btn-sm btn-light">View All</a>
+                </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <div class="p-4" style="background: linear-gradient(135deg, #dcfce7, #bbf7d0); border-radius: 12px;">
+                            <div style="font-size: 2.5rem; color: #16a34a; font-weight: 700;">{{ present_today|default:0 }}</div>
+                            <div style="color: #15803d; font-weight: 600;">Present</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-4" style="background: linear-gradient(135deg, #fee2e2, #fecaca); border-radius: 12px;">
+                            <div style="font-size: 2.5rem; color: #dc2626; font-weight: 700;">{{ absent_today|default:0 }}</div>
+                            <div style="color: #b91c1c; font-weight: 600;">Absent</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-4" style="background: linear-gradient(135deg, #dbeafe, #bfdbfe); border-radius: 12px;">
+                            <div style="font-size: 2.5rem; color: #2563eb; font-weight: 700;">{{ attendance_percentage|floatformat:0|default:0 }}%</div>
+                            <div style="color: #1d4ed8; font-weight: 600;">Attendance Rate</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Fee Overview -->
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-currency-rupee me-2"></i>Fee Collection</h5>
+                <a href="{% url 'students_app:fee_analytics' %}" class="btn btn-sm btn-light">Details</a>
+                </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Collected This Month</span>
+                        <strong class="text-success">₹{{ fee_collected_month|default:0 }}</strong>
+                    </div>
+                    <div class="progress" style="height: 8px; border-radius: 4px;">
+                        <div class="progress-bar bg-success" style="width: {{ fee_collection_percentage|default:65 }}%"></div>
+    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Pending Fees</span>
+                        <strong class="text-danger">₹{{ fee_pending|default:0 }}</strong>
+                        </div>
+                </div>
+                <a href="{% url 'students_app:fee_collection' %}" class="btn btn-primary w-100">
+                    <i class="bi bi-plus me-1"></i>Collect Fee
+                </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+<div class="row g-4">
+    <!-- Recent Students -->
+    <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-people me-2"></i>Recent Students</h5>
+                <a href="{% url 'students_app:student_list' %}" class="btn btn-sm btn-light">View All</a>
+                </div>
+            <div class="card-body p-0">
+                {% if recent_students %}
+                        <div class="table-responsive">
+                    <table class="table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Student</th>
+                                        <th>Class</th>
+                                <th>Admission</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                            {% for student in recent_students %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                        <div class="me-2" style="width: 32px; height: 32px; background: linear-gradient(135deg, var(--primary), var(--primary-light)); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.8rem;">
+                                            {{ student.first_name.0|upper }}
+                                                    </div>
+                                        {{ student.get_full_name }}
+                                            </div>
+                                        </td>
+                                <td><span class="badge bg-primary bg-opacity-10 text-primary">{{ student.current_class.name|default:"—" }}</span></td>
+                                <td>{{ student.admission_number }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-people text-muted" style="font-size: 2rem;"></i>
+                    <p class="text-muted mt-2">No recent students</p>
+                        </div>
+                    {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Notices -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-megaphone me-2"></i>Recent Notices</h5>
+                <a href="{% url 'students_app:notice_list' %}" class="btn btn-sm btn-light">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_notices %}
+                {% for notice in recent_notices %}
+                <div class="d-flex align-items-start mb-3 pb-3 {% if not forloop.last %}border-bottom{% endif %}">
+                    <div class="me-3" style="width: 40px; height: 40px; background: var(--gray-100); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-bell text-primary"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <strong class="d-block">{{ notice.title }}</strong>
+                        <small class="text-muted">{{ notice.created_at|timesince }} ago</small>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-megaphone text-muted" style="font-size: 2rem;"></i>
+                    <p class="text-muted mt-2">No recent notices</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

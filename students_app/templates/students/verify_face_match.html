@@ -1,0 +1,49 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Face Verification{% endblock %}
+
+{% block sidebar %}
+{% include 'includes/admin_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <div class="page-title">
+        <h1><i class="bi bi-person-check me-2"></i>Face Verification</h1>
+        <p>Verify if two photos are of the same person</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-upload me-2"></i>Upload Photos</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <label class="form-label fw-semibold">
+                        <i class="bi bi-image me-2"></i>Photo 1 <span class="text-danger">*</span>
+                    </label>
+                    <input type="file" class="form-control" name="photo1" accept="image/*" required>
+                    <small class="form-text text-muted">First photo to compare</small>
+                </div>
+                
+                <div class="col-md-6 mb-4">
+                    <label class="form-label fw-semibold">
+                        <i class="bi bi-image me-2"></i>Photo 2 <span class="text-danger">*</span>
+                    </label>
+                    <input type="file" class="form-control" name="photo2" accept="image/*" required>
+                    <small class="form-text text-muted">Second photo to compare</small>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-circle me-2"></i>Verify Match
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

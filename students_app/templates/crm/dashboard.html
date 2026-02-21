@@ -1,0 +1,492 @@
+{% extends "students/base_modern.html" %}
+{% load static %}
+{% block title %}CRM Dashboard - Enrollment Management{% endblock %}
+
+{% block sidebar %}
+{% with role_name=request.user.school_profile.role.name|default_if_none:''|lower %}
+    {% if request.user.is_superuser or role_name == 'super_admin' %}
+        {% include 'includes/super_admin_sidebar.html' %}
+    {% elif role_name == 'school admin' or role_name == 'school_admin' or role_name == 'admin' %}
+        {% include 'includes/admin_sidebar.html' %}
+    {% else %}
+        {% include 'includes/school_sidebar.html' %}
+    {% endif %}
+{% endwith %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .metric-card {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+        overflow: hidden;
+    }
+    .metric-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+    .metric-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+    .funnel-stage {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 8px;
+        padding: 20px;
+        color: white;
+        margin-bottom: 15px;
+        position: relative;
+    }
+    .funnel-stage::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 10px solid transparent;
+        border-right: 10px solid transparent;
+        border-top: 10px solid #764ba2;
+    }
+    .funnel-stage:last-child::after {
+        display: none;
+    }
+    .activity-item {
+        border-left: 3px solid #667eea;
+        padding-left: 15px;
+        margin-bottom: 15px;
+        transition: all 0.2s;
+    }
+    .activity-item:hover {
+        border-left-width: 5px;
+        padding-left: 13px;
+    }
+    .progress-ring {
+        transform: rotate(-90deg);
+    }
+    .stat-trend {
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .trend-up { color: #28a745; }
+    .trend-down { color: #dc3545; }
+    .chart-container {
+        position: relative;
+        height: 300px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-chart-line me-2 text-primary"></i>
+                Enrollment CRM Dashboard
+            </h2>
+            <p class="text-muted mb-0">Track leads, conversions, and enrollment metrics</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'students_app:lead_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus-circle"></i> Add New Lead
+            </a>
+            <a href="{% url 'students_app:campaign_list' %}" class="btn btn-success">
+                <i class="fas fa-bullhorn"></i> Campaigns
+            </a>
+            <a href="{% url 'students_app:enrollment_analytics' %}" class="btn btn-info">
+                <i class="fas fa-chart-bar"></i> Analytics
+            </a>
+        </div>
+    </div>
+
+    <!-- Key Metrics Cards - Similar to Salesforce/Zoho -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card metric-card border-0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted text-uppercase mb-2" style="font-size: 12px; letter-spacing: 0.5px;">
+                                Total Leads
+                            </h6>
+                            <h2 class="mb-0 fw-bold">{{ total_leads|default:0 }}</h2>
+                            <small class="stat-trend trend-up">
+                                <i class="fas fa-arrow-up"></i> {{ recent_leads_count|default:0 }} this month
+                            </small>
+                        </div>
+                        <div class="metric-icon bg-primary bg-opacity-10 text-primary">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card metric-card border-0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted text-uppercase mb-2" style="font-size: 12px; letter-spacing: 0.5px;">
+                                New Leads
+                            </h6>
+                            <h2 class="mb-0 fw-bold">{{ new_leads|default:0 }}</h2>
+                            <small class="stat-trend text-warning">
+                                <i class="fas fa-clock"></i> Needs attention
+                            </small>
+                        </div>
+                        <div class="metric-icon bg-warning bg-opacity-10 text-warning">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card metric-card border-0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted text-uppercase mb-2" style="font-size: 12px; letter-spacing: 0.5px;">
+                                Qualified Leads
+                            </h6>
+                            <h2 class="mb-0 fw-bold">{{ qualified_leads|default:0 }}</h2>
+                            <small class="stat-trend trend-up">
+                                <i class="fas fa-check-circle"></i> Ready to convert
+                            </small>
+                        </div>
+                        <div class="metric-icon bg-success bg-opacity-10 text-success">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card metric-card border-0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted text-uppercase mb-2" style="font-size: 12px; letter-spacing: 0.5px;">
+                                Enrolled
+                            </h6>
+                            <h2 class="mb-0 fw-bold">{{ enrolled_count|default:0 }}</h2>
+                            <small class="stat-trend trend-up">
+                                <i class="fas fa-trophy"></i> {{ conversion_rate|default:0 }}% conversion
+                            </small>
+                        </div>
+                        <div class="metric-icon bg-info bg-opacity-10 text-info">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enrollment Funnel - Similar to Pipedrive Visual Pipeline -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-funnel-dollar me-2 text-primary"></i>
+                        Enrollment Funnel
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="funnel-stage">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1 opacity-75">Enquiries</h6>
+                                        <h3 class="mb-0">{{ recent_leads_count|default:0 }}</h3>
+                                    </div>
+                                    <i class="fas fa-search fa-2x opacity-50"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="funnel-stage" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1 opacity-75">Contacted</h6>
+                                        <h3 class="mb-0">{{ qualified_leads|default:0 }}</h3>
+                                    </div>
+                                    <i class="fas fa-phone fa-2x opacity-50"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="funnel-stage" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1 opacity-75">Applications</h6>
+                                        <h3 class="mb-0">{{ qualified_leads|default:0 }}</h3>
+                                    </div>
+                                    <i class="fas fa-file-alt fa-2x opacity-50"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="funnel-stage" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1 opacity-75">Enrolled</h6>
+                                        <h3 class="mb-0">{{ enrolled_count|default:0 }}</h3>
+                                    </div>
+                                    <i class="fas fa-check-circle fa-2x opacity-50"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2 text-warning"></i>
+                        Overdue Follow-ups
+                    </h5>
+                </div>
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    {% if overdue_followups %}
+                        {% for lead in overdue_followups %}
+                            <div class="d-flex align-items-center mb-3 p-2 bg-light rounded">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0">{{ lead.get_full_name }}</h6>
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock"></i> 
+                                        {{ lead.next_followup|timesince }} ago
+                                    </small>
+                                </div>
+                                <a href="{% url 'students_app:lead_detail' lead.id %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-check-circle fa-3x mb-3 text-success"></i>
+                            <p>No overdue follow-ups!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Leads & Active Campaigns - Similar to HubSpot Layout -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2 text-primary"></i>
+                        Recent Leads
+                    </h5>
+                    <a href="{% url 'students_app:lead_list' %}" class="btn btn-sm btn-outline-primary">
+                        View All <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Contact</th>
+                                    <th>Source</th>
+                                    <th>Status</th>
+                                    <th>Assigned To</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lead in recent_leads %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ lead.get_full_name }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ lead.interested_class|default:"Not specified" }}</small>
+                                        </td>
+                                        <td>
+                                            <small>{{ lead.phone }}</small><br>
+                                            <small class="text-muted">{{ lead.email }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">{{ lead.source|default:"-" }}</span>
+                                        </td>
+                                        <td>
+                                            {% if lead.status == 'new' %}
+                                                <span class="badge bg-warning">New</span>
+                                            {% elif lead.status == 'qualified' %}
+                                                <span class="badge bg-info">Qualified</span>
+                                            {% elif lead.status == 'enrolled' %}
+                                                <span class="badge bg-success">Enrolled</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ lead.get_status_display }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <small>{{ lead.assigned_to.get_full_name|default:"Unassigned" }}</small>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'students_app:lead_detail' lead.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-4">
+                                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                                            <p>No leads yet. Create your first lead!</p>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bullhorn me-2 text-success"></i>
+                        Active Campaigns
+                    </h5>
+                    <a href="{% url 'students_app:campaign_list' %}" class="btn btn-sm btn-outline-success">
+                        View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if active_campaigns %}
+                        {% for campaign in active_campaigns %}
+                            <div class="mb-3 p-3 border rounded">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h6 class="mb-0">{{ campaign.name }}</h6>
+                                    <span class="badge bg-success">Running</span>
+                                </div>
+                                <p class="text-muted small mb-2">{{ campaign.get_campaign_type_display }}</p>
+                                <div class="d-flex justify-content-between text-muted small">
+                                    <span><i class="fas fa-paper-plane"></i> {{ campaign.total_sent }} sent</span>
+                                    <span><i class="fas fa-check-circle"></i> {{ campaign.total_converted }} converted</span>
+                                </div>
+                                <div class="progress mt-2" style="height: 6px;">
+                                    <div class="progress-bar bg-success" role="progressbar" 
+                                         style="width: {{ campaign.get_conversion_rate }}%">
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-bullhorn fa-3x mb-3"></i>
+                            <p>No active campaigns</p>
+                            <a href="{% url 'students_app:campaign_list' %}" class="btn btn-sm btn-primary">
+                                Create Campaign
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Lead Source Distribution -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2 text-info"></i>
+                        Lead Sources
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if lead_sources %}
+                        {% for source in lead_sources %}
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span>{{ source.name }}</span>
+                                        <strong>{{ source.lead_count }}</strong>
+                                    </div>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar bg-info" role="progressbar" 
+                                             style="width: {% widthratio source.lead_count total_leads 100 %}%">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center">No data available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats Row -->
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body py-4">
+                    <i class="fas fa-user-clock fa-3x text-primary mb-3"></i>
+                    <h3 class="mb-1">{{ user_leads|default:0 }}</h3>
+                    <p class="text-muted mb-0">Your Assigned Leads</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body py-4">
+                    <i class="fas fa-calendar-check fa-3x text-success mb-3"></i>
+                    <h3 class="mb-1">{{ recent_enrollments|default:0 }}</h3>
+                    <p class="text-muted mb-0">Enrollments (Last 30 Days)</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body py-4">
+                    <i class="fas fa-percentage fa-3x text-info mb-3"></i>
+                    <h3 class="mb-1">{{ conversion_rate|default:0 }}%</h3>
+                    <p class="text-muted mb-0">Overall Conversion Rate</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Add any interactive charts or animations here
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-refresh every 5 minutes
+        setTimeout(function() {
+            location.reload();
+        }, 300000);
+    });
+</script>
+{% endblock %}
+

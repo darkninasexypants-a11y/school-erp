@@ -1,0 +1,40 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Reports Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <h2 class="mb-4"><i class="fas fa-chart-pie me-2"></i>Reports Dashboard</h2>
+    
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-graduate fa-3x text-primary mb-3"></i>
+                    <h5>Student Reports</h5>
+                    <a href="{% url 'students_app:student_list' %}" class="btn btn-outline-primary">View</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                    <h5>Attendance Reports</h5>
+                    <a href="{% url 'students_app:attendance_report' %}" class="btn btn-outline-success">View</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-rupee-sign fa-3x text-warning mb-3"></i>
+                    <h5>Fee Reports</h5>
+                    <a href="{% url 'students_app:fee_report' %}" class="btn btn-outline-warning">View</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+

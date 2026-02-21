@@ -1,0 +1,436 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Generate Bulk ID Cards{% endblock %}
+
+{% block content %}
+<!-- Messages Section -->
+{% if messages %}
+<div class="alert-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 400px;">
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-lg" role="alert">
+            <div class="d-flex align-items-center">
+                <div class="flex-grow-1">
+                    {% if 'success' in message.tags %}
+                    <i class="fas fa-check-circle me-2"></i>
+                    {% elif 'error' in message.tags %}
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    {% elif 'warning' in message.tags %}
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    {% else %}
+                    <i class="fas fa-info-circle me-2"></i>
+                    {% endif %}
+                    {{ message }}
+                </div>
+                {% if 'success' in message.tags %}
+                <div class="ms-3">
+                    <a href="{% url 'students_app:id_card_list' %}" class="btn btn-sm btn-outline-success">
+                        <i class="fas fa-eye me-1"></i> View Cards
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-id-card me-2 text-primary"></i>Generate Bulk ID Cards</h2>
+        <div>
+            <a href="{% url 'students_app:advanced_id_card_batch' %}" class="btn btn-info me-2">
+                <i class="fas fa-file-excel me-2"></i> Advanced Batch (Excel)
+            </a>
+            <a href="{% url 'students_app:upload_id_card_template' %}" class="btn btn-success me-2">
+                <i class="fas fa-upload me-2"></i> Upload Template
+            </a>
+            <a href="{% url 'students_app:id_card_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-list me-2"></i> View Generated Cards
+            </a>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Select Class to Generate ID Cards</h5>
+            </div>
+            <div class="card-body">
+                {% if is_super_admin %}
+                <form method="get" id="schoolFilterForm" class="mb-3">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-10">
+                            <label for="schoolSelect" class="form-label fw-bold">Select School <span
+                                        class="text-danger">*</span></label>
+                            <select name="school" id="schoolSelect" class="form-select form-select-lg" required>
+                                <option value="">-- Select School --</option>
+                                {% for school in schools %}
+                                <option value="{{ school.id }}" {% if selected_school == school.id|stringformat:'s' %}selected{% endif %}>{{ school.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-filter me-1"></i> Filter
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                {% if not selected_school %}
+                <div class="alert alert-warning text-center py-4">
+                    <i class="fas fa-exclamation-triangle fa-2x mb-2 text-warning"></i>
+                    <p class="mb-0"><strong>Please select a school first</strong> to view classes and generate ID cards.</p>
+                </div>
+                {% endif %}
+                {% endif %}
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="classSelect" class="form-label fw-bold">Select Class <span
+                            class="text-danger">*</span></label>
+                    <select name="class" id="classSelect" class="form-select form-select-lg" {% if is_super_admin and not selected_school %}disabled{% endif %}>
+                        <option value="">-- Select a Class --</option>
+                        {% for cls in classes %}
+                        <option value="{{ cls.id }}">{{ cls.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="sectionSelect" class="form-label">Section (Optional)</label>
+                    <select name="section" id="sectionSelect" class="form-select form-select-lg" disabled>
+                        <option value="">All Sections</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="button" class="btn btn-secondary w-100" id="resetBtn" onclick="resetSelection()"
+                        disabled>
+                        <i class="fas fa-redo me-1"></i> Reset
+                    </button>
+                </div>
+            </div>
+            <div class="mt-3">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Select a class from the dropdown above to see students. You can then select individual students or
+                    use "Select All" to generate ID cards for the entire class.
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" action="{% url 'students_app:process_bulk_id_card_generation' %}" id="bulkGenerationForm">
+        {% csrf_token %}
+
+        <div class="card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="form-check mb-0">
+                        <input class="form-check-input" type="checkbox" id="selectAll">
+                        <label class="form-check-label fw-bold" for="selectAll">
+                            Select All
+                        </label>
+                    </div>
+
+                    <!-- Template Selection -->
+                    <div class="d-flex align-items-center">
+                        <select name="template_id" id="templateSelect" class="form-select form-select-sm"
+                            style="width: 200px;" required>
+                            <option value="" disabled selected>Select Template</option>
+                            {% for template in templates %}
+                            <option value="{{ template.id }}" data-image="{% if template.template_image %}{{ template.template_image.url }}{% endif %}">{{ template.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <a href="{% url 'students_app:id_card_template_list' %}"
+                            class="btn btn-sm btn-outline-secondary ms-2" title="Manage Templates">
+                            <i class="fas fa-cog"></i>
+                        </a>
+                    </div>
+                    <!-- Template Preview Modal Trigger/Thumbnail -->
+                    <div id="templatePreviewArea" class="ms-3 d-none">
+                        <div class="d-flex align-items-center">
+                            <img id="selectedTemplateThumb" src="" class="rounded border"
+                                style="height: 38px; width: 60px; object-fit: cover; cursor: pointer;"
+                                title="Click to preview large">
+                            <span class="ms-2 small text-muted">Preview Selected</span>
+                        </div>
+                    </div>
+                    {% if not templates %}
+                    <div class="alert alert-warning mb-0 ms-3 py-1 px-2">
+                        <small><i class="fas fa-exclamation-triangle me-1"></i>No templates found. <a
+                                href="{% url 'students_app:upload_id_card_template' %}">Upload one</a></small>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex gap-2">
+                    <span class="badge bg-info text-dark me-2" id="selectedCount">0 Selected</span>
+                    <button type="submit" class="btn btn-success" id="generateBtn" disabled>
+                        <i class="fas fa-cogs me-2"></i> Generate
+                    </button>
+                    <a href="{% url 'students_app:id_card_list' %}" class="btn btn-primary">
+                        <i class="fas fa-eye me-2"></i> View Generated Cards
+                    </a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 50px;">#</th>
+                                <th>Admission No</th>
+                                <th>Student Name</th>
+                                <th>Class</th>
+                                <th>Section</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentsTableBody">
+                            <tr id="noStudentsRow">
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="fas fa-user-slash fa-3x mb-3"></i>
+                                    <p class="mb-0 fs-5">Please select a class from the dropdown above to view students.
+                                    </p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const classSelect = document.getElementById('classSelect');
+        const sectionSelect = document.getElementById('sectionSelect');
+        const selectAll = document.getElementById('selectAll');
+        const generateBtn = document.getElementById('generateBtn');
+        const selectedCount = document.getElementById('selectedCount');
+        const resetBtn = document.getElementById('resetBtn');
+        const studentsTableBody = document.getElementById('studentsTableBody');
+
+        // Load students when class is selected
+        classSelect.addEventListener('change', function () {
+            const classId = this.value;
+            if (classId) {
+                loadStudents(classId);
+                resetBtn.disabled = false;
+            } else {
+                resetSelection();
+            }
+        });
+
+        // Load students when section is selected (if class is already selected)
+        sectionSelect.addEventListener('change', function () {
+            const classId = classSelect.value;
+            if (classId) {
+                loadStudents(classId, this.value);
+            }
+        });
+
+        function loadStudents(classId, sectionId = null) {
+            // Show loading
+            studentsTableBody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Loading students...</p>
+                    </td>
+                </tr>
+            `;
+
+            // Build URL
+            let url = `{% url 'students_app:get_class_students' 0 %}`.replace('0', classId);
+            if (sectionId) {
+                url += `?section_id=${sectionId}`;
+            }
+
+            // Fetch students via AJAX
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        studentsTableBody.innerHTML = `
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-danger">
+                                    <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                                    <p class="mb-0">Error: ${data.error}</p>
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+
+                    // Update section dropdown
+                    if (data.sections && data.sections.length > 0) {
+                        sectionSelect.innerHTML = '<option value="">All Sections</option>';
+                        data.sections.forEach(section => {
+                            sectionSelect.innerHTML += `<option value="${section.id}">${section.name}</option>`;
+                        });
+                        sectionSelect.disabled = false;
+                    } else {
+                        sectionSelect.innerHTML = '<option value="">No Sections</option>';
+                        sectionSelect.disabled = true;
+                    }
+
+                    if (data.students && data.students.length > 0) {
+                        let html = '';
+                        data.students.forEach(student => {
+                            html += `
+                                <tr>
+                                    <td class="text-center">
+                                        <input class="form-check-input student-checkbox" type="checkbox" name="student_ids" value="${student.id}">
+                                    </td>
+                                    <td>${student.admission_number}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded-circle bg-secondary text-white d-flex justify-content-center align-items-center me-2" style="width: 32px; height: 32px;">
+                                                <i class="fas fa-user small"></i>
+                                            </div>
+                                            ${student.name}
+                                        </div>
+                                    </td>
+                                    <td>${data.class_name || '-'}</td>
+                                    <td>${student.section || '-'}</td>
+                                    <td>
+                                        <span class="badge bg-success">Active</span>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                        studentsTableBody.innerHTML = html;
+
+                        // Reattach event listeners
+                        attachCheckboxListeners();
+                    } else {
+                        studentsTableBody.innerHTML = `
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">
+                                    <i class="fas fa-user-slash fa-2x mb-2"></i>
+                                    <p class="mb-0">No active students found in this class${sectionId ? ' and section' : ''}.</p>
+                                </td>
+                            </tr>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    studentsTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-danger">
+                                <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                                <p class="mb-0">Error loading students: ${error.message}</p>
+                            </td>
+                        </tr>
+                    `;
+                });
+        }
+
+        function resetSelection() {
+            classSelect.value = '';
+            sectionSelect.value = '';
+            sectionSelect.disabled = true;
+            studentsTableBody.innerHTML = `
+                <tr id="noStudentsRow">
+                    <td colspan="6" class="text-center py-5 text-muted">
+                        <i class="fas fa-user-slash fa-3x mb-3"></i>
+                        <p class="mb-0 fs-5">Please select a class from the dropdown above to view students.</p>
+                    </td>
+                </tr>
+            `;
+            resetBtn.disabled = true;
+            selectAll.checked = false;
+            updateUI();
+        }
+
+        function attachCheckboxListeners() {
+            const checkboxes = document.querySelectorAll('.student-checkbox');
+
+            selectAll.addEventListener('change', function () {
+                checkboxes.forEach(cb => {
+                    cb.checked = selectAll.checked;
+                });
+                updateUI();
+            });
+
+            checkboxes.forEach(cb => {
+                cb.addEventListener('change', function () {
+                    updateUI();
+                    // Update select all state
+                    if (!this.checked) {
+                        selectAll.checked = false;
+                    } else if (document.querySelectorAll('.student-checkbox:checked').length === checkboxes.length) {
+                        selectAll.checked = true;
+                    }
+                });
+            });
+        }
+
+        function updateUI() {
+            const checked = document.querySelectorAll('.student-checkbox:checked');
+            const templateSelect = document.querySelector('select[name="template_id"]');
+            selectedCount.textContent = checked.length + ' Selected';
+            // Enable button only if students are selected AND template is selected
+            generateBtn.disabled = checked.length === 0 || !templateSelect.value;
+        }
+
+        // Check template selection
+        const templateSelect = document.getElementById('templateSelect');
+        const templatePreviewArea = document.getElementById('templatePreviewArea');
+        const selectedTemplateThumb = document.getElementById('selectedTemplateThumb');
+
+        if (templateSelect) {
+            templateSelect.addEventListener('change', function () {
+                const selectedOption = this.options[this.selectedIndex];
+                const imageUrl = selectedOption.dataset.image;
+
+                if (imageUrl) {
+                    selectedTemplateThumb.src = imageUrl;
+                    templatePreviewArea.classList.remove('d-none');
+                } else {
+                    templatePreviewArea.classList.add('d-none');
+                }
+                updateUI();
+            });
+
+            // Large preview click
+            selectedTemplateThumb.addEventListener('click', function () {
+                const imageUrl = this.src;
+                if (imageUrl) {
+                    // Simple full screen image modal logic if needed, 
+                    // or just open in new tab
+                    window.open(imageUrl, '_blank');
+                }
+            });
+        }
+
+        // Form submission validation
+        document.getElementById('bulkGenerationForm').addEventListener('submit', function (e) {
+            const checked = document.querySelectorAll('.student-checkbox:checked');
+            const templateSelect = document.getElementById('templateSelect');
+
+            if (checked.length === 0) {
+                e.preventDefault();
+                alert('Please select at least one student.');
+                return false;
+            }
+
+            if (!templateSelect.value) {
+                e.preventDefault();
+                alert('Please select a template.');
+                return false;
+            }
+
+            // Show loading state
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Generating...';
+        });
+    });
+</script>
+
+<script>
+// School selection now handled by form submit (page reload)
+// Classes are loaded server-side based on selected school
+</script>
+{% endblock %}

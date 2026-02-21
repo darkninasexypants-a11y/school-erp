@@ -1,0 +1,116 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Return Book{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="fas fa-undo me-2"></i>Return Book</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Book Issue Details -->
+                    <div class="mb-4">
+                        <h5 class="text-primary mb-3">Book Issue Details</h5>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="border rounded p-3">
+                                    <small class="text-muted d-block mb-1">Student</small>
+                                    <strong>{{ book_issue.student.get_full_name }}</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded p-3">
+                                    <small class="text-muted d-block mb-1">Book</small>
+                                    <strong>{{ book_issue.book.title }}</strong>
+                                    <br><small class="text-muted">by {{ book_issue.book.author }}</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded p-3">
+                                    <small class="text-muted d-block mb-1">Issue Date</small>
+                                    <strong>{{ book_issue.issue_date|date:"d M Y" }}</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded p-3 {% if is_overdue %}border-danger{% endif %}">
+                                    <small class="text-muted d-block mb-1">Due Date</small>
+                                    <strong>{{ book_issue.due_date|date:"d M Y" }}</strong>
+                                    {% if is_overdue %}
+                                    <br><span class="badge bg-danger mt-1">Overdue by {{ overdue_days }} day{{ overdue_days|pluralize }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Late Fee Section -->
+                    {% if is_overdue or calculated_fine > 0 %}
+                    <div class="alert alert-warning mb-4">
+                        <h6 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Late Fee Applicable</h6>
+                        <p class="mb-2">
+                            <strong>Overdue Days:</strong> {{ overdue_days }} day{{ overdue_days|pluralize }}<br>
+                            <strong>Calculated Fine:</strong> ₹{{ calculated_fine|floatformat:2 }} (₹5 per day)
+                        </p>
+                    </div>
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <!-- Late Fee Input -->
+                        <div class="mb-4">
+                            <label for="fine_amount" class="form-label">
+                                <strong>Late Fee Amount (₹)</strong>
+                                {% if is_overdue %}
+                                <small class="text-muted">(Auto-calculated: ₹{{ calculated_fine|floatformat:2 }})</small>
+                                {% endif %}
+                            </label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="fine_amount" 
+                                   name="fine_amount" 
+                                   step="0.01" 
+                                   min="0"
+                                   value="{% if is_overdue %}{{ calculated_fine|floatformat:2 }}{% else %}0{% endif %}"
+                                   {% if not is_overdue %}readonly{% endif %}>
+                            <small class="form-text text-muted">
+                                {% if is_overdue %}
+                                    You can modify the fine amount if needed. Default: ₹5 per overdue day.
+                                {% else %}
+                                    No late fee applicable.
+                                {% endif %}
+                            </small>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'students_app:library_dashboard' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check"></i> Return Book
+                                {% if is_overdue %}
+                                <span class="badge bg-light text-dark ms-2">+ ₹<span id="fine-display">{{ calculated_fine|floatformat:2 }}</span> Late Fee</span>
+                                {% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Update fine display when user changes fine amount
+    document.getElementById('fine_amount').addEventListener('input', function() {
+        const fineAmount = parseFloat(this.value) || 0;
+        const fineDisplay = document.getElementById('fine-display');
+        if (fineDisplay) {
+            fineDisplay.textContent = fineAmount.toFixed(2);
+        }
+    });
+</script>
+{% endblock %}

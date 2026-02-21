@@ -1,0 +1,168 @@
+{% extends "students/base_modern.html" %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-book me-2"></i>{{ title }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row g-3">
+                            <!-- Book Photo -->
+                            <div class="col-md-12">
+                                <label class="form-label">Book Cover Image</label>
+                                {% if book and book.cover_image %}
+                                <div class="mb-2">
+                                    <img src="{{ book.cover_image.url }}" alt="Current cover" 
+                                         class="img-thumbnail" style="max-height: 200px;">
+                                    <p class="text-muted small mt-2">Current cover image</p>
+                                </div>
+                                {% endif %}
+                                {{ form.cover_image }}
+                                {% if form.cover_image.errors %}
+                                    <div class="text-danger small">{{ form.cover_image.errors }}</div>
+                                {% endif %}
+                                <small class="form-text text-muted">Upload book cover image (JPG, PNG)</small>
+                            </div>
+
+                            <!-- Unique Book ID / ISBN -->
+                            <div class="col-md-6">
+                                <label class="form-label">ISBN / Unique Book ID <span class="text-danger">*</span></label>
+                                {{ form.isbn }}
+                                {% if form.isbn.errors %}
+                                    <div class="text-danger small">{{ form.isbn.errors }}</div>
+                                {% endif %}
+                                <small class="form-text text-muted">Unique identifier for the book (ISBN)</small>
+                            </div>
+
+                            <!-- Title -->
+                            <div class="col-md-6">
+                                <label class="form-label">Book Title <span class="text-danger">*</span></label>
+                                {{ form.title }}
+                                {% if form.title.errors %}
+                                    <div class="text-danger small">{{ form.title.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Author -->
+                            <div class="col-md-6">
+                                <label class="form-label">Author <span class="text-danger">*</span></label>
+                                {{ form.author }}
+                                {% if form.author.errors %}
+                                    <div class="text-danger small">{{ form.author.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Publisher -->
+                            <div class="col-md-6">
+                                <label class="form-label">Publisher <span class="text-danger">*</span></label>
+                                {{ form.publisher }}
+                                {% if form.publisher.errors %}
+                                    <div class="text-danger small">{{ form.publisher.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Category -->
+                            <div class="col-md-6">
+                                <label class="form-label">Category</label>
+                                {{ form.category }}
+                                {% if form.category.errors %}
+                                    <div class="text-danger small">{{ form.category.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Edition -->
+                            <div class="col-md-6">
+                                <label class="form-label">Edition</label>
+                                {{ form.edition }}
+                                {% if form.edition.errors %}
+                                    <div class="text-danger small">{{ form.edition.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Publication Year -->
+                            <div class="col-md-6">
+                                <label class="form-label">Publication Year</label>
+                                {{ form.publication_year }}
+                                {% if form.publication_year.errors %}
+                                    <div class="text-danger small">{{ form.publication_year.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Rack Number -->
+                            <div class="col-md-6">
+                                <label class="form-label">Rack Number</label>
+                                {{ form.rack_number }}
+                                {% if form.rack_number.errors %}
+                                    <div class="text-danger small">{{ form.rack_number.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Total Copies -->
+                            <div class="col-md-6">
+                                <label class="form-label">Total Copies <span class="text-danger">*</span></label>
+                                {{ form.total_copies }}
+                                {% if form.total_copies.errors %}
+                                    <div class="text-danger small">{{ form.total_copies.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Available Copies -->
+                            <div class="col-md-6">
+                                <label class="form-label">Available Copies <span class="text-danger">*</span></label>
+                                {{ form.available_copies }}
+                                {% if form.available_copies.errors %}
+                                    <div class="text-danger small">{{ form.available_copies.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Price -->
+                            <div class="col-md-6">
+                                <label class="form-label">Price (₹) <span class="text-danger">*</span></label>
+                                {{ form.price }}
+                                {% if form.price.errors %}
+                                    <div class="text-danger small">{{ form.price.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Description -->
+                            <div class="col-md-12">
+                                <label class="form-label">Description</label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                    <div class="text-danger small">{{ form.description.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mt-4 d-flex justify-content-between">
+                            <a href="{% url 'students_app:book_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Cancel
+                            </a>
+                            <div>
+                                {% if book %}
+                                <a href="{% url 'students_app:book_qr_code_view' book.id %}" class="btn btn-info me-2">
+                                    <i class="fas fa-qrcode"></i> View QR Code
+                                </a>
+                                {% endif %}
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Save Book
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

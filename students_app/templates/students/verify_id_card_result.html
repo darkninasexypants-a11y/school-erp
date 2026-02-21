@@ -1,0 +1,99 @@
+{% extends "students/base_modern.html" %}
+{% block title %}OCR Verification Result{% endblock %}
+
+{% block sidebar %}
+{% if request.user.is_authenticated %}
+    {% with teacher=request.user.teacher %}
+        {% if teacher %}
+            {% include 'includes/teacher_sidebar.html' %}
+        {% else %}
+            {% with role_name=request.user.school_profile.role.name|default_if_none:''|lower %}
+                {% if request.user.is_superuser or role_name == 'super_admin' %}
+                    {% include 'includes/super_admin_sidebar.html' %}
+                {% elif role_name == 'school admin' or role_name == 'school_admin' or role_name == 'admin' %}
+                    {% include 'includes/admin_sidebar.html' %}
+                {% else %}
+                    {% include 'includes/admin_sidebar.html' %}
+                {% endif %}
+            {% endwith %}
+        {% endif %}
+    {% endwith %}
+{% else %}
+    {% include 'includes/admin_sidebar.html' %}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <div class="page-title">
+        <h1><i class="bi bi-eye me-2"></i>OCR Verification Result</h1>
+    </div>
+    <div class="top-bar-actions">
+        <a href="{% url 'students_app:verify_id_card_ocr' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Verify Another
+        </a>
+    </div>
+</div>
+
+{% if success %}
+<div class="card">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0">
+            <i class="bi bi-check-circle me-2"></i>Text Extracted Successfully
+            {% if field_count %}
+            <span class="badge bg-light text-dark ms-2">{{ field_count }} field(s) found</span>
+            {% endif %}
+        </h5>
+    </div>
+    <div class="card-body">
+        <h6>Extracted Data:</h6>
+        {% if extracted_data %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th width="30%">Field</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for key, value in extracted_data.items %}
+                    <tr>
+                        <td><strong>{{ key|title|replace:"_":" " }}</strong></td>
+                        <td>
+                            {% if key == 'raw_text' %}
+                            <code style="word-break: break-all;">{{ value }}</code>
+                            {% else %}
+                            {{ value }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle me-2"></i>No data extracted from the image.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-header bg-warning">
+        <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Extraction Failed</h5>
+    </div>
+    <div class="card-body">
+        <p>{{ message|default:"Could not extract text from the ID card image." }}</p>
+        <p class="text-muted">Please ensure:</p>
+        <ul>
+            <li>Image is clear and high resolution</li>
+            <li>Text is readable and not blurred</li>
+            <li>Image is properly oriented</li>
+        </ul>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+

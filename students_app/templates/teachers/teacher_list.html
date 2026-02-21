@@ -1,0 +1,165 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Teachers List with Credentials{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-chalkboard-teacher me-2 text-primary"></i>Teachers List</h2>
+            <p class="text-muted mb-0">View all teachers with their login credentials</p>
+            {% if total_count %}
+            <small class="text-muted">Total: {{ total_count }} teacher{{ total_count|pluralize }}</small>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Search Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-10">
+                    <label class="form-label">Search</label>
+                    <input type="text" name="search" class="form-control" placeholder="Name, Employee ID, Phone, Email..." value="{{ current_search }}">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Teachers Table -->
+    <div class="card">
+        <div class="card-body">
+            {% if teachers %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Employee ID</th>
+                            <th>Teacher Name</th>
+                            <th>Phone</th>
+                            <th>Email</th>
+                            <th>Qualification</th>
+                            <th>Login Credentials</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in teachers %}
+                        {% with teacher=item.teacher cred=item.credentials %}
+                        <tr>
+                            <td>
+                                <strong class="text-primary">{{ teacher.employee_id }}</strong>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if teacher.photo %}
+                                        <img src="{{ teacher.photo.url }}" alt="{{ teacher.user.get_full_name }}" 
+                                             class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="bg-primary bg-opacity-10 rounded-circle me-2 d-flex align-items-center justify-content-center" 
+                                             style="width: 40px; height: 40px;">
+                                            <i class="fas fa-user text-primary"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <div class="fw-semibold">{{ teacher.user.get_full_name }}</div>
+                                        <small class="text-muted">Joined: {{ teacher.joining_date|date:"M Y" }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <i class="fas fa-phone text-success me-1"></i>
+                                {{ cred.phone }}
+                            </td>
+                            <td>
+                                {% if cred.email %}
+                                <i class="fas fa-envelope text-info me-1"></i>
+                                {{ cred.email }}
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small>{{ teacher.qualification }}</small>
+                            </td>
+                            <td>
+                                <div class="credentials-box p-2 bg-light rounded border">
+                                    <div class="mb-1">
+                                        <strong class="text-primary">Login Methods:</strong>
+                                    </div>
+                                    <div class="small">
+                                        <div class="mb-1">
+                                            <i class="fas fa-mobile-alt text-success me-1"></i>
+                                            <strong>Phone Login:</strong><br>
+                                            <span class="text-muted ms-3">Phone: <strong>{{ cred.login_id }}</strong></span><br>
+                                            <span class="text-muted ms-3">Password: <strong>{{ cred.custom_password }}</strong></span><br>
+                                            <small class="text-info ms-3"><i class="fas fa-info-circle"></i> Login at: /teacher/login/</small>
+                                        </div>
+                                        {% if cred.username %}
+                                        <div class="mb-1">
+                                            <i class="fas fa-user text-info me-1"></i>
+                                            <strong>Username Login:</strong><br>
+                                            <span class="text-muted ms-3">Username: {{ cred.username }}</span><br>
+                                            <span class="text-muted ms-3">Password: {% if cred.has_password %}Set{% else %}Not Set{% endif %}</span>
+                                        </div>
+                                        {% endif %}
+                                        <div class="text-muted small mt-1">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Teachers can login at: <code>/teacher/login/</code>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if teacher.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'students_app:edit_teacher' teacher.id %}" class="btn btn-sm btn-primary" title="Edit Teacher">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                            </td>
+                        </tr>
+                        {% endwith %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-chalkboard-teacher fa-3x text-muted mb-3"></i>
+                <p class="text-muted">No teachers found.</p>
+                {% if current_search %}
+                <a href="{% url 'students_app:teacher_list' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-redo"></i> Clear Search
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.credentials-box {
+    min-width: 300px;
+    font-size: 0.85rem;
+}
+.credentials-box code {
+    background-color: #f8f9fa;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-size: 0.8rem;
+}
+</style>
+{% endblock %}
+

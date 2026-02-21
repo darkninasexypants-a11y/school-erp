@@ -1,0 +1,196 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Request Timetable Change{% endblock %}
+
+{% block sidebar %}
+{% include 'includes/teacher_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="top-bar">
+    <div class="page-title">
+        <h1><i class="bi bi-calendar-x me-2"></i>Request Timetable Change</h1>
+        <p>Submit a request to change your timetable schedule</p>
+    </div>
+    <div class="top-bar-actions">
+        <a href="{% url 'students_app:view_timetable' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Timetable
+        </a>
+    </div>
+</div>
+
+<!-- Pending Requests Alert -->
+{% if pending_requests %}
+<div class="alert alert-info mb-4">
+    <h6 class="mb-2"><i class="bi bi-info-circle me-2"></i>You have {{ pending_requests|length }} pending request(s)</h6>
+    <ul class="mb-0">
+        {% for req in pending_requests %}
+        <li>
+            Request submitted on {{ req.created_at|date:"M d, Y" }} - 
+            <strong>{{ req.get_status_display }}</strong>
+            {% if req.reason %}
+            <br><small class="text-muted">{{ req.reason|truncatewords:20 }}</small>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-file-text me-2"></i>Change Request Form</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.current_timetable_entry.id_for_label }}" class="form-label">
+                            <i class="bi bi-calendar-event me-1"></i>Select Timetable Entry to Change
+                        </label>
+                        {{ form.current_timetable_entry }}
+                        {% if form.current_timetable_entry.errors %}
+                        <div class="text-danger small">{{ form.current_timetable_entry.errors }}</div>
+                        {% endif %}
+                        <small class="text-muted">Select the specific class/period you want to change</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.reason.id_for_label }}" class="form-label">
+                            <i class="bi bi-question-circle me-1"></i>Reason for Change <span class="text-danger">*</span>
+                        </label>
+                        {{ form.reason }}
+                        {% if form.reason.errors %}
+                        <div class="text-danger small">{{ form.reason.errors }}</div>
+                        {% endif %}
+                        <small class="text-muted">Please explain why you need this change</small>
+                    </div>
+                    
+                    <hr class="my-4">
+                    <h6 class="mb-3"><i class="bi bi-gear me-2"></i>Preferred Changes (Optional)</h6>
+                    <p class="text-muted small mb-3">Specify your preferences if you have any. Leave blank if you're flexible.</p>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.preferred_day.id_for_label }}" class="form-label">Preferred Day</label>
+                            {{ form.preferred_day }}
+                            {% if form.preferred_day.errors %}
+                            <div class="text-danger small">{{ form.preferred_day.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="{{ form.preferred_time_slot.id_for_label }}" class="form-label">Preferred Time Slot</label>
+                            {{ form.preferred_time_slot }}
+                            {% if form.preferred_time_slot.errors %}
+                            <div class="text-danger small">{{ form.preferred_time_slot.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="{{ form.preferred_section.id_for_label }}" class="form-label">Preferred Section/Class</label>
+                            {{ form.preferred_section }}
+                            {% if form.preferred_section.errors %}
+                            <div class="text-danger small">{{ form.preferred_section.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="{{ form.preferred_subject.id_for_label }}" class="form-label">Preferred Subject</label>
+                            {{ form.preferred_subject }}
+                            {% if form.preferred_subject.errors %}
+                            <div class="text-danger small">{{ form.preferred_subject.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="{{ form.preferred_room.id_for_label }}" class="form-label">Preferred Room</label>
+                            {{ form.preferred_room }}
+                            {% if form.preferred_room.errors %}
+                            <div class="text-danger small">{{ form.preferred_room.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3 mt-3">
+                        <label for="{{ form.additional_notes.id_for_label }}" class="form-label">
+                            <i class="bi bi-sticky me-1"></i>Additional Notes
+                        </label>
+                        {{ form.additional_notes }}
+                        {% if form.additional_notes.errors %}
+                        <div class="text-danger small">{{ form.additional_notes.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send me-2"></i>Submit Request
+                        </button>
+                        <a href="{% url 'students_app:view_timetable' %}" class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Current Timetable Info -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-calendar-check me-2"></i>Your Current Timetable</h6>
+            </div>
+            <div class="card-body">
+                {% if current_timetables %}
+                <div class="small">
+                    <p class="mb-2"><strong>Academic Year:</strong> {{ current_year.year }}</p>
+                    <p class="mb-3"><strong>Total Classes:</strong> {{ current_timetables|length }}</p>
+                    
+                    <div class="list-group list-group-flush">
+                        {% for tt in current_timetables|slice:":5" %}
+                        <div class="list-group-item px-0 py-2 border-0">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong class="small">{{ tt.get_weekday_display }}</strong><br>
+                                    <span class="text-muted small">{{ tt.time_slot.start_time|time:"g:i A" }} - {{ tt.time_slot.end_time|time:"g:i A" }}</span><br>
+                                    <span class="small">{{ tt.subject.name|default:"—" }} - {{ tt.section.class_assigned.name }}-{{ tt.section.name }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% if current_timetables|length > 5 %}
+                        <div class="text-muted small text-center mt-2">
+                            + {{ current_timetables|length|add:"-5" }} more classes
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-muted small mb-0">No timetable entries found for the current academic year.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Help Card -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>How it Works</h6>
+            </div>
+            <div class="card-body">
+                <ol class="small mb-0 ps-3">
+                    <li class="mb-2">Select the timetable entry you want to change</li>
+                    <li class="mb-2">Explain your reason for the change</li>
+                    <li class="mb-2">Optionally specify your preferences</li>
+                    <li class="mb-2">Submit the request</li>
+                    <li>Admin will review and respond to your request</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

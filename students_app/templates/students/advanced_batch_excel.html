@@ -1,0 +1,192 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Advanced Batch ID Card Generation via Excel{% endblock %}
+
+{% block sidebar %}
+{% if request.user.is_authenticated %}
+    {% with teacher=request.user.teacher %}
+        {% if teacher %}
+            {% include 'includes/teacher_sidebar.html' %}
+        {% else %}
+            {% with role_name=request.user.school_profile.role.name|default_if_none:''|lower %}
+                {% if request.user.is_superuser or role_name == 'super_admin' %}
+                    {% include 'includes/super_admin_sidebar.html' %}
+                {% elif role_name == 'school admin' or role_name == 'school_admin' or role_name == 'admin' %}
+                    {% include 'includes/admin_sidebar.html' %}
+                {% else %}
+                    {% include 'includes/admin_sidebar.html' %}
+                {% endif %}
+            {% endwith %}
+        {% endif %}
+    {% endwith %}
+{% else %}
+    {% include 'includes/admin_sidebar.html' %}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <div class="page-title">
+        <h1><i class="bi bi-file-excel me-2"></i>Advanced Batch ID Card Generation</h1>
+        <p>Generate ID cards from Excel/CSV file with photos</p>
+    </div>
+    <div class="top-bar-actions">
+        <a href="{% url 'students_app:generate_bulk_id_cards' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to ID Cards
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-upload me-2"></i>Upload Files</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="mb-4">
+                <label class="form-label fw-semibold">
+                    <i class="bi bi-file-excel me-2"></i>Excel/CSV File <span class="text-danger">*</span>
+                </label>
+                <input type="file" class="form-control" name="excel_file" accept=".xlsx,.xls,.csv" required>
+                <small class="form-text text-muted">
+                    Upload Excel (.xlsx, .xls) or CSV file with student data
+                </small>
+            </div>
+            
+            <div class="mb-4">
+                <label class="form-label fw-semibold">
+                    <i class="bi bi-image me-2"></i>Photos ZIP (Optional)
+                </label>
+                <input type="file" class="form-control" name="photo_zip" accept=".zip">
+                <small class="form-text text-muted">
+                    ZIP file containing student photos. Photos should be named as numbers (e.g., 1.jpg, 2.jpg, 3.jpg) matching the Photo No in Excel.
+                </small>
+            </div>
+            
+            <div class="mb-4">
+                <label class="form-label fw-semibold">
+                    <i class="bi bi-layout-text-window me-2"></i>Template
+                </label>
+                <select name="template_id" class="form-select">
+                    <option value="">Use Default Template</option>
+                    {% if templates %}
+                        {% for template in templates %}
+                        <option value="{{ template.id }}">{{ template.name }}</option>
+                        {% endfor %}
+                    {% endif %}
+                </select>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-gear me-2"></i>Generate ID Cards
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Excel File Format - Flexible Column Structure</h5>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-success">
+            <i class="bi bi-check-circle me-2"></i>
+            <strong>You decide what fields to include!</strong> Add only the columns that match your ID card template. The system will automatically detect common field names.
+        </div>
+        
+        <h6 class="mt-4"><i class="bi bi-lightbulb me-2"></i>How It Works:</h6>
+        <ol>
+            <li>Include columns for the fields you want on your ID card</li>
+            <li>Use any column names you prefer (system auto-detects common names)</li>
+            <li>Configure field mappings in the template editor if needed</li>
+            <li>System will map Excel columns to ID card fields automatically</li>
+        </ol>
+        
+        <h6 class="mt-4"><i class="bi bi-list-check me-2"></i>Common Fields (Auto-Detected):</h6>
+        <div class="row">
+            <div class="col-md-6">
+                <ul class="list-unstyled">
+                    <li><i class="bi bi-check text-success me-2"></i><strong>Name:</strong> Name, Student Name, F. Name, full_name</li>
+                    <li><i class="bi bi-check text-success me-2"></i><strong>ID/Admission:</strong> ID, Admission Number, Student ID</li>
+                    <li><i class="bi bi-check text-success me-2"></i><strong>Class:</strong> Class, Class Name, Grade</li>
+                    <li><i class="bi bi-check text-success me-2"></i><strong>Section:</strong> Section, section</li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <ul class="list-unstyled">
+                    <li><i class="bi bi-check text-success me-2"></i><strong>Contact:</strong> Mobile, Phone, Contact</li>
+                    <li><i class="bi bi-check text-success me-2"></i><strong>DOB:</strong> DOB, Date of Birth, Birth Date</li>
+                    <li><i class="bi bi-check text-success me-2"></i><strong>Address:</strong> Address, Home Address</li>
+                    <li><i class="bi bi-check text-success me-2"></i><strong>Photo:</strong> Photo, Photo No, Photo Number</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="alert alert-info mt-3">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>Photo Mapping:</strong> Use photo numbers in Excel (1, 2, 3, etc.) and name photos in ZIP file as <code>1.jpg</code>, <code>2.jpg</code>, <code>3.jpg</code>, etc. The system will automatically map the photo number to the corresponding photo file.
+        </div>
+        
+        <div class="alert alert-warning mt-3">
+            <i class="bi bi-gear me-2"></i>
+            <strong>Custom Field Names?</strong> You can configure field mappings in the <a href="{% url 'students_app:idcard_template_list' %}" class="alert-link">Template Editor</a> to map your custom column names to ID card fields.
+        </div>
+        
+        <h6 class="mt-4"><i class="bi bi-table me-2"></i>Example Excel Structure:</h6>
+        <p class="text-muted small">Include only the fields you need. Here's an example with common fields:</p>
+        <div class="table-responsive">
+            <table class="table table-bordered table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>ID</th>
+                        <th>Class</th>
+                        <th>Section</th>
+                        <th>Photo No</th>
+                        <th>Mobile</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>John Doe</td>
+                        <td>STU001</td>
+                        <td>Class 10</td>
+                        <td>A</td>
+                        <td>1</td>
+                        <td>9876543210</td>
+                    </tr>
+                    <tr>
+                        <td>Jane Smith</td>
+                        <td>STU002</td>
+                        <td>Class 10</td>
+                        <td>B</td>
+                        <td>2</td>
+                        <td>9876543211</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="mt-3">
+            <strong>ZIP File Structure (if using photos):</strong>
+            <pre class="bg-light p-2 rounded mb-0"><code>photos.zip
+├── 1.jpg  (Photo for row 1)
+├── 2.jpg  (Photo for row 2)
+├── 3.jpg
+└── ...</code></pre>
+        </div>
+        
+        <div class="mt-4 p-3 bg-light rounded">
+            <h6 class="mb-2"><i class="bi bi-question-circle me-2"></i>Need Help?</h6>
+            <ul class="mb-0 small">
+                <li>Check your ID card template to see which fields are configured</li>
+                <li>Include columns only for fields you want to display</li>
+                <li>Column names are case-insensitive (Name = name = NAME)</li>
+                <li>Use the Template Editor to configure custom field mappings</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

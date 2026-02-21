@@ -1,0 +1,1141 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Create Question Paper{% endblock %}
+
+{% block sidebar %}
+{% include 'includes/teacher_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="top-bar">
+    <div class="page-title">
+        <h1><i class="bi bi-file-text me-2"></i>Create Question Paper</h1>
+        <p>Create and manage question papers with AI assistance</p>
+    </div>
+    <div class="top-bar-actions">
+        <a href="{% url 'students_app:teacher_dashboard' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Main Form -->
+    <div class="col-lg-8">
+        <form method="post" id="questionPaperForm">
+            {% csrf_token %}
+            
+            <!-- Basic Details Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Question Paper Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="{{ form.title.id_for_label }}" class="form-label">Title <span class="text-danger">*</span></label>
+                            {{ form.title }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.subject.id_for_label }}" class="form-label">Subject <span class="text-danger">*</span></label>
+                            {{ form.subject }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.class_assigned.id_for_label }}" class="form-label">Class <span class="text-danger">*</span></label>
+                            {{ form.class_assigned }}
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label for="{{ form.instructions.id_for_label }}" class="form-label">Instructions</label>
+                            {{ form.instructions }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question Builder Card -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-list-check me-2"></i>Questions</h5>
+                    <button type="button" class="btn btn-sm btn-primary" onclick="showQuestionTypeModal()">
+                        <i class="bi bi-plus-circle me-1"></i>Add Question
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="questions-container">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>Click "Add Question" to start building your question paper.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-4">
+                <button type="button" class="btn btn-outline-secondary" onclick="previewQuestionPaper()">
+                    <i class="bi bi-eye me-2"></i>Preview
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save me-2"></i>Save Question Paper
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- AI Assist Panel -->
+    <div class="col-lg-4">
+        <div class="card sticky-top" style="top: 20px;">
+            <div class="card-header bg-gradient-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-magic me-2"></i>AI Question Generator
+                </h5>
+                <small class="opacity-75">Powered by AI - Generate questions instantly</small>
+            </div>
+            <div class="card-body">
+                <!-- Tabs -->
+                <ul class="nav nav-tabs mb-3" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="generate-tab" data-bs-toggle="tab" data-bs-target="#generate-panel" type="button" role="tab">
+                            <i class="bi bi-magic me-1"></i>Generate
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="search-tab" data-bs-toggle="tab" data-bs-target="#search-panel" type="button" role="tab">
+                            <i class="bi bi-search me-1"></i>Search Web
+                        </button>
+                    </li>
+                </ul>
+                
+                <!-- Tab Panels -->
+                <div class="tab-content">
+                    <!-- Generate Panel -->
+                    <div class="tab-pane fade show active" id="generate-panel" role="tabpanel">
+                        <!-- Topic Input -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-book me-1"></i>Topic/Subject
+                            </label>
+                            <input type="text" id="ai-topic" class="form-control" 
+                                   placeholder="e.g., Algebra - Linear Equations, Physics - Newton's Laws">
+                            <small class="text-muted">Enter the topic or subject area</small>
+                        </div>
+                        
+                        <!-- Question Type -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-list-ul me-1"></i>Question Type
+                            </label>
+                            <select id="ai-question-type" class="form-select">
+                                <option value="mixed">Mixed (All Types)</option>
+                                <option value="mcq">Multiple Choice (MCQ)</option>
+                                <option value="fill_blank">Fill in the Blanks</option>
+                                <option value="match_columns">Match the Columns</option>
+                                <option value="one_word">One Word Answer</option>
+                                <option value="single_line">Single Line Answer</option>
+                                <option value="multiple_line">Multiple Line Answer</option>
+                                <option value="true_false">True/False</option>
+                                <option value="numerical">Numerical Problems</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Difficulty Level -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-bar-chart me-1"></i>Difficulty Level
+                            </label>
+                            <select id="ai-difficulty" class="form-select">
+                                <option value="mixed">Mixed Difficulty</option>
+                                <option value="easy">Easy</option>
+                                <option value="medium">Medium</option>
+                                <option value="hard">Hard</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Number of Questions -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-hash me-1"></i>Number of Questions
+                            </label>
+                            <input type="number" id="ai-count" class="form-control" value="5" min="1" max="20">
+                        </div>
+                        
+                        <!-- Generate Button -->
+                        <button class="btn btn-primary w-100 mb-3" type="button" onclick="suggestQuestions()" id="generateBtn">
+                            <i class="bi bi-magic me-2"></i>Generate Questions
+                        </button>
+                        
+                        <!-- Loading State -->
+                        <div id="ai-loading" class="text-center py-3" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="text-muted mt-2 mb-0">AI is generating questions...</p>
+                        </div>
+                        
+                        <!-- Suggestions Output -->
+                        <div id="ai-suggestions" class="mt-3"></div>
+                    </div>
+                    
+                    <!-- Search Panel -->
+                    <div class="tab-pane fade" id="search-panel" role="tabpanel">
+                        <!-- Search Input -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-search me-1"></i>Search the Internet
+                            </label>
+                            <div class="input-group">
+                                <input type="text" id="search-query" class="form-control" 
+                                       placeholder="Search for information, definitions, examples...">
+                                <button class="btn btn-primary" type="button" onclick="searchInternet()" id="searchBtn">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">Search the web for relevant information to enhance your questions</small>
+                        </div>
+                        
+                        <!-- Search Loading -->
+                        <div id="search-loading" class="text-center py-3" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Searching...</span>
+                            </div>
+                            <p class="text-muted mt-2 mb-0">Searching the web...</p>
+                        </div>
+                        
+                        <!-- Search Results -->
+                        <div id="search-results" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Question Type Selection Modal -->
+<div class="modal fade" id="questionTypeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Select Question Type</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <button type="button" class="btn btn-outline-primary w-100 h-100 p-3" onclick="addQuestion('mcq')">
+                            <i class="bi bi-list-ul fs-4 d-block mb-2"></i>
+                            <strong>MCQ</strong><br>
+                            <small>Multiple Choice</small>
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <button type="button" class="btn btn-outline-primary w-100 h-100 p-3" onclick="addQuestion('fill_blank')">
+                            <i class="bi bi-dash-square fs-4 d-block mb-2"></i>
+                            <strong>Fill Blanks</strong><br>
+                            <small>Fill in the blanks</small>
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <button type="button" class="btn btn-outline-primary w-100 h-100 p-3" onclick="addQuestion('match_columns')">
+                            <i class="bi bi-arrow-left-right fs-4 d-block mb-2"></i>
+                            <strong>Match Columns</strong><br>
+                            <small>Match the columns</small>
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <button type="button" class="btn btn-outline-primary w-100 h-100 p-3" onclick="addQuestion('one_word')">
+                            <i class="bi bi-type fs-4 d-block mb-2"></i>
+                            <strong>One Word</strong><br>
+                            <small>One word answer</small>
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <button type="button" class="btn btn-outline-primary w-100 h-100 p-3" onclick="addQuestion('single_line')">
+                            <i class="bi bi-text-left fs-4 d-block mb-2"></i>
+                            <strong>Single Line</strong><br>
+                            <small>Single line answer</small>
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <button type="button" class="btn btn-outline-primary w-100 h-100 p-3" onclick="addQuestion('multiple_line')">
+                            <i class="bi bi-text-paragraph fs-4 d-block mb-2"></i>
+                            <strong>Multiple Line</strong><br>
+                            <small>Multiple line answer</small>
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <button type="button" class="btn btn-outline-primary w-100 h-100 p-3" onclick="addQuestion('true_false')">
+                            <i class="bi bi-check2-square fs-4 d-block mb-2"></i>
+                            <strong>True/False</strong><br>
+                            <small>True or false</small>
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <button type="button" class="btn btn-outline-primary w-100 h-100 p-3" onclick="addQuestion('numerical')">
+                            <i class="bi bi-calculator fs-4 d-block mb-2"></i>
+                            <strong>Numerical</strong><br>
+                            <small>Numerical problem</small>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Question Edit Modal -->
+<div class="modal fade" id="questionEditModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="questionEditModalTitle">Edit Question</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="questionEditModalBody">
+                <!-- Content will be dynamically loaded -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveQuestionFromModal()">Save Question</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Question Paper Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="previewContent">
+                <!-- Preview will be generated here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="window.print()">
+                    <i class="bi bi-printer me-2"></i>Print
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+}
+
+.question-item {
+    background: #f8f9fa;
+    border: 1px solid #e2e8f0;
+    border-left: 4px solid #6366f1;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.question-item:hover {
+    background: #e9ecef;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1);
+}
+
+.question-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 10px;
+}
+
+.question-number {
+    font-weight: 600;
+    color: #6366f1;
+    font-size: 1.1rem;
+}
+
+.question-type-badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.question-text {
+    color: #1e293b;
+    margin-bottom: 10px;
+    line-height: 1.6;
+}
+
+.question-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.question-template {
+    display: none;
+}
+
+.question-template.active {
+    display: block;
+}
+
+.match-columns-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 15px;
+}
+
+.match-column {
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 15px;
+    background: #f8f9fa;
+}
+
+.match-item {
+    padding: 8px;
+    margin-bottom: 8px;
+    background: white;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+}
+
+.nav-tabs .nav-link {
+    color: #64748b;
+    border: none;
+    border-bottom: 2px solid transparent;
+}
+
+.nav-tabs .nav-link.active {
+    color: #6366f1;
+    border-bottom-color: #6366f1;
+    background: transparent;
+}
+
+@media print {
+    .question-item {
+        page-break-inside: avoid;
+        border: 1px solid #000;
+        margin-bottom: 20px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let questionCounter = 0;
+let currentEditingIndex = -1;
+let questions = [];
+
+function showQuestionTypeModal() {
+    const modal = new bootstrap.Modal(document.getElementById('questionTypeModal'));
+    modal.show();
+}
+
+function addQuestion(type) {
+    const modal = bootstrap.Modal.getInstance(document.getElementById('questionTypeModal'));
+    if (modal) modal.hide();
+    
+    currentEditingIndex = -1;
+    questionCounter++;
+    
+    const question = {
+        id: questionCounter,
+        type: type,
+        question_text: '',
+        marks: '1',
+        order: questions.length + 1
+    };
+    
+    // Initialize type-specific fields
+    if (type === 'mcq') {
+        question.options = ['', '', '', ''];
+        question.correct_answer = 'A';
+    } else if (type === 'fill_blank') {
+        question.blanks = [];
+        question.answers = [];
+    } else if (type === 'match_columns') {
+        question.left_column = [];
+        question.right_column = [];
+        question.matches = '';
+    } else if (type === 'one_word' || type === 'single_line' || type === 'multiple_line') {
+        question.sample_answer = '';
+    } else if (type === 'true_false') {
+        question.correct_answer = 'True';
+    } else if (type === 'numerical') {
+        question.correct_answer = '';
+        question.unit = '';
+    }
+    
+    questions.push(question);
+    renderQuestions();
+    editQuestion(questions.length - 1);
+}
+
+function editQuestion(index) {
+    currentEditingIndex = index;
+    const question = questions[index];
+    const modal = new bootstrap.Modal(document.getElementById('questionEditModal'));
+    
+    document.getElementById('questionEditModalTitle').textContent = `Edit ${getQuestionTypeName(question.type)} Question`;
+    document.getElementById('questionEditModalBody').innerHTML = getQuestionTemplate(question);
+    
+    modal.show();
+}
+
+function getQuestionTypeName(type) {
+    const names = {
+        'mcq': 'Multiple Choice',
+        'fill_blank': 'Fill in the Blanks',
+        'match_columns': 'Match the Columns',
+        'one_word': 'One Word',
+        'single_line': 'Single Line',
+        'multiple_line': 'Multiple Line',
+        'true_false': 'True/False',
+        'numerical': 'Numerical'
+    };
+    return names[type] || type;
+}
+
+function getQuestionTemplate(question) {
+    const type = question.type;
+    let html = `
+        <div class="mb-3">
+            <label class="form-label">Question Text <span class="text-danger">*</span></label>
+            <textarea class="form-control" id="edit_question_text" rows="3" required>${escapeHtml(question.question_text)}</textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Marks</label>
+            <input type="number" class="form-control" id="edit_marks" value="${question.marks}" min="1" required>
+        </div>
+    `;
+    
+    if (type === 'mcq') {
+        html += `
+            <div class="mb-3">
+                <label class="form-label">Options</label>
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text">A</span>
+                            <input type="text" class="form-control" id="edit_option_a" value="${escapeHtml(question.options[0] || '')}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text">B</span>
+                            <input type="text" class="form-control" id="edit_option_b" value="${escapeHtml(question.options[1] || '')}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text">C</span>
+                            <input type="text" class="form-control" id="edit_option_c" value="${escapeHtml(question.options[2] || '')}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text">D</span>
+                            <input type="text" class="form-control" id="edit_option_d" value="${escapeHtml(question.options[3] || '')}" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Correct Answer</label>
+                <select class="form-select" id="edit_correct_answer">
+                    <option value="A" ${question.correct_answer === 'A' ? 'selected' : ''}>A</option>
+                    <option value="B" ${question.correct_answer === 'B' ? 'selected' : ''}>B</option>
+                    <option value="C" ${question.correct_answer === 'C' ? 'selected' : ''}>C</option>
+                    <option value="D" ${question.correct_answer === 'D' ? 'selected' : ''}>D</option>
+                </select>
+            </div>
+        `;
+    } else if (type === 'fill_blank') {
+        html += `
+            <div class="mb-3">
+                <label class="form-label">Question with Blanks (use [blank] for each blank)</label>
+                <textarea class="form-control" id="edit_question_with_blanks" rows="3">${escapeHtml(question.question_text)}</textarea>
+                <small class="text-muted">Example: The capital of India is [blank] and it is located in [blank].</small>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Answers (comma-separated)</label>
+                <input type="text" class="form-control" id="edit_blank_answers" value="${(question.answers || []).join(', ')}" placeholder="Delhi, North">
+                <small class="text-muted">Enter answers in order, separated by commas</small>
+            </div>
+        `;
+    } else if (type === 'match_columns') {
+        html += `
+            <div class="mb-3">
+                <label class="form-label">Left Column Items (one per line)</label>
+                <textarea class="form-control" id="edit_left_column" rows="5">${(question.left_column || []).join('\n')}</textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Right Column Items (one per line)</label>
+                <textarea class="form-control" id="edit_right_column" rows="5">${(question.right_column || []).join('\n')}</textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Matching Instructions</label>
+                <textarea class="form-control" id="edit_match_instructions" rows="2">${escapeHtml(question.matches || 'Match the items in Column A with Column B')}</textarea>
+            </div>
+        `;
+    } else if (type === 'one_word' || type === 'single_line' || type === 'multiple_line') {
+        html += `
+            <div class="mb-3">
+                <label class="form-label">Sample Answer (for reference)</label>
+                <textarea class="form-control" id="edit_sample_answer" rows="${type === 'multiple_line' ? '4' : '2'}">${escapeHtml(question.sample_answer || '')}</textarea>
+            </div>
+        `;
+    } else if (type === 'true_false') {
+        html += `
+            <div class="mb-3">
+                <label class="form-label">Correct Answer</label>
+                <select class="form-select" id="edit_correct_answer">
+                    <option value="True" ${question.correct_answer === 'True' ? 'selected' : ''}>True</option>
+                    <option value="False" ${question.correct_answer === 'False' ? 'selected' : ''}>False</option>
+                </select>
+            </div>
+        `;
+    } else if (type === 'numerical') {
+        html += `
+            <div class="mb-3">
+                <label class="form-label">Correct Answer (Numerical Value)</label>
+                <input type="text" class="form-control" id="edit_numerical_answer" value="${escapeHtml(question.correct_answer || '')}" placeholder="e.g., 42.5">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Unit (optional)</label>
+                <input type="text" class="form-control" id="edit_numerical_unit" value="${escapeHtml(question.unit || '')}" placeholder="e.g., km, kg, m/s">
+            </div>
+        `;
+    }
+    
+    return html;
+}
+
+function saveQuestionFromModal() {
+    if (currentEditingIndex === -1) return;
+    
+    const question = questions[currentEditingIndex];
+    question.question_text = document.getElementById('edit_question_text').value.trim();
+    question.marks = document.getElementById('edit_marks').value;
+    
+    if (question.type === 'mcq') {
+        question.options = [
+            document.getElementById('edit_option_a').value.trim(),
+            document.getElementById('edit_option_b').value.trim(),
+            document.getElementById('edit_option_c').value.trim(),
+            document.getElementById('edit_option_d').value.trim()
+        ];
+        question.correct_answer = document.getElementById('edit_correct_answer').value;
+    } else if (question.type === 'fill_blank') {
+        question.question_text = document.getElementById('edit_question_with_blanks').value.trim();
+        const answers = document.getElementById('edit_blank_answers').value.trim();
+        question.answers = answers ? answers.split(',').map(a => a.trim()) : [];
+    } else if (question.type === 'match_columns') {
+        const leftItems = document.getElementById('edit_left_column').value.trim();
+        const rightItems = document.getElementById('edit_right_column').value.trim();
+        question.left_column = leftItems ? leftItems.split('\n').map(item => item.trim()).filter(item => item) : [];
+        question.right_column = rightItems ? rightItems.split('\n').map(item => item.trim()).filter(item => item) : [];
+        question.matches = document.getElementById('edit_match_instructions').value.trim();
+    } else if (question.type === 'one_word' || question.type === 'single_line' || question.type === 'multiple_line') {
+        question.sample_answer = document.getElementById('edit_sample_answer').value.trim();
+    } else if (question.type === 'true_false') {
+        question.correct_answer = document.getElementById('edit_correct_answer').value;
+    } else if (question.type === 'numerical') {
+        question.correct_answer = document.getElementById('edit_numerical_answer').value.trim();
+        question.unit = document.getElementById('edit_numerical_unit').value.trim();
+    }
+    
+    const modal = bootstrap.Modal.getInstance(document.getElementById('questionEditModal'));
+    if (modal) modal.hide();
+    
+    renderQuestions();
+}
+
+function deleteQuestion(index) {
+    if (confirm('Are you sure you want to delete this question?')) {
+        questions.splice(index, 1);
+        renderQuestions();
+    }
+}
+
+function moveQuestionUp(index) {
+    if (index > 0) {
+        [questions[index], questions[index - 1]] = [questions[index - 1], questions[index]];
+        renderQuestions();
+    }
+}
+
+function moveQuestionDown(index) {
+    if (index < questions.length - 1) {
+        [questions[index], questions[index + 1]] = [questions[index + 1], questions[index]];
+        renderQuestions();
+    }
+}
+
+function renderQuestions() {
+    const container = document.getElementById('questions-container');
+    
+    if (questions.length === 0) {
+        container.innerHTML = '<div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>Click "Add Question" to start building your question paper.</div>';
+        return;
+    }
+    
+    let html = '';
+    questions.forEach((q, index) => {
+        html += `
+            <div class="question-item">
+                <div class="question-header">
+                    <div>
+                        <span class="question-number">Q${index + 1}</span>
+                        <span class="badge question-type-badge bg-primary ms-2">${getQuestionTypeName(q.type)}</span>
+                        <span class="badge bg-secondary ms-2">${q.marks} Mark${q.marks != 1 ? 's' : ''}</span>
+                    </div>
+                    <div class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-outline-secondary" onclick="moveQuestionUp(${index})" ${index === 0 ? 'disabled' : ''} title="Move Up">
+                            <i class="bi bi-arrow-up"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="moveQuestionDown(${index})" ${index === questions.length - 1 ? 'disabled' : ''} title="Move Down">
+                            <i class="bi bi-arrow-down"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="question-text">${escapeHtml(q.question_text || 'No question text')}</div>
+                ${renderQuestionPreview(q)}
+                <div class="question-actions">
+                    <button type="button" class="btn btn-sm btn-primary" onclick="editQuestion(${index})">
+                        <i class="bi bi-pencil me-1"></i>Edit
+                    </button>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="deleteQuestion(${index})">
+                        <i class="bi bi-trash me-1"></i>Delete
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+function renderQuestionPreview(question) {
+    if (question.type === 'mcq' && question.options) {
+        return `
+            <div class="mt-2">
+                <small class="text-muted">Options:</small>
+                <ul class="list-unstyled ms-3">
+                    ${question.options.map((opt, i) => `<li>${String.fromCharCode(65 + i)}. ${escapeHtml(opt || '')}</li>`).join('')}
+                </ul>
+                <small class="text-success">Correct: ${question.correct_answer}</small>
+            </div>
+        `;
+    } else if (question.type === 'match_columns' && question.left_column && question.right_column) {
+        return `
+            <div class="match-columns-container mt-2">
+                <div class="match-column">
+                    <strong>Column A</strong>
+                    ${question.left_column.map(item => `<div class="match-item">${escapeHtml(item)}</div>`).join('')}
+                </div>
+                <div class="match-column">
+                    <strong>Column B</strong>
+                    ${question.right_column.map(item => `<div class="match-item">${escapeHtml(item)}</div>`).join('')}
+                </div>
+            </div>
+        `;
+    }
+    return '';
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function previewQuestionPaper() {
+    if (questions.length === 0) {
+        alert('Please add at least one question before previewing.');
+        return;
+    }
+    
+    const title = document.getElementById('id_title').value || 'Question Paper';
+    const subject = document.getElementById('id_subject').options[document.getElementById('id_subject').selectedIndex].text || '';
+    const classAssigned = document.getElementById('id_class_assigned').options[document.getElementById('id_class_assigned').selectedIndex].text || '';
+    const instructions = document.getElementById('id_instructions').value || '';
+    
+    let html = `
+        <div class="question-paper-preview">
+            <div class="text-center mb-4">
+                <h2>${escapeHtml(title)}</h2>
+                <p><strong>Subject:</strong> ${escapeHtml(subject)} | <strong>Class:</strong> ${escapeHtml(classAssigned)}</p>
+            </div>
+            ${instructions ? `<div class="alert alert-info mb-4"><strong>Instructions:</strong><br>${escapeHtml(instructions).replace(/\n/g, '<br>')}</div>` : ''}
+            <div class="questions-preview">
+    `;
+    
+    questions.forEach((q, index) => {
+        html += `
+            <div class="question-preview-item mb-4 pb-3 border-bottom">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5>Q${index + 1}. ${escapeHtml(q.question_text || '')}</h5>
+                    <span class="badge bg-secondary">${q.marks} Mark${q.marks != 1 ? 's' : ''}</span>
+                </div>
+        `;
+        
+        if (q.type === 'mcq' && q.options) {
+            html += '<div class="ms-3"><ul class="list-unstyled">';
+            q.options.forEach((opt, i) => {
+                html += `<li>${String.fromCharCode(65 + i)}. ${escapeHtml(opt || '')}</li>`;
+            });
+            html += '</ul></div>';
+        } else if (q.type === 'fill_blank') {
+            html += `<div class="ms-3"><p class="text-muted">[Fill in the blanks]</p></div>`;
+        } else if (q.type === 'match_columns' && q.left_column && q.right_column) {
+            html += `
+                <div class="row ms-3">
+                    <div class="col-md-6">
+                        <strong>Column A</strong>
+                        <ol>${q.left_column.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ol>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Column B</strong>
+                        <ol>${q.right_column.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ol>
+                    </div>
+                </div>
+            `;
+        } else if (q.type === 'one_word' || q.type === 'single_line') {
+            html += `<div class="ms-3"><p class="text-muted">Answer: _______________________</p></div>`;
+        } else if (q.type === 'multiple_line') {
+            html += `<div class="ms-3"><p class="text-muted">Answer:</p><div style="min-height: 100px; border: 1px solid #ddd; padding: 10px;"></div></div>`;
+        }
+        
+        html += '</div>';
+    });
+    
+    html += `
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('previewContent').innerHTML = html;
+    const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+    modal.show();
+}
+
+// Update form submission to include questions
+document.getElementById('questionPaperForm').addEventListener('submit', function(e) {
+    if (questions.length === 0) {
+        e.preventDefault();
+        alert('Please add at least one question before saving.');
+        return false;
+    }
+    
+    // Add hidden inputs for each question
+    questions.forEach((q, index) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = `question_${index}_type`;
+        input.value = q.type;
+        this.appendChild(input);
+        
+        const textInput = document.createElement('input');
+        textInput.type = 'hidden';
+        textInput.name = `question_${index}_text`;
+        textInput.value = q.question_text;
+        this.appendChild(textInput);
+        
+        const marksInput = document.createElement('input');
+        marksInput.type = 'hidden';
+        marksInput.name = `question_${index}_marks`;
+        marksInput.value = q.marks;
+        this.appendChild(marksInput);
+        
+        if (q.type === 'mcq') {
+            ['a', 'b', 'c', 'd'].forEach((opt, i) => {
+                const optInput = document.createElement('input');
+                optInput.type = 'hidden';
+                optInput.name = `question_${index}_option_${opt}`;
+                optInput.value = q.options[i] || '';
+                this.appendChild(optInput);
+            });
+            const correctInput = document.createElement('input');
+            correctInput.type = 'hidden';
+            correctInput.name = `question_${index}_correct`;
+            correctInput.value = q.correct_answer;
+            this.appendChild(correctInput);
+        } else if (q.type === 'fill_blank') {
+            const answersInput = document.createElement('input');
+            answersInput.type = 'hidden';
+            answersInput.name = `question_${index}_answers`;
+            answersInput.value = (q.answers || []).join(',');
+            this.appendChild(answersInput);
+        } else if (q.type === 'match_columns') {
+            const leftInput = document.createElement('input');
+            leftInput.type = 'hidden';
+            leftInput.name = `question_${index}_left_items`;
+            leftInput.value = (q.left_column || []).join('\n');
+            this.appendChild(leftInput);
+            
+            const rightInput = document.createElement('input');
+            rightInput.type = 'hidden';
+            rightInput.name = `question_${index}_right_items`;
+            rightInput.value = (q.right_column || []).join('\n');
+            this.appendChild(rightInput);
+            
+            const matchesInput = document.createElement('input');
+            matchesInput.type = 'hidden';
+            matchesInput.name = `question_${index}_matches`;
+            matchesInput.value = q.matches || '';
+            this.appendChild(matchesInput);
+        } else if (q.type === 'one_word' || q.type === 'single_line' || q.type === 'multiple_line') {
+            const sampleInput = document.createElement('input');
+            sampleInput.type = 'hidden';
+            sampleInput.name = `question_${index}_sample_answer`;
+            sampleInput.value = q.sample_answer || '';
+            this.appendChild(sampleInput);
+        } else if (q.type === 'true_false') {
+            const correctInput = document.createElement('input');
+            correctInput.type = 'hidden';
+            correctInput.name = `question_${index}_correct`;
+            correctInput.value = q.correct_answer;
+            this.appendChild(correctInput);
+        } else if (q.type === 'numerical') {
+            const correctInput = document.createElement('input');
+            correctInput.type = 'hidden';
+            correctInput.name = `question_${index}_correct`;
+            correctInput.value = q.correct_answer || '';
+            this.appendChild(correctInput);
+            
+            const unitInput = document.createElement('input');
+            unitInput.type = 'hidden';
+            unitInput.name = `question_${index}_unit`;
+            unitInput.value = q.unit || '';
+            this.appendChild(unitInput);
+        }
+    });
+    
+    const countInput = document.createElement('input');
+    countInput.type = 'hidden';
+    countInput.name = 'question_count';
+    countInput.value = questions.length;
+    this.appendChild(countInput);
+});
+
+// AI Question Generation Functions (simplified versions)
+let generatedQuestions = [];
+let searchResultsData = [];
+
+function suggestQuestions() {
+    const topic = document.getElementById('ai-topic').value.trim();
+    const questionType = document.getElementById('ai-question-type').value;
+    const difficulty = document.getElementById('ai-difficulty').value;
+    const count = parseInt(document.getElementById('ai-count').value) || 5;
+    const output = document.getElementById('ai-suggestions');
+    const loading = document.getElementById('ai-loading');
+    const generateBtn = document.getElementById('generateBtn');
+    
+    if (!topic) {
+        output.innerHTML = '<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>Please enter a topic first.</div>';
+        return;
+    }
+    
+    loading.style.display = 'block';
+    output.innerHTML = '';
+    generateBtn.disabled = true;
+    generateBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Generating...';
+    
+    setTimeout(() => {
+        loading.style.display = 'none';
+        generateBtn.disabled = false;
+        generateBtn.innerHTML = '<i class="bi bi-magic me-2"></i>Generate Questions';
+        
+        generatedQuestions = generateAIQuestions(topic, questionType, difficulty, count);
+        displayAIQuestions(generatedQuestions, output);
+    }, 1500);
+}
+
+function generateAIQuestions(topic, type, difficulty, count) {
+    const questions = [];
+    const templates = {
+        mcq: [`What is the main concept of ${topic}?`, `Which of the following best describes ${topic}?`],
+        fill_blank: [`The capital of ${topic} is [blank].`, `${topic} is located in [blank].`],
+        match_columns: [`Match items related to ${topic}.`],
+        one_word: [`What is ${topic}?`, `Name one example of ${topic}.`],
+        single_line: [`Explain ${topic} in one line.`, `Define ${topic}.`],
+        multiple_line: [`Write a detailed explanation of ${topic}.`, `Discuss ${topic} comprehensively.`],
+        true_false: [`${topic} is always true. (True/False)`, `The concept of ${topic} applies universally. (True/False)`],
+        numerical: [`Solve a numerical problem related to ${topic}.`, `Calculate the value using ${topic} principles.`]
+    };
+    
+    const selectedTemplates = type === 'mixed' 
+        ? Object.values(templates).flat()
+        : templates[type] || templates.single_line;
+    
+    for (let i = 0; i < count; i++) {
+        const templateIndex = i % selectedTemplates.length;
+        questions.push({
+            text: selectedTemplates[templateIndex],
+            type: type === 'mixed' ? ['mcq', 'fill_blank', 'one_word'][i % 3] : type,
+            marks: '2'
+        });
+    }
+    
+    return questions;
+}
+
+function displayAIQuestions(questions, container) {
+    let html = `
+        <div class="ai-suggestion-header mb-3">
+            <h6><i class="bi bi-check-circle me-2"></i>Generated ${questions.length} Questions</h6>
+            <button class="btn btn-sm btn-outline-primary" onclick="addAllAIQuestions()">
+                <i class="bi bi-plus-circle me-1"></i>Add All
+            </button>
+        </div>
+    `;
+    
+    questions.forEach((q, index) => {
+        html += `
+            <div class="question-item mb-2">
+                <div class="question-text">${escapeHtml(q.text)}</div>
+                <div class="question-meta">
+                    <span class="badge bg-info">${q.type.toUpperCase()}</span>
+                    <span class="badge bg-secondary">${q.marks} Marks</span>
+                </div>
+                <div class="question-actions">
+                    <button class="btn btn-sm btn-outline-primary" onclick="addAIQuestion(${index})">
+                        <i class="bi bi-plus-circle me-1"></i>Add
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+function addAIQuestion(index) {
+    const aiQ = generatedQuestions[index];
+    const type = aiQ.type;
+    
+    questionCounter++;
+    const question = {
+        id: questionCounter,
+        type: type,
+        question_text: aiQ.text,
+        marks: aiQ.marks,
+        order: questions.length + 1
+    };
+    
+    // Initialize type-specific fields
+    if (type === 'mcq') {
+        question.options = ['Option A', 'Option B', 'Option C', 'Option D'];
+        question.correct_answer = 'A';
+    } else if (type === 'fill_blank') {
+        question.answers = [];
+    } else if (type === 'match_columns') {
+        question.left_column = [];
+        question.right_column = [];
+        question.matches = '';
+    } else if (type === 'one_word' || type === 'single_line' || type === 'multiple_line') {
+        question.sample_answer = '';
+    } else if (type === 'true_false') {
+        question.correct_answer = 'True';
+    } else if (type === 'numerical') {
+        question.correct_answer = '';
+        question.unit = '';
+    }
+    
+    questions.push(question);
+    renderQuestions();
+}
+
+function addAllAIQuestions() {
+    generatedQuestions.forEach((aiQ, index) => {
+        addAIQuestion(index);
+    });
+}
+
+function searchInternet() {
+    const query = document.getElementById('search-query').value.trim();
+    const resultsContainer = document.getElementById('search-results');
+    const loading = document.getElementById('search-loading');
+    const searchBtn = document.getElementById('searchBtn');
+    
+    if (!query) {
+        resultsContainer.innerHTML = '<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>Please enter a search query.</div>';
+        return;
+    }
+    
+    loading.style.display = 'block';
+    resultsContainer.innerHTML = '';
+    searchBtn.disabled = true;
+    searchBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+    
+    setTimeout(() => {
+        loading.style.display = 'none';
+        searchBtn.disabled = false;
+        searchBtn.innerHTML = '<i class="bi bi-search"></i>';
+        
+        searchResultsData = generateSearchResults(query);
+        displaySearchResults(searchResultsData, resultsContainer);
+        
+        if (!document.getElementById('ai-topic').value.trim()) {
+            document.getElementById('ai-topic').value = query;
+        }
+    }, 1200);
+}
+
+function generateSearchResults(query) {
+    const domains = ['wikipedia.org', 'khanacademy.org', 'britannica.com'];
+    const results = [];
+    
+    for (let i = 0; i < 3; i++) {
+        results.push({
+            title: `${query} - Complete Guide`,
+            url: `https://www.${domains[i]}/article/${query.toLowerCase().replace(/\s+/g, '-')}`,
+            snippet: `${query} is a fundamental concept that involves multiple aspects.`
+        });
+    }
+    
+    return results;
+}
+
+function displaySearchResults(results, container) {
+    if (results.length === 0) {
+        container.innerHTML = '<div class="alert alert-info">No results found.</div>';
+        return;
+    }
+    
+    let html = '';
+    results.forEach((result, index) => {
+        html += `
+            <div class="search-result-item mb-2 p-2 border rounded">
+                <div class="fw-bold">${escapeHtml(result.title)}</div>
+                <div class="text-muted small">${escapeHtml(result.url)}</div>
+                <div class="mt-1">${escapeHtml(result.snippet)}</div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+// Allow Enter key to generate
+document.getElementById('ai-topic').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        suggestQuestions();
+    }
+});
+
+document.getElementById('search-query').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        searchInternet();
+    }
+});
+</script>
+{% endblock %}

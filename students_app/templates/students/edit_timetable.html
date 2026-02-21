@@ -1,0 +1,301 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Edit Timetable{% endblock %}
+
+{% block extra_css %}
+<style>
+    .timetable-cell {
+        min-width: 160px;
+        padding: 8px !important;
+        vertical-align: top;
+        background: #f8fafc;
+        transition: all 0.2s ease;
+    }
+    .timetable-cell:hover {
+        background: #e2e8f0;
+    }
+    .timetable-form {
+        background: #fff;
+        border-radius: 10px;
+        padding: 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .timetable-form .form-select,
+    .timetable-form .form-control {
+        font-size: 0.8rem;
+        padding: 6px 10px;
+    }
+    .timetable-form .form-label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #64748b;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+    }
+    .time-slot-cell {
+        background: linear-gradient(135deg, #4f46e5, #6366f1) !important;
+        color: #fff !important;
+        font-weight: 600;
+        vertical-align: middle;
+        text-align: center;
+    }
+    .day-header {
+        background: #1e293b !important;
+        color: #fff !important;
+        font-weight: 600;
+        text-align: center;
+        padding: 12px !important;
+    }
+    .save-btn {
+        background: linear-gradient(135deg, #10b981, #059669);
+        border: none;
+        color: #fff;
+        font-size: 0.75rem;
+        padding: 6px 12px;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+    }
+    .save-btn:hover {
+        background: linear-gradient(135deg, #059669, #047857);
+        transform: translateY(-1px);
+        color: #fff;
+    }
+    .clear-btn {
+        background: #fee2e2;
+        border: none;
+        color: #dc2626;
+        font-size: 0.7rem;
+        padding: 4px 8px;
+        border-radius: 4px;
+    }
+    .clear-btn:hover {
+        background: #fecaca;
+    }
+</style>
+{% endblock %}
+
+{% comment %}Sidebar will use default from base_modern.html based on user role{% endcomment %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="top-bar">
+    <div class="page-title">
+        <h1><i class="bi bi-pencil-square me-2"></i>Edit Timetable</h1>
+        <p>{{ section.class_assigned.name }} - Section {{ section.name }} | {{ current_year.name|default:"Current Year" }}</p>
+    </div>
+    <div class="top-bar-actions">
+        <a href="{% url 'students_app:view_timetable' %}?section={{ section.id }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to View
+        </a>
+    </div>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-4" role="alert">
+        <i class="bi bi-check-circle me-2"></i>{{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+{% endif %}
+
+<!-- Instructions Card -->
+<div class="card mb-4">
+    <div class="card-body py-3">
+        <div class="d-flex align-items-center gap-3">
+            <div class="rounded-circle p-2" style="background: #dbeafe;">
+                <i class="bi bi-info-circle text-primary fs-5"></i>
+            </div>
+            <div>
+                {% if timetable_data.0.entries.0 %}
+                <strong>How to edit:</strong> Select subject and teacher for each time slot, then click Save. 
+                <br><small class="text-muted">• Leave subject empty and click Save to clear a slot</small>
+                <br><small class="text-muted">• Click the delete icon (🗑️) to remove an existing entry</small>
+                {% else %}
+                <strong>Create Timetable:</strong> Fill in subject and teacher for each time slot, then click Save to create entries.
+                <br><small class="text-muted">• Select a subject and teacher, then click Save to add a class</small>
+                <br><small class="text-muted">• Room number is optional</small>
+                <br><small class="text-muted">• You can save each cell individually or fill multiple cells before saving</small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Timetable Grid -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-table me-2"></i>Weekly Schedule Grid</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-bordered mb-0" style="min-width: 1200px;">
+                <thead>
+                    <tr>
+                        <th class="day-header" style="width: 130px;">
+                            <i class="bi bi-clock me-1"></i>Time Slot
+                        </th>
+                        <th class="day-header">Monday</th>
+                        <th class="day-header">Tuesday</th>
+                        <th class="day-header">Wednesday</th>
+                        <th class="day-header">Thursday</th>
+                        <th class="day-header">Friday</th>
+                        <th class="day-header">Saturday</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for slot_data in timetable_data %}
+                    <tr>
+                        <td class="time-slot-cell">
+                            <div class="fw-bold">{{ slot_data.slot.slot_name }}</div>
+                            <small style="opacity: 0.8;">{{ slot_data.slot.start_time|time:"g:i A" }}</small>
+                            <div style="opacity: 0.6; font-size: 0.7rem;">to</div>
+                            <small style="opacity: 0.8;">{{ slot_data.slot.end_time|time:"g:i A" }}</small>
+                        </td>
+                        {% for weekday_num, weekday_name in weekday_map.items %}
+                        <td class="timetable-cell">
+                            {% for key, entry in slot_data.entries.items %}
+                                {% if key == weekday_num %}
+                                <form method="post" class="timetable-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="weekday" value="{{ weekday_num }}">
+                                    <input type="hidden" name="time_slot" value="{{ slot_data.slot.id }}">
+                                    
+                                    <div class="mb-2">
+                                        <label class="form-label">Subject</label>
+                                        <select name="subject" class="form-select">
+                                            <option value="">-- Select --</option>
+                                            {% for subject in subjects %}
+                                            <option value="{{ subject.id }}" {% if entry and entry.subject and entry.subject.id == subject.id %}selected{% endif %}>
+                                                {{ subject.name }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-2">
+                                        <label class="form-label">Teacher</label>
+                                        <select name="teacher" class="form-select">
+                                            <option value="">-- Select --</option>
+                                            {% for teacher in teachers %}
+                                            <option value="{{ teacher.id }}" {% if entry and entry.teacher and entry.teacher.id == teacher.id %}selected{% endif %}>
+                                                {{ teacher.user.get_full_name|default:teacher.user.username }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-2">
+                                        <label class="form-label">Room</label>
+                                        <input type="text" name="room_number" class="form-control" 
+                                               value="{% if entry %}{{ entry.room_number }}{% endif %}" 
+                                               placeholder="e.g. R-101">
+                                    </div>
+                                    
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="save-btn flex-grow-1">
+                                            <i class="bi bi-check-lg me-1"></i>Save
+                                        </button>
+                                        {% if entry %}
+                                        <button type="button" class="clear-btn" onclick="deleteEntry({{ entry.id }}, this)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </form>
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Help Card -->
+<div class="card mt-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <h6><i class="bi bi-lightbulb me-2 text-warning"></i>Quick Tips</h6>
+                <ul class="small text-muted mb-0">
+                    <li>Click Save after making changes to each cell</li>
+                    <li>Leave Subject empty to clear a slot</li>
+                    <li>Room number is optional</li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <h6><i class="bi bi-clock me-2 text-primary"></i>Time Slots</h6>
+                <p class="small text-muted mb-0">
+                    Time slots are predefined by the admin. Contact admin to add or modify time slots.
+                </p>
+            </div>
+            <div class="col-md-4">
+                <h6><i class="bi bi-person me-2 text-success"></i>Teachers</h6>
+                <p class="small text-muted mb-0">
+                    Only registered teachers appear in the dropdown. Add teachers first if list is empty.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Show saving feedback
+    document.querySelectorAll('.timetable-form').forEach(function(form) {
+        form.addEventListener('submit', function() {
+            const btn = form.querySelector('.save-btn');
+            btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Saving...';
+            btn.disabled = true;
+        });
+    });
+    
+    // Delete timetable entry
+    function deleteEntry(entryId, btn) {
+        if (!confirm('Are you sure you want to delete this timetable entry?')) {
+            return;
+        }
+        
+        // Create a form to submit delete request
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '';
+        
+        // Add CSRF token
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+        
+        // Add action and entry ID
+        const actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'action';
+        actionInput.value = 'delete';
+        form.appendChild(actionInput);
+        
+        const idInput = document.createElement('input');
+        idInput.type = 'hidden';
+        idInput.name = 'timetable_id';
+        idInput.value = entryId;
+        form.appendChild(idInput);
+        
+        // Show loading state
+        btn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+        btn.disabled = true;
+        
+        // Submit form
+        document.body.appendChild(form);
+        form.submit();
+    }
+</script>
+{% endblock %}
+
+
+

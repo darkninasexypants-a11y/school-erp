@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mock Tests - Class {{ class_obj.name }}</title>
+
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fredoka:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <!-- AOS Animation -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --warning-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f3f4f6;
+            min-height: 100vh;
+        }
+
+        .header-section {
+            background: var(--primary-gradient);
+            padding: 40px 0 80px;
+            color: white;
+            border-radius: 0 0 30px 30px;
+            margin-bottom: -50px;
+        }
+
+        .page-title {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+
+        .subject-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: #e0e7ff;
+            color: #4338ca;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .test-card {
+            border: 1px solid #eee;
+            border-radius: 15px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            height: 100%;
+            background: #fff;
+        }
+
+        .test-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            border-color: #667eea;
+        }
+
+        .test-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            margin-bottom: 15px;
+            background: var(--success-gradient);
+        }
+
+        .btn-start {
+            background: var(--primary-gradient);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            color: white;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 15px;
+            transition: all 0.3s;
+        }
+
+        .btn-start:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        .back-btn {
+            color: white;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 20px;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+
+        .back-btn:hover {
+            opacity: 1;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header-section">
+        <div class="container">
+            <a href="{% url 'students_app:student_dashboard' %}" class="back-btn">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+            <h1 class="page-title" data-aos="fade-down">Mock Tests</h1>
+            <p class="lead mb-0">Class {{ class_obj.name }}</p>
+        </div>
+    </div>
+
+    <div class="container">
+        {% if selected_subject %}
+        <div class="alert alert-info shadow-sm rounded-4" role="alert" data-aos="fade-up">
+            Filtering by subject: <strong>{{ selected_subject }}</strong>
+            <a href="{% url 'students_app:mock_tests_by_class' class_obj.id %}"
+                class="float-end text-decoration-none">Clear Filter</a>
+        </div>
+        {% endif %}
+
+        {% if tests_by_category %}
+        {% for category, tests in tests_by_category.items %}
+        <div class="content-card" data-aos="fade-up">
+            <div class="d-flex align-items-center mb-4">
+                <h3 class="mb-0 fw-bold text-dark">{{ category }}</h3>
+                <span class="badge bg-primary ms-3 rounded-pill">{{ tests|length }} Tests</span>
+            </div>
+
+            <div class="row g-4">
+                {% for test in tests %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="test-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="test-icon">
+                                <i class="bi bi-journal-text"></i>
+                            </div>
+                            {% if test.is_active %}
+                            <span class="badge bg-success-subtle text-success rounded-pill">Active</span>
+                            {% else %}
+                            <span class="badge bg-secondary-subtle text-secondary rounded-pill">Inactive</span>
+                            {% endif %}
+                        </div>
+
+                        <h5 class="fw-bold mb-2">{{ test.title }}</h5>
+                        <p class="text-muted small mb-3">{{ test.description|truncatechars:80 }}</p>
+
+                        <div class="d-flex justify-content-between text-muted small mb-3">
+                            <span><i class="bi bi-clock me-1"></i> {{ test.duration_minutes }} mins</span>
+                            <span><i class="bi bi-question-circle me-1"></i> {{ test.total_questions }} Qs</span>
+                        </div>
+
+                        <a href="{% url 'students_app:start_mock_test' test.id %}" class="btn btn-start">
+                            Start Test <i class="bi bi-arrow-right ms-2"></i>
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="content-card text-center py-5" data-aos="fade-up">
+            <img src="https://cdn-icons-png.flaticon.com/512/7486/7486777.png" alt="No Tests" width="120"
+                class="mb-3 opacity-50">
+            <h3>No Mock Tests Available</h3>
+            <p class="text-muted">There are no mock tests available for this class yet.</p>
+            <a href="{% url 'students_app:student_dashboard' %}" class="btn btn-outline-primary rounded-pill px-4">Go
+                Back</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- AOS Animation -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init();
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

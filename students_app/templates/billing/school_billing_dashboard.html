@@ -1,0 +1,457 @@
+{% extends "students/base_modern.html" %}
+{% load static %}
+{% block title %}School Billing Dashboard{% endblock %}
+
+{% block content %}
+{% include 'includes/super_admin_sidebar.html' %}
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-file-invoice-dollar me-2 text-success"></i>School Billing</h2>
+            <p class="text-muted">Manage school subscriptions and invoices</p>
+        </div>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sendBillModal">
+            <i class="fas fa-paper-plane"></i> Send Bill
+        </button>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ total_schools }}</h4>
+                            <p class="mb-0">Total Schools</p>
+                        </div>
+                        <i class="fas fa-school fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ pending_bills }}</h4>
+                            <p class="mb-0">Pending Bills</p>
+                            <small>₹{{ pending_revenue|floatformat:0 }}</small>
+                        </div>
+                        <i class="fas fa-clock fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ overdue_bills }}</h4>
+                            <p class="mb-0">Overdue Bills</p>
+                        </div>
+                        <i class="fas fa-exclamation-triangle fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>₹{{ total_revenue|floatformat:0 }}</h4>
+                            <p class="mb-0">Total Revenue</p>
+                            <small>{{ paid_bills }} paid</small>
+                        </div>
+                        <i class="fas fa-rupee-sign fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <select name="school" class="form-select">
+                        <option value="">All Schools</option>
+                        {% for school in schools %}
+                            <option value="{{ school.id }}" {% if current_school == school.id|stringformat:"s" %}selected{% endif %}>
+                                {{ school.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="status" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="pending" {% if current_status == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="overdue" {% if current_status == 'overdue' %}selected{% endif %}>Overdue</option>
+                        <option value="paid" {% if current_status == 'paid' %}selected{% endif %}>Paid</option>
+                        <option value="cancelled" {% if current_status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter"></i> Filter
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Billings Table -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Billing Records</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>School</th>
+                            <th>Period</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Due Date</th>
+                            <th>Payment Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for billing in billings %}
+                        <tr>
+                            <td>
+                                <strong>{{ billing.school.name }}</strong><br>
+                                <small class="text-muted">{{ billing.school.phone }}</small>
+                            </td>
+                            <td>{{ billing.billing_period }}</td>
+                            <td>
+                                <strong class="text-success">₹{{ billing.amount|floatformat:2 }}</strong>
+                            </td>
+                            <td>
+                                {% if billing.payment_status == 'paid' %}
+                                    <span class="badge bg-success">Paid</span>
+                                {% elif billing.payment_status == 'pending' %}
+                                    <span class="badge bg-warning">Pending</span>
+                                {% elif billing.payment_status == 'overdue' %}
+                                    <span class="badge bg-danger">Overdue</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ billing.payment_status|title }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ billing.due_date|date:"M d, Y" }}</td>
+                            <td>
+                                {% if billing.payment_date %}
+                                    {{ billing.payment_date|date:"M d, Y" }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'students_app:view_invoice' billing.id %}" class="btn btn-sm btn-outline-primary" title="View Invoice" target="_blank">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'students_app:download_invoice_pdf' billing.id %}" class="btn btn-sm btn-outline-success" title="Download PDF">
+                                        <i class="fas fa-download"></i>
+                                    </a>
+                                    <button class="btn btn-sm btn-outline-warning" onclick="updateBillStatus({{ billing.id }})" title="Update Status">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <a href="{% url 'students_app:school_billing_history' billing.school.id %}" class="btn btn-sm btn-outline-info" title="View History">
+                                        <i class="fas fa-history"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                <i class="fas fa-file-invoice fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">No billing records found</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Send Bill Modal -->
+<div class="modal fade" id="sendBillModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Send Bill to School</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="sendBillForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">School *</label>
+                        <select name="school_id" id="schoolSelect" class="form-select" required onchange="updateStudentCount()">
+                            <option value="">Select School</option>
+                            {% for school in schools %}
+                                <option value="{{ school.id }}" data-student-count="{{ school.active_students_count }}">
+                                    {{ school.name }} ({{ school.active_students_count }} active students)
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted" id="selectedSchoolInfo"></small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Billing Period *</label>
+                        <input type="text" name="billing_period" class="form-control" placeholder="e.g., Jan 2024" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Billing Type *</label>
+                        <select name="billing_type" id="billingType" class="form-select" required onchange="toggleBillingType()">
+                            <option value="per_student" selected>Per Student (Rate per head)</option>
+                            <option value="fixed">Fixed Amount</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="perStudentSection">
+                        <label class="form-label">Rate Per Student (₹) *</label>
+                        <input type="number" name="rate_per_student" id="ratePerStudent" class="form-control" step="0.01" placeholder="e.g., 5 or 10" oninput="calculateAmount()">
+                        <small class="text-muted">Enter rate per student (e.g., ₹5, ₹10 per head)</small>
+                    </div>
+                    <div class="mb-3" id="fixedAmountSection" style="display: none;">
+                        <label class="form-label">Fixed Amount (₹) *</label>
+                        <input type="number" name="amount" id="fixedAmount" class="form-control" step="0.01" placeholder="Enter fixed amount">
+                    </div>
+                    <div class="mb-3 alert alert-info" id="amountPreview" style="display: none;">
+                        <strong>Calculated Amount:</strong> ₹<span id="calculatedAmount">0.00</span>
+                        <br><small id="studentInfo"></small>
+                    </div>
+                    <input type="hidden" name="amount" id="finalAmount">
+                    <div class="mb-3">
+                        <label class="form-label">Due Date *</label>
+                        <input type="date" name="due_date" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea name="notes" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Send Bill
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Update Status Modal -->
+<div class="modal fade" id="updateStatusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Update Bill Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="updateStatusForm">
+                <input type="hidden" name="billing_id" id="billingId">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Payment Status *</label>
+                        <select name="status" class="form-select" required>
+                            <option value="pending">Pending</option>
+                            <option value="paid">Paid</option>
+                            <option value="overdue">Overdue</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Payment Date</label>
+                        <input type="date" name="payment_date" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Payment Method</label>
+                        <input type="text" name="payment_method" class="form-control" placeholder="e.g., Bank Transfer">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Transaction ID</label>
+                        <input type="text" name="transaction_id" class="form-control">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Status</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Store school data
+const schoolData = {};
+{% for school in schools %}
+schoolData[{{ school.id }}] = {{ school.active_students_count }};
+{% endfor %}
+
+// Toggle billing type
+function toggleBillingType() {
+    const billingType = document.getElementById('billingType').value;
+    const perStudentSection = document.getElementById('perStudentSection');
+    const fixedAmountSection = document.getElementById('fixedAmountSection');
+    const amountPreview = document.getElementById('amountPreview');
+    
+    if (billingType === 'per_student') {
+        perStudentSection.style.display = 'block';
+        fixedAmountSection.style.display = 'none';
+        document.getElementById('ratePerStudent').required = true;
+        document.getElementById('fixedAmount').required = false;
+        calculateAmount();
+    } else {
+        perStudentSection.style.display = 'none';
+        fixedAmountSection.style.display = 'block';
+        document.getElementById('ratePerStudent').required = false;
+        document.getElementById('fixedAmount').required = true;
+        amountPreview.style.display = 'none';
+    }
+}
+
+// Update student count display
+function updateStudentCount() {
+    const schoolSelect = document.getElementById('schoolSelect');
+    const selectedOption = schoolSelect.options[schoolSelect.selectedIndex];
+    const studentCount = selectedOption.getAttribute('data-student-count');
+    const schoolInfo = document.getElementById('selectedSchoolInfo');
+    
+    if (studentCount) {
+        schoolInfo.textContent = `Active Students: ${studentCount}`;
+        schoolInfo.style.display = 'block';
+        calculateAmount();
+    } else {
+        schoolInfo.style.display = 'none';
+    }
+}
+
+// Calculate amount based on rate and student count
+function calculateAmount() {
+    const billingType = document.getElementById('billingType').value;
+    const schoolSelect = document.getElementById('schoolSelect');
+    const amountPreview = document.getElementById('amountPreview');
+    const calculatedAmountSpan = document.getElementById('calculatedAmount');
+    const studentInfo = document.getElementById('studentInfo');
+    const finalAmountInput = document.getElementById('finalAmount');
+    
+    if (billingType === 'per_student') {
+        const rate = parseFloat(document.getElementById('ratePerStudent').value) || 0;
+        const selectedOption = schoolSelect.options[schoolSelect.selectedIndex];
+        const studentCount = parseInt(selectedOption.getAttribute('data-student-count')) || 0;
+        
+        if (rate > 0 && studentCount > 0) {
+            const total = rate * studentCount;
+            calculatedAmountSpan.textContent = total.toFixed(2);
+            studentInfo.textContent = `Rate: ₹${rate.toFixed(2)} × ${studentCount} students = ₹${total.toFixed(2)}`;
+            amountPreview.style.display = 'block';
+            finalAmountInput.value = total.toFixed(2);
+        } else {
+            amountPreview.style.display = 'none';
+            finalAmountInput.value = '';
+        }
+    } else {
+        const fixedAmount = parseFloat(document.getElementById('fixedAmount').value) || 0;
+        if (fixedAmount > 0) {
+            finalAmountInput.value = fixedAmount.toFixed(2);
+        } else {
+            finalAmountInput.value = '';
+        }
+    }
+}
+
+// Send Bill Form
+document.getElementById('sendBillForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    // Validate amount before submit
+    const billingType = document.getElementById('billingType').value;
+    const finalAmountInput = document.getElementById('finalAmount');
+    let amount = finalAmountInput.value;
+    
+    if (billingType === 'fixed') {
+        amount = document.getElementById('fixedAmount').value;
+        finalAmountInput.value = amount;
+    }
+    
+    if (!amount || parseFloat(amount) <= 0) {
+        alert('Please calculate/enter a valid amount before submitting.');
+        return false;
+    }
+    
+    const formData = new FormData(this);
+    
+    try {
+        const response = await fetch('{% url "students_app:send_school_bill" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        alert('Error sending bill: ' + error);
+    }
+});
+
+// Update Status
+function updateBillStatus(billingId) {
+    document.getElementById('billingId').value = billingId;
+    new bootstrap.Modal(document.getElementById('updateStatusModal')).show();
+}
+
+document.getElementById('updateStatusForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const billingId = document.getElementById('billingId').value;
+    const formData = new FormData(this);
+    
+    try {
+        const response = await fetch(`/billing/${billingId}/update-status/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        alert('Error updating status: ' + error);
+    }
+});
+</script>
+{% endblock %}
+

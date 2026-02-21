@@ -1,0 +1,155 @@
+{% extends "students/base_modern.html" %}
+{% load static %}
+
+{% block title %}{% if is_edit %}Edit{% else %}Add{% endif %} Expense{% endblock %}
+
+{% block sidebar %}
+{% include 'includes/super_admin_sidebar.html' %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .form-header {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 12px 12px 0 0;
+    }
+    .btn-save {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        border: none;
+        color: white;
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card form-card">
+                <div class="form-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-rupee-sign me-2"></i>
+                        {% if is_edit %}Edit{% else %}Add{% endif %} Expense
+                    </h4>
+                    <p class="mb-0 mt-2 opacity-75">
+                        For: {{ work_entry.title }}
+                    </p>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="category" class="form-label">Category *</label>
+                            <select name="category" id="category" class="form-select" required>
+                                <option value="">Select Category</option>
+                                <option value="travel" {% if expense and expense.category == 'travel' %}selected{% endif %}>Travel</option>
+                                <option value="food" {% if expense and expense.category == 'food' %}selected{% endif %}>Food & Accommodation</option>
+                                <option value="materials" {% if expense and expense.category == 'materials' %}selected{% endif %}>Materials & Supplies</option>
+                                <option value="equipment" {% if expense and expense.category == 'equipment' %}selected{% endif %}>Equipment</option>
+                                <option value="labor" {% if expense and expense.category == 'labor' %}selected{% endif %}>Labor Cost</option>
+                                <option value="printing" {% if expense and expense.category == 'printing' %}selected{% endif %}>Printing</option>
+                                <option value="installation" {% if expense and expense.category == 'installation' %}selected{% endif %}>Installation</option>
+                                <option value="other" {% if expense and expense.category == 'other' %}selected{% endif %}>Other</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description *</label>
+                            <input type="text" name="description" id="description" class="form-control" 
+                                   value="{% if expense %}{{ expense.description }}{% endif %}" 
+                                   placeholder="Brief description of expense" required>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="amount" class="form-label">Amount (₹) *</label>
+                                <input type="number" name="amount" id="amount" class="form-control" 
+                                       value="{% if expense %}{{ expense.amount }}{% endif %}" 
+                                       placeholder="0.00" step="0.01" min="0" required>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="expense_date" class="form-label">Expense Date *</label>
+                                <input type="date" name="expense_date" id="expense_date" class="form-control" 
+                                       value="{% if expense %}{{ expense.expense_date|date:'Y-m-d' }}{% endif %}" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="paid_by" class="form-label">Paid By *</label>
+                            <select name="paid_by" id="paid_by" class="form-select" required onchange="toggleTeamMember()">
+                                <option value="company" {% if not expense or expense.paid_by == 'company' %}selected{% endif %}>Company</option>
+                                <option value="team_member" {% if expense and expense.paid_by == 'team_member' %}selected{% endif %}>Team Member</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3" id="team_member_div" style="display: {% if expense and expense.paid_by == 'team_member' %}block{% else %}none{% endif %};">
+                            <label for="team_member" class="form-label">Team Member</label>
+                            <select name="team_member" id="team_member" class="form-select">
+                                <option value="">Select Team Member</option>
+                                {% for member in team_members %}
+                                    <option value="{{ member.id }}" {% if expense and expense.team_member and expense.team_member.id == member.id %}selected{% endif %}>
+                                        {{ member.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="receipt_number" class="form-label">Receipt Number</label>
+                            <input type="text" name="receipt_number" id="receipt_number" class="form-control" 
+                                   value="{% if expense %}{{ expense.receipt_number }}{% endif %}" 
+                                   placeholder="Optional receipt/bill number">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes</label>
+                            <textarea name="notes" id="notes" class="form-control" rows="3" 
+                                      placeholder="Any additional notes">{% if expense %}{{ expense.notes }}{% endif %}</textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <a href="{% url 'students_app:work_detail' work_entry.id %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-save">
+                                <i class="fas fa-save me-2"></i>
+                                {% if is_edit %}Update{% else %}Save{% endif %} Expense
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleTeamMember() {
+    const paidBy = document.getElementById('paid_by').value;
+    const teamMemberDiv = document.getElementById('team_member_div');
+    const teamMemberSelect = document.getElementById('team_member');
+    
+    if (paidBy === 'team_member') {
+        teamMemberDiv.style.display = 'block';
+        teamMemberSelect.required = true;
+    } else {
+        teamMemberDiv.style.display = 'none';
+        teamMemberSelect.required = false;
+        teamMemberSelect.value = '';
+    }
+}
+</script>
+{% endblock %}
+

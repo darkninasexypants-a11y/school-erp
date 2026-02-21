@@ -1,0 +1,60 @@
+<!-- Teacher Sidebar - Only for Teachers -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+        <h4><i class="bi bi-person-badge"></i> <span>Teacher Portal</span></h4>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Dashboard</div>
+        <a href="{% url 'students_app:teacher_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'teacher_dashboard' %}active{% endif %}" data-title="Dashboard">
+            <i class="bi bi-grid-1x2-fill"></i> <span>Dashboard</span>
+        </a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Teaching</div>
+        <a href="{% url 'students_app:teacher_student_attendance' %}" class="nav-link {% if 'teacher_student_attendance' in request.resolver_match.url_name %}active{% endif %}" data-title="Mark Attendance">
+            <i class="bi bi-calendar-check"></i> <span>Mark Attendance</span>
+        </a>
+        <a href="{% url 'students_app:marks_entry' %}" class="nav-link {% if 'marks' in request.path %}active{% endif %}" data-title="Marks Entry">
+            <i class="bi bi-clipboard-data"></i> <span>Marks Entry</span>
+        </a>
+        <a href="{% url 'students_app:view_timetable' %}" class="nav-link {% if 'timetable' in request.path %}active{% endif %}" data-title="Timetable">
+            <i class="bi bi-calendar3"></i> <span>Timetable</span>
+        </a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">My Records</div>
+        <a href="{% url 'students_app:teacher_my_attendance' %}" class="nav-link {% if 'teacher_my_attendance' in request.resolver_match.url_name %}active{% endif %}" data-title="My Attendance">
+            <i class="bi bi-person-check"></i> <span>My Attendance</span>
+        </a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Resources</div>
+        <a href="{% url 'students_app:teacher_question_paper' %}" class="nav-link {% if 'question' in request.path %}active{% endif %}" data-title="Question Papers">
+            <i class="bi bi-file-text"></i> <span>Question Papers</span>
+        </a>
+        <a href="{% url 'students_app:student_list' %}" class="nav-link {% if 'student_list' in request.resolver_match.url_name %}active{% endif %}" data-title="Students">
+            <i class="bi bi-people"></i> <span>View Students</span>
+        </a>
+        <a href="{% url 'students_app:teacher_book_request' %}" class="nav-link {% if 'teacher_book_request' in request.resolver_match.url_name %}active{% endif %}" data-title="Book Request">
+            <i class="bi bi-book"></i> <span>Request Book</span>
+        </a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Communication</div>
+        <a href="{% url 'students_app:teacher_whatsapp' %}" class="nav-link {% if 'whatsapp' in request.path %}active{% endif %}" data-title="WhatsApp">
+            <i class="bi bi-whatsapp"></i> <span>WhatsApp</span>
+        </a>
+    </div>
+
+    <div class="nav-section" style="margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+        <a href="{% url 'students_app:user_logout' %}" class="nav-link text-danger" data-title="Logout" onclick="return confirm('Are you sure you want to logout?');">
+            <i class="bi bi-box-arrow-left"></i> <span>Logout</span>
+        </a>
+    </div>
+</div>
+

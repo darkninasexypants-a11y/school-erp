@@ -1,0 +1,672 @@
+{% extends "students/base_modern.html" %}
+{% block title %}Create New School{% endblock %}
+
+{% block sidebar %}
+{% include 'includes/super_admin_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="fas fa-plus me-2"></i>Create New School</h4>
+                    <p class="text-muted mb-0">Add a new school to your platform and create their admin user</p>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" enctype="multipart/form-data" id="create-school-form" onsubmit="return validateOTPBeforeSubmit(event)">
+                        {% csrf_token %}
+                        <input type="hidden" id="otp-verified" name="otp_verified" value="false">
+                        
+                        <!-- School Information -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary mb-3"><i class="fas fa-school me-2"></i>School Information</h5>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="{{ form.name.id_for_label }}" class="form-label fw-semibold">
+                                    <i class="fas fa-school me-1"></i>{{ form.name.label }}
+                                </label>
+                                {{ form.name }}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.phone.id_for_label }}" class="form-label fw-semibold">
+                                    <i class="fas fa-phone me-1"></i>{{ form.phone.label }}
+                                </label>
+                                <div class="input-group">
+                                    {{ form.phone }}
+                                    <button type="button" class="btn btn-outline-primary" id="send-otp-btn" onclick="sendSchoolOTP()">
+                                        <i class="fas fa-paper-plane me-1"></i>Send OTP
+                                    </button>
+                                </div>
+                                {% if form.phone.errors %}
+                                    <div class="text-danger small">{{ form.phone.errors }}</div>
+                                {% endif %}
+                                <div class="form-text">Enter 10-digit mobile number (e.g., 9876543210)</div>
+                                
+                                <!-- OTP Verification Section -->
+                                <div id="otp-verification-section" style="display: none; margin-top: 15px;">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>OTP Sent!</strong> Please enter the OTP sent to your mobile number.
+                                        <div id="otp-display" class="mt-2" style="display: none;">
+                                            <small><strong>OTP:</strong> <span id="otp-value"></span> (for testing)</small>
+                                        </div>
+                                    </div>
+                                    <div class="input-group mb-2">
+                                        <input type="text" class="form-control" id="otp-input" placeholder="Enter 6-digit OTP" maxlength="6" pattern="[0-9]{6}">
+                                        <button type="button" class="btn btn-success" id="verify-otp-btn" onclick="verifySchoolOTP()">
+                                            <i class="fas fa-check me-1"></i>Verify OTP
+                                        </button>
+                                    </div>
+                                    <div id="otp-status" class="small"></div>
+                                    <div id="otp-timer" class="small text-muted mt-1"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="{{ form.email.id_for_label }}" class="form-label fw-semibold">
+                                    <i class="fas fa-envelope me-1"></i>{{ form.email.label }}
+                                </label>
+                                {{ form.email }}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.website.id_for_label }}" class="form-label fw-semibold">
+                                    <i class="fas fa-globe me-1"></i>{{ form.website.label }}
+                                </label>
+                                {{ form.website }}
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <label for="{{ form.address.id_for_label }}" class="form-label fw-semibold">
+                                    <i class="fas fa-map-marker-alt me-1"></i>{{ form.address.label }}
+                                </label>
+                                {{ form.address }}
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="{{ form.logo.id_for_label }}" class="form-label fw-semibold">
+                                    <i class="fas fa-image me-1"></i>{{ form.logo.label }}
+                                </label>
+                                {{ form.logo }}
+                                <div class="form-text">Upload school logo (optional)</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.max_users.id_for_label }}" class="form-label fw-semibold">
+                                    <i class="fas fa-users me-1"></i>{{ form.max_users.label }}
+                                </label>
+                                {{ form.max_users }}
+                                <div class="form-text">Maximum number of users for this school</div>
+                            </div>
+                        </div>
+
+                        <!-- School Details -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary mb-3"><i class="fas fa-info-circle me-2"></i>School Details</h5>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="{{ form.principal_name.id_for_label }}" class="form-label fw-semibold">
+                                    <i class="fas fa-user-tie me-1"></i>{{ form.principal_name.label }}
+                                </label>
+                                {{ form.principal_name }}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.established_year.id_for_label }}" class="form-label fw-semibold">
+                                    <i class="fas fa-calendar me-1"></i>{{ form.established_year.label }}
+                                </label>
+                                {{ form.established_year }}
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="{{ form.affiliation_number.id_for_label }}" class="form-label fw-semibold">
+                                    <i class="fas fa-certificate me-1"></i>{{ form.affiliation_number.label }}
+                                </label>
+                                {{ form.affiliation_number }}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.board.id_for_label }}" class="form-label fw-semibold">
+                                    <i class="fas fa-graduation-cap me-1"></i>{{ form.board.label }}
+                                </label>
+                                {{ form.board }}
+                            </div>
+                        </div>
+
+                        <!-- Feature Configuration -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary mb-3"><i class="fas fa-sliders-h me-2"></i>Feature Configuration</h5>
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Select Features:</strong> Choose which features this school will have access to. Unchecked features will use global settings.
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" name="fee_payment_online" id="fee_payment_online" checked style="cursor: pointer;">
+                                            <label class="form-check-label" for="fee_payment_online" style="cursor: pointer;">
+                                                <strong>Online Fee Payment</strong>
+                                                <p class="text-muted small mb-0">Online fee management and payment</p>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" name="id_card_generator" id="id_card_generator" checked style="cursor: pointer;">
+                                            <label class="form-check-label" for="id_card_generator" style="cursor: pointer;">
+                                                <strong>ID Card Generator</strong>
+                                                <p class="text-muted small mb-0">Generate student ID cards</p>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" name="attendance_tracking" id="attendance_tracking" checked style="cursor: pointer;">
+                                            <label class="form-check-label" for="attendance_tracking" style="cursor: pointer;">
+                                                <strong>Attendance Tracking</strong>
+                                                <p class="text-muted small mb-0">Daily attendance management</p>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" name="marks_entry" id="marks_entry" style="cursor: pointer;">
+                                            <label class="form-check-label" for="marks_entry" style="cursor: pointer;">
+                                                <strong>Marks Entry</strong>
+                                                <p class="text-muted small mb-0">Exam and assessment management</p>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" name="library_management" id="library_management" style="cursor: pointer;">
+                                            <label class="form-check-label" for="library_management" style="cursor: pointer;">
+                                                <strong>Library Management</strong>
+                                                <p class="text-muted small mb-0">Book issue and return</p>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" name="transport_management" id="transport_management" style="cursor: pointer;">
+                                            <label class="form-check-label" for="transport_management" style="cursor: pointer;">
+                                                <strong>Transport Management</strong>
+                                                <p class="text-muted small mb-0">Bus routes and tracking</p>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" name="hostel_management" id="hostel_management" style="cursor: pointer;">
+                                            <label class="form-check-label" for="hostel_management" style="cursor: pointer;">
+                                                <strong>Hostel Management</strong>
+                                                <p class="text-muted small mb-0">Hostel room allocation</p>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" name="canteen_management" id="canteen_management" style="cursor: pointer;">
+                                            <label class="form-check-label" for="canteen_management" style="cursor: pointer;">
+                                                <strong>Canteen Management</strong>
+                                                <p class="text-muted small mb-0">Canteen orders and billing</p>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" name="crm_enabled" id="crm_enabled" style="cursor: pointer;">
+                                            <label class="form-check-label" for="crm_enabled" style="cursor: pointer;">
+                                                <strong>CRM Module</strong>
+                                                <p class="text-muted small mb-0">Lead management and enrollment</p>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" name="erp_enabled" id="erp_enabled" checked style="cursor: pointer;">
+                                            <label class="form-check-label" for="erp_enabled" style="cursor: pointer;">
+                                                <strong>ERP Module</strong>
+                                                <p class="text-muted small mb-0">Student and school management</p>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Admin User Info -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-success mb-3"><i class="fas fa-user-shield me-2"></i>Admin User Creation</h5>
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Note:</strong> A school admin user will be automatically created with the credentials you provide below.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="{{ form.admin_username.id_for_label }}" class="form-label fw-semibold">
+                                    <i class="fas fa-user me-1"></i>{{ form.admin_username.label }}
+                                </label>
+                                {{ form.admin_username }}
+                                {% if form.admin_username.errors %}
+                                    <div class="text-danger small">{{ form.admin_username.errors }}</div>
+                                {% endif %}
+                                {% if form.admin_username.help_text %}
+                                    <div class="form-text">{{ form.admin_username.help_text }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.admin_email.id_for_label }}" class="form-label fw-semibold">
+                                    <i class="fas fa-envelope me-1"></i>{{ form.admin_email.label }}
+                                </label>
+                                {{ form.admin_email }}
+                                {% if form.admin_email.errors %}
+                                    <div class="text-danger small">{{ form.admin_email.errors }}</div>
+                                {% endif %}
+                                {% if form.admin_email.help_text %}
+                                    <div class="form-text">{{ form.admin_email.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="{{ form.admin_password.id_for_label }}" class="form-label fw-semibold">
+                                    <i class="fas fa-lock me-1"></i>{{ form.admin_password.label }}
+                                </label>
+                                {{ form.admin_password }}
+                                {% if form.admin_password.errors %}
+                                    <div class="text-danger small">{{ form.admin_password.errors }}</div>
+                                {% endif %}
+                                {% if form.admin_password.help_text %}
+                                    <div class="form-text">{{ form.admin_password.help_text }}</div>
+                                {% endif %}
+                                <div class="password-strength mt-2" id="password-strength" style="display: none;">
+                                    <div class="progress" style="height: 5px;">
+                                        <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                    </div>
+                                    <small class="text-muted" id="password-strength-text"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.admin_password_confirm.id_for_label }}" class="form-label fw-semibold">
+                                    <i class="fas fa-lock me-1"></i>{{ form.admin_password_confirm.label }}
+                                </label>
+                                {{ form.admin_password_confirm }}
+                                {% if form.admin_password_confirm.errors %}
+                                    <div class="text-danger small">{{ form.admin_password_confirm.errors }}</div>
+                                {% endif %}
+                                <div id="password-match" class="mt-2" style="display: none;">
+                                    <small class="text-success"><i class="fas fa-check-circle"></i> Passwords match</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary btn-lg">
+                                        <i class="fas fa-plus me-2"></i>Create School & Admin
+                                    </button>
+                                    <a href="{% url 'students_app:admin_dashboard' %}" class="btn btn-outline-secondary btn-lg">
+                                        <i class="fas fa-arrow-left me-2"></i>Cancel
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const passwordInput = document.getElementById('id_admin_password');
+    const passwordConfirmInput = document.getElementById('id_admin_password_confirm');
+    const passwordStrength = document.getElementById('password-strength');
+    const passwordStrengthBar = passwordStrength ? passwordStrength.querySelector('.progress-bar') : null;
+    const passwordStrengthText = document.getElementById('password-strength-text');
+    const passwordMatch = document.getElementById('password-match');
+    
+    // Sync admin email with school email (but allow manual override)
+    const schoolEmailInput = document.getElementById('id_email');
+    const adminEmailInput = document.getElementById('id_admin_email');
+    
+    if (schoolEmailInput && adminEmailInput) {
+        // When school email changes and admin email is empty or matches old school email, update it
+        let lastSchoolEmail = schoolEmailInput.value;
+        schoolEmailInput.addEventListener('input', function() {
+            // Only auto-update if admin email is empty or matches the previous school email value
+            if (!adminEmailInput.value || adminEmailInput.value === lastSchoolEmail) {
+                adminEmailInput.value = this.value;
+            }
+            lastSchoolEmail = this.value;
+        });
+        
+        // Initialize admin email if empty
+        if (!adminEmailInput.value && schoolEmailInput.value) {
+            adminEmailInput.value = schoolEmailInput.value;
+        }
+    }
+    
+    // Phone number input validation (only digits, max 10)
+    const phoneInput = document.getElementById('id_phone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function() {
+            // Only allow digits
+            this.value = this.value.replace(/\D/g, '');
+            // Limit to 10 digits
+            if (this.value.length > 10) {
+                this.value = this.value.slice(0, 10);
+            }
+        });
+    }
+    
+    // Password strength indicator
+    if (passwordInput && passwordStrength && passwordStrengthBar) {
+        passwordInput.addEventListener('input', function() {
+            const password = this.value;
+            if (password.length > 0) {
+                passwordStrength.style.display = 'block';
+                let strength = 0;
+                let strengthText = '';
+                let strengthClass = '';
+                
+                // Check length
+                if (password.length >= 8) strength += 25;
+                if (password.length >= 12) strength += 10;
+                
+                // Check for lowercase
+                if (/[a-z]/.test(password)) strength += 15;
+                
+                // Check for uppercase
+                if (/[A-Z]/.test(password)) strength += 15;
+                
+                // Check for numbers
+                if (/[0-9]/.test(password)) strength += 15;
+                
+                // Check for special characters
+                if (/[^a-zA-Z0-9]/.test(password)) strength += 20;
+                
+                // Determine strength level
+                if (strength < 40) {
+                    strengthText = 'Weak';
+                    strengthClass = 'bg-danger';
+                } else if (strength < 70) {
+                    strengthText = 'Medium';
+                    strengthClass = 'bg-warning';
+                } else if (strength < 90) {
+                    strengthText = 'Strong';
+                    strengthClass = 'bg-info';
+                } else {
+                    strengthText = 'Very Strong';
+                    strengthClass = 'bg-success';
+                }
+                
+                passwordStrengthBar.style.width = strength + '%';
+                passwordStrengthBar.className = 'progress-bar ' + strengthClass;
+                if (passwordStrengthText) {
+                    passwordStrengthText.textContent = 'Password strength: ' + strengthText;
+                }
+            } else {
+                passwordStrength.style.display = 'none';
+            }
+        });
+    }
+    
+    // Password match indicator
+    if (passwordInput && passwordConfirmInput) {
+        function checkPasswordMatch() {
+            if (passwordConfirmInput.value.length > 0) {
+                if (passwordInput.value === passwordConfirmInput.value) {
+                    passwordMatch.style.display = 'block';
+                    passwordMatch.innerHTML = '<small class="text-success"><i class="fas fa-check-circle"></i> Passwords match</small>';
+                } else {
+                    passwordMatch.style.display = 'block';
+                    passwordMatch.innerHTML = '<small class="text-danger"><i class="fas fa-times-circle"></i> Passwords do not match</small>';
+                }
+            } else {
+                passwordMatch.style.display = 'none';
+            }
+        }
+        
+        passwordInput.addEventListener('input', checkPasswordMatch);
+        passwordConfirmInput.addEventListener('input', checkPasswordMatch);
+    }
+    
+    // OTP timer (defined in global scope so it can be called from other functions)
+    
+    // Allow only digits in OTP input
+    const otpInput = document.getElementById('otp-input');
+    if (otpInput) {
+        otpInput.addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '').slice(0, 6);
+        });
+        
+        otpInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                verifySchoolOTP();
+            }
+        });
+    }
+});
+
+// OTP timer (global scope)
+let otpTimerInterval = null;
+function startOTPTimer(seconds) {
+    const timerElement = document.getElementById('otp-timer');
+    if (!timerElement) return;
+    
+    let remaining = seconds;
+    timerElement.textContent = `OTP expires in ${remaining} seconds`;
+    timerElement.className = 'small text-muted mt-1';
+    
+    if (otpTimerInterval) clearInterval(otpTimerInterval);
+    
+    otpTimerInterval = setInterval(() => {
+        remaining--;
+        if (remaining > 0) {
+            timerElement.textContent = `OTP expires in ${remaining} seconds`;
+        } else {
+            timerElement.textContent = 'OTP has expired. Please request a new OTP.';
+            timerElement.className = 'small text-danger mt-1';
+            clearInterval(otpTimerInterval);
+        }
+    }, 1000);
+}
+
+// Send OTP function
+function sendSchoolOTP() {
+    const phoneInput = document.getElementById('id_phone');
+    const sendBtn = document.getElementById('send-otp-btn');
+    const otpSection = document.getElementById('otp-verification-section');
+    const otpStatus = document.getElementById('otp-status');
+    
+    if (!phoneInput || !sendBtn) return;
+    
+    let phone = phoneInput.value.replace(/\D/g, '');
+    
+    // Validate phone number
+    if (phone.length !== 10) {
+        alert('Please enter a valid 10-digit phone number.');
+        return;
+    }
+    
+    if (phone[0] === '0') {
+        alert('Phone number cannot start with 0.');
+        return;
+    }
+    
+    // Disable button and show loading
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Sending...';
+    otpStatus.innerHTML = '';
+    
+    // Send OTP request
+    fetch('{% url "students_app:send_school_otp" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: 'phone=' + encodeURIComponent(phone)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show OTP section
+            otpSection.style.display = 'block';
+            otpStatus.innerHTML = '<div class="text-success"><i class="fas fa-check-circle"></i> ' + data.message + '</div>';
+            
+            // Show OTP in development (if included in response)
+            const otpDisplay = document.getElementById('otp-display');
+            const otpValue = document.getElementById('otp-value');
+            if (data.otp && otpDisplay && otpValue) {
+                otpValue.textContent = data.otp;
+                otpDisplay.style.display = 'block';
+            }
+            
+            // Start timer (10 minutes = 600 seconds)
+            startOTPTimer(600);
+            
+            // Focus on OTP input
+            const otpInput = document.getElementById('otp-input');
+            if (otpInput) {
+                otpInput.value = '';
+                otpInput.focus();
+            }
+        } else {
+            otpStatus.innerHTML = '<div class="text-danger"><i class="fas fa-times-circle"></i> ' + data.error + '</div>';
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Send OTP';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        otpStatus.innerHTML = '<div class="text-danger"><i class="fas fa-times-circle"></i> Error sending OTP. Please try again.</div>';
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Send OTP';
+    });
+}
+
+// Verify OTP function
+function verifySchoolOTP() {
+    const otpInput = document.getElementById('otp-input');
+    const verifyBtn = document.getElementById('verify-otp-btn');
+    const otpStatus = document.getElementById('otp-status');
+    const otpVerified = document.getElementById('otp-verified');
+    
+    if (!otpInput || !verifyBtn) return;
+    
+    const otp = otpInput.value.replace(/\D/g, '');
+    
+    // Validate OTP
+    if (otp.length !== 6) {
+        otpStatus.innerHTML = '<div class="text-danger"><i class="fas fa-times-circle"></i> Please enter a valid 6-digit OTP.</div>';
+        return;
+    }
+    
+    // Disable button and show loading
+    verifyBtn.disabled = true;
+    verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Verifying...';
+    
+    // Verify OTP request
+    fetch('{% url "students_app:verify_school_otp" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: 'otp=' + encodeURIComponent(otp)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            otpStatus.innerHTML = '<div class="text-success"><i class="fas fa-check-circle"></i> ' + data.message + '</div>';
+            if (otpVerified) {
+                otpVerified.value = 'true';
+            }
+            
+            // Disable OTP input and buttons
+            otpInput.disabled = true;
+            verifyBtn.disabled = true;
+            verifyBtn.innerHTML = '<i class="fas fa-check me-1"></i>Verified';
+            
+            // Clear timer
+            if (otpTimerInterval) {
+                clearInterval(otpTimerInterval);
+                const timerElement = document.getElementById('otp-timer');
+                if (timerElement) {
+                    timerElement.innerHTML = '<span class="text-success"><i class="fas fa-check-circle"></i> OTP Verified</span>';
+                }
+            }
+        } else {
+            otpStatus.innerHTML = '<div class="text-danger"><i class="fas fa-times-circle"></i> ' + data.error + '</div>';
+            verifyBtn.disabled = false;
+            verifyBtn.innerHTML = '<i class="fas fa-check me-1"></i>Verify OTP';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        otpStatus.innerHTML = '<div class="text-danger"><i class="fas fa-times-circle"></i> Error verifying OTP. Please try again.</div>';
+        verifyBtn.disabled = false;
+        verifyBtn.innerHTML = '<i class="fas fa-check me-1"></i>Verify OTP';
+    });
+}
+
+// Validate OTP before form submission
+function validateOTPBeforeSubmit(event) {
+    const otpVerified = document.getElementById('otp-verified');
+    const phoneInput = document.getElementById('id_phone');
+    
+    if (phoneInput && phoneInput.value) {
+        if (!otpVerified || otpVerified.value !== 'true') {
+            event.preventDefault();
+            alert('Please verify your mobile number with OTP before submitting the form.');
+            
+            // Scroll to OTP section
+            const otpSection = document.getElementById('otp-verification-section');
+            if (otpSection) {
+                otpSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            
+            return false;
+        }
+    }
+    
+    return true;
+}
+</script>
+{% endblock %}
